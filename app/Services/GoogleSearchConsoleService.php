@@ -1,0 +1,266 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Keyword;
+use App\Models\Project;
+use App\Models\Ranking;
+use App\Notifications\RankingChangeNotification;
+use Carbon\Carbon;
+use Google\Client as GoogleClient;
+use Google\Service\SearchConsole;
+use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
+use Illuminate\Support\Facades\Log;
+
+class GoogleSearchConsoleService
+{
+    public $repository;
+
+    private readonly GoogleClient $googleClient;
+
+    private readonly SearchConsole $searchConsole;
+
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
+    {
+        $this->googleClient = new GoogleClient();
+        $this->googleClient->setApplicationName('SEO Monitor');
+        $this->googleClient->setScopes([SearchConsole::WEBMASTERS_READONLY]);
+
+        // Set credentials from environment or config
+        if ($credentialsPath = $repository->get('services.google.credentials_path')) {
+            $this->googleClient->setAuthConfig($credentialsPath);
+        }
+
+        $this->searchConsole = new SearchConsole($this->googleClient);
+    }
+
+    /**
+     * Get performance data from Search Console
+     */
+    public function getPerformanceData(Project $project, array $keywords = [], ?Carbon $startDate = null, ?Carbon $endDate = null): array
+    {
+        try {
+            $startDate ??= Carbon::now()->subDays(30);
+            $endDate ??= Carbon::now()->subDay();
+
+            $searchAnalyticsQueryRequest = new SearchAnalyticsQueryRequest();
+            $searchAnalyticsQueryRequest->setStartDate($startDate->format('Y-m-d'));
+            $searchAnalyticsQueryRequest->setEndDate($endDate->format('Y-m-d'));
+            $searchAnalyticsQueryRequest->setDimensions(['query', 'page']);
+            $searchAnalyticsQueryRequest->setRowLimit(1000);
+
+            if ($keywords !== []) {
+                $filters = [];
+                foreach ($keywords as $keyword) {
+                    $filters[] = [
+                        'dimension' => 'query',
+                        'operator' => 'equals',
+                        'expression' => $keyword,
+                    ];
+                }
+
+                $searchAnalyticsQueryRequest->setDimensionFilterGroups([
+                    ['filters' => $filters],
+                ]);
+            }
+
+            $response = $this->searchConsole->searchanalytics->query($project->url, $searchAnalyticsQueryRequest);
+
+            return $this->processSearchConsoleResponse($response, $project);
+        } catch (\Exception $exception) {
+            Log::error('Google Search Console API Error: ' . $exception->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Process Search Console API response
+     */
+    private function processSearchConsoleResponse($response, Project $project): array
+    {
+        $data = [];
+
+        if ($response->getRows()) {
+            foreach ($response->getRows() as $row) {
+                $query = $row->getKeys()[0];
+                $page = $row->getKeys()[1] ?? null;
+
+                $data[] = [
+                    'keyword' => $query,
+                    'url' => $page,
+                    'clicks' => $row->getClicks() ?? 0,
+                    'impressions' => $row->getImpressions() ?? 0,
+                    'ctr' => $row->getCtr() ?? 0,
+                    'position' => round($row->getPosition() ?? 0, 1),
+                    'project_id' => $project->id,
+                ];
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Import performance data and update rankings
+     */
+    public function importAndUpdateRankings(Project $project): int
+    {
+        $performanceData = $this->getPerformanceData($project);
+        $importedCount = 0;
+
+        foreach ($performanceData as $data) {
+            // Find or create keyword
+            $keyword = \App\Models\Keyword::query()->firstOrCreate([
+                'project_id' => $project->id,
+                'keyword' => $data['keyword'],
+            ], [
+                'category' => 'Search Console Import',
+                'priority' => 'medium',
+                'search_volume' => null,
+                'difficulty_score' => null,
+            ]);
+
+            // Get previous ranking for comparison
+            $previousRanking = $keyword->rankings()->latest('checked_at')->first();
+
+            // Create new ranking entry
+            $ranking = \App\Models\Ranking::query()->create([
+                'keyword_id' => $keyword->id,
+                'position' => $data['position'],
+                'previous_position' => $previousRanking ? $previousRanking->position : null,
+                'url' => $data['url'],
+                'featured_snippet' => false,
+                'serp_features' => json_encode([
+                    'clicks' => $data['clicks'],
+                    'impressions' => $data['impressions'],
+                    'ctr' => $data['ctr'],
+                ]),
+                'checked_at' => now(),
+            ]);
+
+            // Check for significant changes and send notifications
+            $this->checkForSignificantChanges($ranking);
+
+            $importedCount++;
+        }
+
+        return $importedCount;
+    }
+
+    /**
+     * Get sites from Search Console
+     */
+    public function getSites(): array
+    {
+        try {
+            $sites = $this->searchConsole->sites->listSites();
+
+            return $sites->getSiteEntry() ?? [];
+        } catch (\Exception $exception) {
+            Log::error('Error fetching Search Console sites: ' . $exception->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Check if credentials are configured
+     */
+    public function hasCredentials(): bool
+    {
+        return $this->repository->get('services.google.credentials_path') !== null;
+    }
+
+    private function checkForSignificantChanges(Ranking $ranking): void
+    {
+        $previousPosition = $ranking->previous_position;
+        $currentPosition = $ranking->position;
+
+        // No previous position, this is new
+        if (! $previousPosition) {
+            // Send notification only if it's a good position
+            if ($currentPosition <= 10) {
+                $this->sendNotification($ranking, $currentPosition <= 3 ? 'top3' : 'first_page');
+            }
+
+            return;
+        }
+
+        $change = $previousPosition - $currentPosition;
+
+        // Check for significant improvements (position got better)
+        if ($change > 0) {
+            // Entered top 3
+            if ($currentPosition <= 3 && $previousPosition > 3) {
+                $this->sendNotification($ranking, 'top3');
+            }
+            // Entered first page
+            elseif ($currentPosition <= 10 && $previousPosition > 10) {
+                $this->sendNotification($ranking, 'first_page');
+            }
+            // Significant improvement (5+ positions)
+            elseif ($change >= 5) {
+                $this->sendNotification($ranking, 'significant_improvement');
+            }
+        }
+
+        // Check for significant declines (position got worse)
+        if ($change < 0) {
+            $absoluteChange = abs($change);
+
+            // Dropped out of first page
+            if ($previousPosition <= 10 && $currentPosition > 10) {
+                $this->sendNotification($ranking, 'dropped_out');
+            }
+            // Significant decline (5+ positions)
+            elseif ($absoluteChange >= 5) {
+                $this->sendNotification($ranking, 'significant_decline');
+            }
+        }
+    }
+
+    private function sendNotification(Ranking $ranking, string $changeType): void
+    {
+        try {
+            $project = $ranking->keyword->project;
+
+            // Get all users who have access to this project
+            $users = $project->users()->get();
+
+            foreach ($users as $user) {
+                $preferences = $user->getNotificationPreferencesForProject($project);
+
+                // Check if user wants to receive this type of notification
+                if ($preferences->shouldReceiveEmail($changeType) ||
+                    $preferences->shouldReceiveAppNotification($changeType)) {
+                    $notification = new RankingChangeNotification($ranking, $changeType);
+
+                    // Set notification channels based on preferences
+                    $channels = [];
+                    if ($preferences->shouldReceiveEmail($changeType)) {
+                        $channels[] = 'mail';
+                    }
+
+                    if ($preferences->shouldReceiveAppNotification($changeType)) {
+                        $channels[] = 'database';
+                    }
+
+                    // Override the via method temporarily
+                    $notification->via = fn (): array => $channels;
+
+                    $user->notify($notification);
+                }
+            }
+
+            Log::info('Ranking notification sent', [
+                'keyword' => $ranking->keyword->keyword,
+                'change_type' => $changeType,
+                'position' => $ranking->position,
+                'previous_position' => $ranking->previous_position,
+            ]);
+        } catch (\Exception $exception) {
+            Log::error('Failed to send ranking notification: ' . $exception->getMessage());
+        }
+    }
+}

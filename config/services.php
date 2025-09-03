@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'google' => [
+        'credentials_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
+        'search_console' => [
+            'client_id' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_ID'),
+            'client_secret' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET'),
+        ],
+    ],
+
 ];

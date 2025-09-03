@@ -3,21 +3,36 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
+    public function __construct(private readonly \Illuminate\Contracts\Hashing\Hasher $hasher) {}
+
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Create admin user
+        $user = \App\Models\User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@admin.com',
+            'password' => $this->hasher->make('password'),
+            'email_verified_at' => now(),
         ]);
+
+        // Create SEO projects
+        $project1 = \App\Models\Project::query()->create([
+            'name' => 'Main Website SEO',
+            'url' => 'https://example.com',
+            'description' => 'SEO monitoring for the main company website',
+        ]);
+
+        $project2 = \App\Models\Project::query()->create([
+            'name' => 'Blog SEO Tracking',
+            'url' => 'https://blog.example.com',
+            'description' => 'SEO monitoring for the company blog',
+        ]);
+
+        // Attach admin to projects
+        $user->projects()->attach([$project1->id, $project2->id]);
     }
 }

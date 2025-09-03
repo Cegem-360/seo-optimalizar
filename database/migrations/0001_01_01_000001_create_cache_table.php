@@ -2,25 +2,26 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
+    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('cache', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->mediumText('value');
-            $table->integer('expiration');
+        $this->builder->create('cache', function (Blueprint $blueprint): void {
+            $blueprint->string('key')->primary();
+            $blueprint->mediumText('value');
+            $blueprint->integer('expiration');
         });
 
-        Schema::create('cache_locks', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->string('owner');
-            $table->integer('expiration');
+        $this->builder->create('cache_locks', function (Blueprint $blueprint): void {
+            $blueprint->string('key')->primary();
+            $blueprint->string('owner');
+            $blueprint->integer('expiration');
         });
     }
 
@@ -29,7 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cache');
-        Schema::dropIfExists('cache_locks');
+        $this->builder->dropIfExists('cache');
+        $this->builder->dropIfExists('cache_locks');
     }
 };
