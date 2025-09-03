@@ -20,7 +20,7 @@ class GoogleSearchConsoleService
 
     private readonly SearchConsole $searchConsole;
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Foundation\Application $application)
     {
         $this->googleClient = new GoogleClient();
         $this->googleClient->setApplicationName('SEO Monitor');
@@ -234,8 +234,6 @@ class GoogleSearchConsoleService
                 // Check if user wants to receive this type of notification
                 if ($preferences->shouldReceiveEmail($changeType) ||
                     $preferences->shouldReceiveAppNotification($changeType)) {
-                    $notification = new RankingChangeNotification($ranking, $changeType);
-
                     // Set notification channels based on preferences
                     $channels = [];
                     if ($preferences->shouldReceiveEmail($changeType)) {
@@ -246,9 +244,7 @@ class GoogleSearchConsoleService
                         $channels[] = 'database';
                     }
 
-                    // Override the via method temporarily
-                    $notification->via = fn (): array => $channels;
-
+                    $notification = new RankingChangeNotification($ranking, $changeType, $this->application->make('url'), $channels);
                     $user->notify($notification);
                 }
             }

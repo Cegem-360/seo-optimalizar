@@ -15,12 +15,13 @@ class RankingChangeNotification extends Notification implements ShouldQueue
     public function __construct(
         public Ranking $ranking,
         public string $changeType,
-        private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator
+        private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator,
+        private readonly array $channels = ['mail', 'database']
     ) {}
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return $this->channels;
     }
 
     public function toMail(object $notifiable): MailMessage
