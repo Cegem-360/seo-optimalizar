@@ -35,7 +35,7 @@ class RankingResource extends Resource
             });
         }
 
-        return $query;
+        return $builder;
     }
 
     public static function form(Schema $schema): Schema
