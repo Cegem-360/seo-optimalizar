@@ -8,15 +8,15 @@ Artisan::command('inspire', function (): void {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('seo:import-search-console')
+Schedule::command('gsc:sync --all')
     ->dailyAt('06:00')
     ->withoutOverlapping()
     ->runInBackground()
     ->onSuccess(function (): void {
-        info('Search Console import completed successfully');
+        info('Google Search Console sync completed successfully');
     })
     ->onFailure(function (): void {
-        info('Search Console import failed');
+        error('Google Search Console sync failed');
     });
 
 Schedule::command('seo:check-positions')

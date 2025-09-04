@@ -3,9 +3,10 @@
 namespace App\Filament\Resources\Keywords\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\BadgeColumn;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -26,20 +27,26 @@ class KeywordsTable
                     ->badge()
                     ->color('gray'),
 
-                BadgeColumn::make('priority')
-                    ->colors([
-                        'danger' => 'high',
-                        'warning' => 'medium',
-                        'success' => 'low',
-                    ]),
+                TextColumn::make('priority')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'high' => 'danger',
+                        'medium' => 'warning',
+                        'low' => 'success',
+                        default => 'gray',
+                    })
+                    ->sortable(),
 
-                BadgeColumn::make('intent_type')
-                    ->colors([
-                        'info' => 'informational',
-                        'warning' => 'navigational',
-                        'success' => 'commercial',
-                        'danger' => 'transactional',
-                    ]),
+                TextColumn::make('intent_type')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'informational' => 'info',
+                        'navigational' => 'warning',
+                        'commercial' => 'success',
+                        'transactional' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable(),
 
                 TextColumn::make('search_volume')
                     ->numeric()
@@ -79,10 +86,12 @@ class KeywordsTable
                         'transactional' => 'Transactional',
                     ]),
             ])
-            ->recordActions([
+            ->actions([
+                ViewAction::make(),
                 EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

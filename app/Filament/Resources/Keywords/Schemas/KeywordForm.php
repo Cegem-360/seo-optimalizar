@@ -54,8 +54,19 @@ class KeywordForm
                                     ->placeholder('e.g., US, UK, global'),
                             ]),
 
-                        Grid::make(2)
+                        Grid::make(3)
                             ->components([
+                                Select::make('language')
+                                    ->options([
+                                        'hu' => 'Magyar',
+                                        'en' => 'English',
+                                        'de' => 'Deutsch',
+                                        'fr' => 'Français',
+                                        'es' => 'Español',
+                                    ])
+                                    ->default('hu')
+                                    ->required(),
+
                                 TextInput::make('search_volume')
                                     ->numeric()
                                     ->placeholder('Monthly search volume'),

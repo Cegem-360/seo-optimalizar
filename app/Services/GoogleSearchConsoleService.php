@@ -22,6 +22,7 @@ class GoogleSearchConsoleService
 
     public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Foundation\Application $application)
     {
+        $this->repository = $repository;
         $this->googleClient = new GoogleClient();
         $this->googleClient->setApplicationName('SEO Monitor');
         $this->googleClient->setScopes([SearchConsole::WEBMASTERS_READONLY]);

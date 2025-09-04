@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\KeywordResource\RelationManagers\RankingsRelationManager;
 use App\Filament\Resources\Keywords\Pages\CreateKeyword;
 use App\Filament\Resources\Keywords\Pages\EditKeyword;
 use App\Filament\Resources\Keywords\Pages\ListKeywords;
@@ -20,7 +21,9 @@ class KeywordResource extends Resource
 {
     protected static ?string $model = Keyword::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlass;
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $tenantOwnershipRelationshipName = 'project';
 
@@ -49,7 +52,7 @@ class KeywordResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RankingsRelationManager::class,
         ];
     }
 

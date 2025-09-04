@@ -3,9 +3,12 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Tenancy\RegisterProject;
+use App\Filament\Widgets\CompetitorComparisonWidget;
+use App\Filament\Widgets\KeywordPerformanceWidget;
 use App\Filament\Widgets\RankingTrendsChart;
 use App\Filament\Widgets\RecentRankingsTable;
 use App\Filament\Widgets\SeoStatsWidget;
+use App\Filament\Widgets\TrafficOverviewWidget;
 use App\Models\Project;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -46,7 +49,10 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 SeoStatsWidget::class,
+                TrafficOverviewWidget::class,
+                CompetitorComparisonWidget::class,
                 RankingTrendsChart::class,
+                KeywordPerformanceWidget::class,
                 RecentRankingsTable::class,
             ])
             ->middleware([

@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Models\Ranking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,7 +12,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        public Ranking $ranking,
+        public $ranking,
         public string $changeType,
         private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator,
         private readonly array $channels = ['mail', 'database']
