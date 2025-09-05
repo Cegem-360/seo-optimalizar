@@ -1,12 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-
-Artisan::command('inspire', function (): void {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
 
 Schedule::command('gsc:sync --all')
     ->dailyAt('06:00')
@@ -16,7 +10,7 @@ Schedule::command('gsc:sync --all')
         info('Google Search Console sync completed successfully');
     })
     ->onFailure(function (): void {
-        error('Google Search Console sync failed');
+        logger()->error('Google Search Console sync failed');
     });
 
 Schedule::command('seo:check-positions')
@@ -50,7 +44,7 @@ Schedule::command('seo:pagespeed-monitor --strategy=mobile')
         info('Daily PageSpeed mobile monitoring completed successfully');
     })
     ->onFailure(function (): void {
-        error('Daily PageSpeed mobile monitoring failed');
+        logger()->error('Daily PageSpeed mobile monitoring failed');
     });
 
 // PageSpeed Monitoring - Desktop analysis daily at 2:00 PM
@@ -62,7 +56,7 @@ Schedule::command('seo:pagespeed-monitor --strategy=desktop')
         info('Daily PageSpeed desktop monitoring completed successfully');
     })
     ->onFailure(function (): void {
-        error('Daily PageSpeed desktop monitoring failed');
+        logger()->error('Daily PageSpeed desktop monitoring failed');
     });
 
 // PageSpeed Monitoring - Weekly comprehensive analysis (both mobile & desktop)
@@ -74,5 +68,5 @@ Schedule::command('seo:pagespeed-monitor --strategy=both --force')
         info('Weekly comprehensive PageSpeed monitoring completed successfully');
     })
     ->onFailure(function (): void {
-        error('Weekly comprehensive PageSpeed monitoring failed');
+        logger()->error('Weekly comprehensive PageSpeed monitoring failed');
     });
