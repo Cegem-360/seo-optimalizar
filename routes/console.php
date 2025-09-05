@@ -40,3 +40,39 @@ Schedule::command('seo:send-weekly-summary')
     ->onFailure(function (): void {
         info('Weekly SEO summary failed');
     });
+
+// PageSpeed Monitoring - Mobile analysis daily at 8:00 AM
+Schedule::command('seo:pagespeed-monitor --strategy=mobile')
+    ->dailyAt('08:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onSuccess(function (): void {
+        info('Daily PageSpeed mobile monitoring completed successfully');
+    })
+    ->onFailure(function (): void {
+        error('Daily PageSpeed mobile monitoring failed');
+    });
+
+// PageSpeed Monitoring - Desktop analysis daily at 2:00 PM
+Schedule::command('seo:pagespeed-monitor --strategy=desktop')
+    ->dailyAt('14:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onSuccess(function (): void {
+        info('Daily PageSpeed desktop monitoring completed successfully');
+    })
+    ->onFailure(function (): void {
+        error('Daily PageSpeed desktop monitoring failed');
+    });
+
+// PageSpeed Monitoring - Weekly comprehensive analysis (both mobile & desktop)
+Schedule::command('seo:pagespeed-monitor --strategy=both --force')
+    ->weeklyOn(0, '10:00') // Every Sunday at 10:00 AM
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onSuccess(function (): void {
+        info('Weekly comprehensive PageSpeed monitoring completed successfully');
+    })
+    ->onFailure(function (): void {
+        error('Weekly comprehensive PageSpeed monitoring failed');
+    });

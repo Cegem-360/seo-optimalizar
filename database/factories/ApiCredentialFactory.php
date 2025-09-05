@@ -1,0 +1,77 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Project;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ApiCredential>
+ */
+class ApiCredentialFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        $service = $this->faker->randomElement([
+            'google_search_console',
+            'google_analytics',
+            'google_pagespeed_insights',
+            'serpapi',
+            'mobile_friendly_test'
+        ]);
+
+        $credentials = match($service) {
+            'google_search_console' => [
+                'client_id' => $this->faker->uuid(),
+                'client_secret' => $this->faker->password(20),
+                'refresh_token' => $this->faker->password(30),
+            ],
+            'google_analytics' => [
+                'property_id' => 'GA4-' . $this->faker->numerify('########'),
+                'client_id' => $this->faker->uuid(),
+                'client_secret' => $this->faker->password(20),
+            ],
+            'serpapi' => [
+                'api_key' => $this->faker->password(32),
+            ],
+            default => [
+                'api_key' => $this->faker->password(32),
+            ]
+        };
+        
+        return [
+            'project_id' => Project::factory(),
+            'service' => $service,
+            'credentials' => $credentials,
+            'is_active' => $this->faker->boolean(85),
+            'last_used_at' => $this->faker->optional(0.6)->dateTimeBetween('-7 days', 'now'),
+        ];
+    }
+
+    public function googleSearchConsole(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'service' => 'google_search_console',
+            'credentials' => [
+                'client_id' => $this->faker->uuid(),
+                'client_secret' => $this->faker->password(20),
+                'refresh_token' => $this->faker->password(30),
+            ],
+        ]);
+    }
+
+    public function serpApi(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'service' => 'serpapi',
+            'credentials' => [
+                'api_key' => $this->faker->password(32),
+            ],
+        ]);
+    }
+}

@@ -39,6 +39,26 @@ class Project extends Model
         return $this->hasMany(Ranking::class)->through('keywords');
     }
 
+    public function competitors(): HasMany
+    {
+        return $this->hasMany(Competitor::class);
+    }
+
+    public function apiCredentials(): HasMany
+    {
+        return $this->hasMany(ApiCredential::class);
+    }
+
+    public function pageSpeedResults(): HasMany
+    {
+        return $this->hasMany(PageSpeedResult::class);
+    }
+
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(NotificationPreference::class);
+    }
+
     #[Scope]
     protected function withKeywordCount(Builder $builder): void
     {

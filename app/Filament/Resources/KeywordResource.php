@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\KeywordResource\RelationManagers\RankingsRelationManager;
 use App\Filament\Resources\Keywords\Pages\CreateKeyword;
 use App\Filament\Resources\Keywords\Pages\EditKeyword;
@@ -16,12 +17,15 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class KeywordResource extends Resource
 {
     protected static ?string $model = Keyword::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlass;
+
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoManagement;
 
     protected static ?int $navigationSort = 2;
 

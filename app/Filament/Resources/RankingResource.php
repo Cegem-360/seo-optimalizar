@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\Rankings\Pages\CreateRanking;
 use App\Filament\Resources\Rankings\Pages\EditRanking;
 use App\Filament\Resources\Rankings\Pages\ListRankings;
@@ -15,12 +16,15 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class RankingResource extends Resource
 {
     protected static ?string $model = Ranking::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoManagement;
 
     protected static bool $isScopedToTenant = false;
 

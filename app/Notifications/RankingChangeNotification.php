@@ -14,7 +14,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
     public function __construct(
         public $ranking,
         public string $changeType,
-        private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator,
+        private readonly string $baseUrl,
         private readonly array $channels = ['mail', 'database']
     ) {}
 
@@ -47,7 +47,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
             ->line('**Current Position:** ' . $this->ranking->position)
             ->line('**Previous Position:** ' . ($this->ranking->previous_position ?? 'New'))
             ->line('**Change:** ' . $change)
-            ->action('View Details', $this->urlGenerator->to(sprintf('/admin/%s/rankings', $project->id)));
+            ->action('View Details', $this->baseUrl . sprintf('/admin/%s/rankings', $project->id));
 
         if ($this->ranking->url) {
             $mailMessage->line('**Ranking URL:** ' . $this->ranking->url);
@@ -59,7 +59,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'ranking_id' => $this->ranking->id,
+            'ranking_id' => $this->ranking->id ?? null,
             'keyword' => $this->ranking->keyword->keyword,
             'project' => $this->ranking->keyword->project->name,
             'change_type' => $this->changeType,

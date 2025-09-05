@@ -2,157 +2,164 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\NavigationGroups;
 use App\Models\NotificationPreference;
+use App\Notifications\RankingChangeNotification;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
-class ManageNotificationSettings extends Page implements HasForms
+/**
+ * @property-read Schema $form
+ */
+class ManageNotificationSettings extends Page implements HasActions, HasSchemas
 {
-    use InteractsWithForms;
+    use InteractsWithActions;
+    use InteractsWithSchemas;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBell;
 
-    protected string $view = 'filament.pages.manage-notification-settings';
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Settings;
 
+    protected static ?string $navigationLabel = 'Notifications';
+
+    protected static ?string $title = 'Notification Settings';
 
     protected static ?int $navigationSort = 100;
 
     public ?array $data = [];
 
-    public NotificationPreference $preference;
+    protected string $view = 'filament.pages.manage-notification-settings';
 
     public function mount(): void
     {
-        $tenant = Filament::getTenant();
-        $user = auth()->user();
-
-        if (! $tenant || ! $user) {
-            return;
-        }
-
-        $this->preference = NotificationPreference::firstOrCreate(
-            [
-                'user_id' => $user->id,
-                'project_id' => $tenant->id,
-            ],
-            [
-                'email_ranking_changes' => true,
-                'email_top3_achievements' => true,
-                'email_first_page_entries' => true,
-                'email_significant_drops' => true,
-                'email_weekly_summary' => false,
-                'app_ranking_changes' => true,
-                'app_top3_achievements' => true,
-                'app_first_page_entries' => true,
-                'app_significant_drops' => true,
-                'significant_change_threshold' => 5,
-                'only_significant_changes' => false,
-            ]
-        );
-
-        $this->form->fill($this->preference->toArray());
+        $this->form->fill($this->getRecord()?->attributesToArray());
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
-        return [
-            Section::make('Email Notifications')
-                ->description('Configure which notifications you want to receive via email')
-                ->schema([
-                    Grid::make(2)
-                        ->schema([
-                            Toggle::make('email_ranking_changes')
-                                ->label('Ranking Changes')
-                                ->helperText('Get notified when rankings change significantly'),
+        return $schema
+            ->components([
+                Section::make('Email Notifications')
+                    ->description('Configure which notifications you want to receive via email')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Toggle::make('email_ranking_changes')
+                                    ->label('Ranking Changes')
+                                    ->helperText('Get notified when rankings change significantly'),
 
-                            Toggle::make('email_top3_achievements')
-                                ->label('Top 3 Achievements')
-                                ->helperText('Celebrate when keywords reach top 3 positions'),
+                                Toggle::make('email_top3_achievements')
+                                    ->label('Top 3 Achievements')
+                                    ->helperText('Celebrate when keywords reach top 3 positions'),
 
-                            Toggle::make('email_first_page_entries')
-                                ->label('First Page Entries')
-                                ->helperText('Know when keywords enter the first page'),
+                                Toggle::make('email_first_page_entries')
+                                    ->label('First Page Entries')
+                                    ->helperText('Know when keywords enter the first page'),
 
-                            Toggle::make('email_significant_drops')
-                                ->label('Significant Drops')
-                                ->helperText('Alert when rankings drop significantly'),
+                                Toggle::make('email_significant_drops')
+                                    ->label('Significant Drops')
+                                    ->helperText('Alert when rankings drop significantly'),
 
-                            Toggle::make('email_weekly_summary')
-                                ->label('Weekly Summary')
-                                ->helperText('Receive a weekly SEO performance summary')
-                                ->columnSpan(2),
-                        ]),
-                ]),
+                                Toggle::make('email_weekly_summary')
+                                    ->label('Weekly Summary')
+                                    ->helperText('Receive a weekly SEO performance summary')
+                                    ->columnSpan(2),
+                            ]),
+                    ]),
 
-            Section::make('In-App Notifications')
-                ->description('Configure which notifications appear in the application')
-                ->schema([
-                    Grid::make(2)
-                        ->schema([
-                            Toggle::make('app_ranking_changes')
-                                ->label('Ranking Changes'),
+                Section::make('In-App Notifications')
+                    ->description('Configure which notifications appear in the application')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Toggle::make('app_ranking_changes')
+                                    ->label('Ranking Changes'),
 
-                            Toggle::make('app_top3_achievements')
-                                ->label('Top 3 Achievements'),
+                                Toggle::make('app_top3_achievements')
+                                    ->label('Top 3 Achievements'),
 
-                            Toggle::make('app_first_page_entries')
-                                ->label('First Page Entries'),
+                                Toggle::make('app_first_page_entries')
+                                    ->label('First Page Entries'),
 
-                            Toggle::make('app_significant_drops')
-                                ->label('Significant Drops'),
-                        ]),
-                ]),
+                                Toggle::make('app_significant_drops')
+                                    ->label('Significant Drops'),
+                            ]),
+                    ]),
 
-            Section::make('Notification Thresholds')
-                ->description('Fine-tune when notifications should be triggered')
-                ->schema([
-                    Grid::make(2)
-                        ->schema([
-                            TextInput::make('significant_change_threshold')
-                                ->label('Significant Change Threshold')
-                                ->helperText('Number of positions to consider as significant')
-                                ->numeric()
-                                ->minValue(1)
-                                ->maxValue(20)
-                                ->default(5),
+                Section::make('Notification Thresholds')
+                    ->description('Fine-tune when notifications should be triggered')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('significant_change_threshold')
+                                    ->label('Significant Change Threshold')
+                                    ->helperText('Number of positions to consider as significant')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(20)
+                                    ->default(5),
 
-                            Toggle::make('only_significant_changes')
-                                ->label('Only Significant Changes')
-                                ->helperText('Only notify for changes above the threshold'),
-                        ]),
-                ]),
-        ];
+                                Toggle::make('only_significant_changes')
+                                    ->label('Only Significant Changes')
+                                    ->helperText('Only notify for changes above the threshold'),
+                            ]),
+                    ]),
+            ])
+            ->record($this->getRecord())
+            ->statePath('data');
     }
 
-    protected function getFormActions(): array
+    public function saveAction(): Action
     {
-        return [
-            Action::make('save')
-                ->label('Save Settings')
-                ->action('save'),
+        return Action::make('save')
+            ->label('Save Settings')
+            ->action('save');
+    }
 
-            Action::make('testNotification')
-                ->label('Send Test Notification')
-                ->color('gray')
-                ->action('sendTestNotification'),
-        ];
+    public function testNotificationAction(): Action
+    {
+        return Action::make('testNotification')
+            ->label('Send Test Notification')
+            ->color('gray')
+            ->action('sendTestNotification');
     }
 
     public function save(): void
     {
         $data = $this->form->getState();
 
-        $this->preference->update($data);
+        $record = $this->getRecord();
+
+        if (! $record) {
+            $tenant = Filament::getTenant();
+            $user = Auth::user();
+
+            $record = new NotificationPreference();
+            $record->user_id = $user->id;
+            $record->project_id = $tenant->id;
+        }
+
+        $record->fill($data);
+        $record->save();
+
+        if ($record->wasRecentlyCreated) {
+            $this->form->record($record)->saveRelationships();
+        }
 
         Notification::make()
             ->title('Settings saved')
@@ -163,7 +170,8 @@ class ManageNotificationSettings extends Page implements HasForms
 
     public function sendTestNotification(): void
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        $preference = $this->getRecord();
 
         // Create a test ranking change notification
         $testRanking = new \stdClass();
@@ -177,11 +185,11 @@ class ManageNotificationSettings extends Page implements HasForms
         try {
             $channels = [];
 
-            if ($this->preference->email_top3_achievements) {
+            if ($preference?->email_top3_achievements) {
                 $channels[] = 'mail';
             }
 
-            if ($this->preference->app_top3_achievements) {
+            if ($preference?->app_top3_achievements) {
                 $channels[] = 'database';
             }
 
@@ -195,10 +203,10 @@ class ManageNotificationSettings extends Page implements HasForms
                 return;
             }
 
-            $user->notify(new \App\Notifications\RankingChangeNotification(
+            $user->notify(new RankingChangeNotification(
                 $testRanking,
                 'top3',
-                app('url'),
+                config('app.url'),
                 $channels
             ));
 
@@ -214,5 +222,20 @@ class ManageNotificationSettings extends Page implements HasForms
                 ->danger()
                 ->send();
         }
+    }
+
+    public function getRecord(): ?NotificationPreference
+    {
+        $tenant = Filament::getTenant();
+        $user = Auth::user();
+
+        if (! $tenant || ! $user) {
+            return null;
+        }
+
+        return NotificationPreference::query()
+            ->where('user_id', $user->id)
+            ->where('project_id', $tenant->id)
+            ->first();
     }
 }

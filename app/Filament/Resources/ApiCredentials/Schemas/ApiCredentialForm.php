@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Filament\Resources\ApiCredentials\Schemas;
+
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class ApiCredentialForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('API Service Configuration')
+                    ->columnSpanFull()
+                    ->description('Configure API credentials for external services')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Hidden::make('project_id')
+                                    ->default(fn () => Filament::getTenant()?->id)
+                                    ->required(),
+
+                                Select::make('service')
+                                    ->label('API Service')
+                                    ->options([
+                                        'google_search_console' => 'Google Search Console',
+                                        'google_analytics' => 'Google Analytics 4',
+                                        'google_pagespeed_insights' => 'PageSpeed Insights',
+                                        'serpapi' => 'SerpAPI',
+                                        'mobile_friendly_test' => 'Mobile-Friendly Test',
+                                    ])
+                                    ->required()
+                                    ->native(false)
+                                    ->reactive()
+                                    ->afterStateUpdated(fn ($state, callable $set) => $set('credentials', [])),
+
+                                Toggle::make('is_active')
+                                    ->label('Active')
+                                    ->default(true)
+                                    ->helperText('Enable or disable this API integration'),
+                            ]),
+
+                        KeyValue::make('credentials')
+                            ->label('API Credentials')
+                            ->keyLabel('Credential Key')
+                            ->valueLabel('Credential Value')
+                            ->helperText('Enter the API credentials as key-value pairs. These will be encrypted automatically.')
+                            ->addActionLabel('Add Credential')
+                            ->reorderable(false)
+                            ->required()
+                            ->columnSpanFull(),
+                    ]),
+            ]);
+    }
+}

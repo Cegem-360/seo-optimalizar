@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\DB;
 
 class CompetitorComparisonWidget extends ChartWidget
 {
@@ -46,12 +47,12 @@ class CompetitorComparisonWidget extends ChartWidget
             ->whereHas('keyword', function ($query) use ($tenant) {
                 $query->where('project_id', $tenant->id);
             })
-            ->whereIn('id', function ($query) use ($tenant) {
-                $query->select(\Illuminate\Support\Facades\DB::raw('MAX(id)'))
+            ->whereIn('rankings.id', function ($query) use ($tenant) {
+                $query->select(DB::raw('MAX(rankings.id)'))
                     ->from('rankings')
                     ->join('keywords', 'rankings.keyword_id', '=', 'keywords.id')
                     ->where('keywords.project_id', $tenant->id)
-                    ->groupBy('keyword_id');
+                    ->groupBy('rankings.keyword_id');
             })
             ->get();
 

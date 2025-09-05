@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\Reports\Pages\CreateReport;
 use App\Filament\Resources\Reports\Pages\EditReport;
 use App\Filament\Resources\Reports\Pages\ListReports;
@@ -15,12 +16,15 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class ReportResource extends Resource
 {
     protected static ?string $model = Report::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Reports;
 
     protected static ?string $tenantOwnershipRelationshipName = 'project';
 

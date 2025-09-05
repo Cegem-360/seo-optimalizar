@@ -28,9 +28,9 @@ class KeywordPerformanceWidget extends BaseWidget
 
                 return \App\Models\Keyword::query()
                     ->where('project_id', $tenant->id)
+                    ->whereHas('rankings')
                     ->withAvg('rankings', 'position')
                     ->withCount('rankings')
-                    ->having('rankings_count', '>', 0)
                     ->orderBy('rankings_avg_position', 'asc');
             })
             ->columns([
