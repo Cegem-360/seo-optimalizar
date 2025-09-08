@@ -59,12 +59,6 @@ class SyncGoogleSearchConsole extends Command
                 $importedCount = $this->searchConsoleService->importAndUpdateRankings($project);
 
                 $this->line(" ✓ Imported {$importedCount} ranking entries for {$project->name}");
-
-                Log::info('GSC sync completed', [
-                    'project_id' => $project->id,
-                    'project_name' => $project->name,
-                    'imported_count' => $importedCount,
-                ]);
             } catch (\Exception $e) {
                 $this->error(" ✗ Failed to sync {$project->name}: {$e->getMessage()}");
 

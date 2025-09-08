@@ -58,11 +58,21 @@ class RankingResource extends Resource
             //
         ];
     }
+    
+    public static function getWidgets(): array
+    {
+        return [
+            RankingResource\Widgets\RankingsOverviewWidget::class,
+            RankingResource\Widgets\RankingsTrendChart::class,
+            RankingResource\Widgets\RankingsDistributionChart::class,
+        ];
+    }
 
     public static function getPages(): array
     {
         return [
             'index' => ListRankings::route('/'),
+            'dashboard' => RankingResource\Pages\RankingsDashboard::route('/dashboard'),
             'create' => CreateRanking::route('/create'),
             'edit' => EditRanking::route('/{record}/edit'),
         ];

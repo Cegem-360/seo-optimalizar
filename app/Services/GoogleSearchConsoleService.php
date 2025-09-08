@@ -33,11 +33,11 @@ class GoogleSearchConsoleService
             if (file_exists($fullPath)) {
                 $this->googleClient->setAuthConfig($fullPath);
                 $this->googleClient->useApplicationDefaultCredentials();
-                
+
                 // If using Google Workspace domain-wide delegation
                 if ($subject = $repository->get('services.google.workspace_subject')) {
                     $this->googleClient->setSubject($subject);
-                    Log::info('Using Google Workspace delegation for: ' . $subject);
+                    // Log::info('Using Google Workspace delegation for: ' . $subject);
                 }
             } else {
                 Log::warning('Google Service Account credentials file not found: ' . $fullPath);
@@ -196,12 +196,12 @@ class GoogleSearchConsoleService
                 return true;
             }
         }
-        
+
         // Check for OAuth credentials
         return $this->repository->get('services.google.client_id') !== null &&
                $this->repository->get('services.google.client_secret') !== null;
     }
-    
+
     /**
      * Check if using Service Account authentication
      */
@@ -209,8 +209,10 @@ class GoogleSearchConsoleService
     {
         if ($credentialsPath = $this->repository->get('services.google.credentials_path')) {
             $fullPath = base_path($credentialsPath);
+
             return file_exists($fullPath);
         }
+
         return false;
     }
 
@@ -291,12 +293,12 @@ class GoogleSearchConsoleService
                 }
             }
 
-            Log::info('Ranking notification sent', [
-                'keyword' => $ranking->keyword->keyword,
-                'change_type' => $changeType,
-                'position' => $ranking->position,
-                'previous_position' => $ranking->previous_position,
-            ]);
+            /*  Log::info('Ranking notification sent', [
+                 'keyword' => $ranking->keyword->keyword,
+                 'change_type' => $changeType,
+                 'position' => $ranking->position,
+                 'previous_position' => $ranking->previous_position,
+             ]); */
         } catch (\Exception $exception) {
             Log::error('Failed to send ranking notification: ' . $exception->getMessage());
         }

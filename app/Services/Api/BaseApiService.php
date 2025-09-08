@@ -12,9 +12,13 @@ use Illuminate\Support\Facades\Log;
 abstract class BaseApiService
 {
     protected Project $project;
+
     protected ?ApiCredential $credentials = null;
+
     protected string $serviceName;
+
     protected int $retryAttempts = 3;
+
     protected int $retryDelayMs = 1000;
 
     public function __construct(Project $project)
@@ -34,7 +38,7 @@ abstract class BaseApiService
 
     protected function makeRequest(): PendingRequest
     {
-        if (!$this->isConfigured()) {
+        if (! $this->isConfigured()) {
             throw new \Exception("API credentials not configured for service: {$this->serviceName}");
         }
 
@@ -53,23 +57,23 @@ abstract class BaseApiService
 
     protected function logRequest(PendingRequest $request): void
     {
-        Log::info("API Request to {$this->serviceName}", [
+        /* Log::info("API Request to {$this->serviceName}", [
             'project_id' => $this->project->id,
             'service' => $this->serviceName,
             'url' => $request->getBaseUri(),
-        ]);
+        ]); */
     }
 
     protected function logResponse(Response $response): void
     {
-        Log::info("API Response from {$this->serviceName}", [
+        /* Log::info("API Response from {$this->serviceName}", [
             'project_id' => $this->project->id,
             'service' => $this->serviceName,
             'status' => $response->status(),
             'success' => $response->successful(),
-        ]);
+        ]); */
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::warning("API Error from {$this->serviceName}", [
                 'project_id' => $this->project->id,
                 'service' => $this->serviceName,
@@ -84,7 +88,7 @@ abstract class BaseApiService
         $this->logResponse($response);
         $this->markCredentialsAsUsed();
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception(
                 "API request failed for {$this->serviceName}: {$response->status()} - {$response->body()}"
             );

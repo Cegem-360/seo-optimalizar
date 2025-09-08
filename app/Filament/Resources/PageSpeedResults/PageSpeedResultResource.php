@@ -50,11 +50,21 @@ class PageSpeedResultResource extends Resource
             //
         ];
     }
+    
+    public static function getWidgets(): array
+    {
+        return [
+            Widgets\PageSpeedOverviewWidget::class,
+            Widgets\PageSpeedTrendChart::class,
+            Widgets\PageSpeedRecentResultsTable::class,
+        ];
+    }
 
     public static function getPages(): array
     {
         return [
             'index' => ListPageSpeedResults::route('/'),
+            'dashboard' => Pages\PageSpeedDashboard::route('/dashboard'),
             'create' => CreatePageSpeedResult::route('/create'),
             'edit' => EditPageSpeedResult::route('/{record}/edit'),
         ];

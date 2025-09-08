@@ -29,8 +29,9 @@ class ApiServiceManager
         return match ($serviceName) {
             'google_search_console' => new GoogleSearchConsoleService($this->project),
             'google_analytics' => new GoogleAnalyticsService($this->project),
-            'serpapi' => new SerpApiService($this->project),
             'google_pagespeed_insights' => new PageSpeedInsightsService($this->project),
+            'google_ads' => new GoogleAdsApiService($this->project),
+            'gemini' => new GeminiApiService($this->project),
             default => throw new \InvalidArgumentException("Unknown service: {$serviceName}"),
         };
     }
@@ -45,14 +46,20 @@ class ApiServiceManager
         return $this->getService('google_analytics');
     }
 
-    public function getSerpApi(): SerpApiService
-    {
-        return $this->getService('serpapi');
-    }
 
     public function getPageSpeedInsights(): PageSpeedInsightsService
     {
         return $this->getService('google_pagespeed_insights');
+    }
+
+    public function getGoogleAds(): GoogleAdsApiService
+    {
+        return $this->getService('google_ads');
+    }
+
+    public function getGemini(): GeminiApiService
+    {
+        return $this->getService('gemini');
     }
 
     public function getConfiguredServices(): Collection
@@ -62,8 +69,9 @@ class ApiServiceManager
         $availableServices = [
             'google_search_console' => 'Google Search Console',
             'google_analytics' => 'Google Analytics',
-            'serpapi' => 'SerpAPI',
             'google_pagespeed_insights' => 'PageSpeed Insights',
+            'google_ads' => 'Google Ads (Keyword Planner)',
+            'gemini' => 'Google Gemini',
         ];
 
         foreach ($availableServices as $serviceKey => $serviceName) {
@@ -148,23 +156,6 @@ class ApiServiceManager
             ];
         }
 
-        // Sync SerpAPI data
-        try {
-            if ($this->hasService('serpapi')) {
-                $serp = $this->getSerpApi();
-                $synced = $serp->syncKeywordRankings();
-                $results['serpapi'] = [
-                    'success' => true,
-                    'message' => "Synced {$synced} keywords from SerpAPI",
-                    'count' => $synced,
-                ];
-            }
-        } catch (\Exception $e) {
-            $results['serpapi'] = [
-                'success' => false,
-                'message' => 'Error syncing SerpAPI data: ' . $e->getMessage(),
-            ];
-        }
 
         return $results;
     }

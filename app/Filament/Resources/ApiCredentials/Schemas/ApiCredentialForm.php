@@ -33,7 +33,8 @@ class ApiCredentialForm
                                         'google_search_console' => 'Google Search Console',
                                         'google_analytics' => 'Google Analytics 4',
                                         'google_pagespeed_insights' => 'PageSpeed Insights',
-                                        'serpapi' => 'SerpAPI',
+                                        'google_ads' => 'Google Ads (Keyword Planner)',
+                                        'gemini' => 'Google Gemini AI',
                                         'mobile_friendly_test' => 'Mobile-Friendly Test',
                                     ])
                                     ->required()
@@ -51,7 +52,17 @@ class ApiCredentialForm
                             ->label('API Credentials')
                             ->keyLabel('Credential Key')
                             ->valueLabel('Credential Value')
-                            ->helperText('Enter the API credentials as key-value pairs. These will be encrypted automatically.')
+                            ->helperText(function (callable $get) {
+                                $service = $get('service');
+                                return match($service) {
+                                    'google_ads' => 'Google Ads: client_id, client_secret, refresh_token, developer_token, customer_id',
+                                    'gemini' => 'Google Gemini: api_key',
+                                    'google_search_console' => 'Google Search Console: credentials file content or service account JSON',
+                                    'google_analytics' => 'Google Analytics: credentials file content or service account JSON',
+                                    'google_pagespeed_insights' => 'PageSpeed Insights: api_key',
+                                    default => 'Enter the API credentials as key-value pairs. These will be encrypted automatically.'
+                                };
+                            })
                             ->addActionLabel('Add Credential')
                             ->reorderable(false)
                             ->required()
