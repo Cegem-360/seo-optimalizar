@@ -23,7 +23,7 @@ class KeywordResource extends Resource
 {
     protected static ?string $model = Keyword::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlass;
+    /*     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlass; */
 
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoManagement;
 

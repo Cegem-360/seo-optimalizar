@@ -4,6 +4,8 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
+use Filament\Support\Enums\IconSize;
+use Filament\Support\Icons\Heroicon;
 
 enum NavigationGroups: string implements HasIcon, HasLabel
 {
@@ -19,16 +21,18 @@ enum NavigationGroups: string implements HasIcon, HasLabel
             self::Reports => 'Reports',
             self::Settings => 'Settings',
             self::Analytics => 'Analytics',
+            default => 'General',
         };
     }
 
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::SeoManagement => 'heroicon-o-magnifying-glass',
-            self::Reports => 'heroicon-o-document-chart-bar',
-            self::Settings => 'heroicon-o-cog-6-tooth',
-            self::Analytics => 'heroicon-o-chart-bar',
+            self::SeoManagement => Heroicon::MagnifyingGlass->getIconForSize(IconSize::Small),
+            self::Reports => Heroicon::DocumentChartBar->getIconForSize(IconSize::Small),
+            self::Settings => Heroicon::Cog6Tooth->getIconForSize(IconSize::Small),
+            self::Analytics => Heroicon::ChartBar->getIconForSize(IconSize::Small),
+            default => Heroicon::Squares2x2->getIconForSize(IconSize::Small),
         };
     }
 }

@@ -20,7 +20,7 @@ class PageSpeedResultResource extends Resource
 {
     protected static ?string $model = PageSpeedResult::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
+    /*     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar; */
 
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Analytics;
 

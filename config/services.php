@@ -37,6 +37,7 @@ return [
 
     'google' => [
         'credentials_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
+        'workspace_subject' => env('GOOGLE_WORKSPACE_SUBJECT'), // For domain-wide delegation
         'client_id' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET'),
         'redirect_uri' => env('GOOGLE_REDIRECT_URI', env('APP_URL', 'http://seo-optimalizer.test') . '/auth/google/callback'),

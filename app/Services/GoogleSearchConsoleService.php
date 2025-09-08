@@ -27,9 +27,28 @@ class GoogleSearchConsoleService
         $this->googleClient->setApplicationName('SEO Monitor');
         $this->googleClient->setScopes([SearchConsole::WEBMASTERS_READONLY]);
 
-        // Set credentials from environment or config
+        // Try Service Account credentials first
         if ($credentialsPath = $repository->get('services.google.credentials_path')) {
-            $this->googleClient->setAuthConfig($credentialsPath);
+            $fullPath = base_path($credentialsPath);
+            if (file_exists($fullPath)) {
+                $this->googleClient->setAuthConfig($fullPath);
+                $this->googleClient->useApplicationDefaultCredentials();
+                
+                // If using Google Workspace domain-wide delegation
+                if ($subject = $repository->get('services.google.workspace_subject')) {
+                    $this->googleClient->setSubject($subject);
+                    Log::info('Using Google Workspace delegation for: ' . $subject);
+                }
+            } else {
+                Log::warning('Google Service Account credentials file not found: ' . $fullPath);
+            }
+        }
+        // Fall back to OAuth if configured
+        elseif ($clientId = $repository->get('services.google.client_id')) {
+            $this->googleClient->setClientId($clientId);
+            $this->googleClient->setClientSecret($repository->get('services.google.client_secret'));
+            $this->googleClient->setRedirectUri($repository->get('services.google.redirect_uri'));
+            // Note: OAuth flow needs to be handled separately
         }
 
         $this->searchConsole = new SearchConsole($this->googleClient);
@@ -170,7 +189,29 @@ class GoogleSearchConsoleService
      */
     public function hasCredentials(): bool
     {
-        return $this->repository->get('services.google.credentials_path') !== null;
+        // Check for Service Account credentials
+        if ($credentialsPath = $this->repository->get('services.google.credentials_path')) {
+            $fullPath = base_path($credentialsPath);
+            if (file_exists($fullPath)) {
+                return true;
+            }
+        }
+        
+        // Check for OAuth credentials
+        return $this->repository->get('services.google.client_id') !== null &&
+               $this->repository->get('services.google.client_secret') !== null;
+    }
+    
+    /**
+     * Check if using Service Account authentication
+     */
+    public function isUsingServiceAccount(): bool
+    {
+        if ($credentialsPath = $this->repository->get('services.google.credentials_path')) {
+            $fullPath = base_path($credentialsPath);
+            return file_exists($fullPath);
+        }
+        return false;
     }
 
     private function checkForSignificantChanges(Ranking $ranking): void
@@ -245,7 +286,7 @@ class GoogleSearchConsoleService
                         $channels[] = 'database';
                     }
 
-                    $notification = new RankingChangeNotification($ranking, $changeType, $this->application->make('url'), $channels);
+                    $notification = new RankingChangeNotification($ranking, $changeType, config('app.url'), $channels);
                     $user->notify($notification);
                 }
             }

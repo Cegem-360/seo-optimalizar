@@ -20,7 +20,7 @@ class ApiCredentialResource extends Resource
 {
     protected static ?string $model = ApiCredential::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
+    /*   protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey; */
 
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Settings;
 
@@ -73,6 +73,7 @@ class ApiCredentialResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         $count = static::getNavigationBadge();
+
         return $count > 0 ? 'success' : 'warning';
     }
 }

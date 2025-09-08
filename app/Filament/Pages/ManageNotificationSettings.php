@@ -31,7 +31,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
     use InteractsWithActions;
     use InteractsWithSchemas;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBell;
+    /*     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBell; */
 
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Settings;
 
