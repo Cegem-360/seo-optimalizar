@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Rankings;
 
 use App\Enums\NavigationGroups;
-use App\Filament\Resources\RankingResource\Pages\RankingsDashboard;
-use App\Filament\Resources\RankingResource\Widgets\RankingsDistributionChart;
-use App\Filament\Resources\RankingResource\Widgets\RankingsOverviewWidget;
-use App\Filament\Resources\RankingResource\Widgets\RankingsTrendChart;
+use App\Filament\Resources\Rankings\RankingResource\Pages\RankingsDashboard;
+use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsDistributionChart;
+use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsOverviewWidget;
+use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsTrendChart;
 use App\Filament\Resources\Rankings\Pages\CreateRanking;
 use App\Filament\Resources\Rankings\Pages\EditRanking;
 use App\Filament\Resources\Rankings\Pages\ListRankings;

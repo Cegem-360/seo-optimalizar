@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Google;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository;

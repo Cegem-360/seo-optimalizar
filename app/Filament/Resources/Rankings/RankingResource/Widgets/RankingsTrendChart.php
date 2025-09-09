@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\RankingResource\Widgets;
+namespace App\Filament\Resources\Rankings\RankingResource\Widgets;
 
 use App\Models\Ranking;
 use Filament\Facades\Filament;

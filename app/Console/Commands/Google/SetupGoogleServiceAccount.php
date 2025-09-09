@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Google;
 
 use App\Models\ApiCredential;
 use App\Models\Project;

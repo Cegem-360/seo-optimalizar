@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Rankings\Pages;
 
-use App\Filament\Resources\RankingResource;
+use App\Filament\Resources\Rankings\RankingResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateRanking extends CreateRecord

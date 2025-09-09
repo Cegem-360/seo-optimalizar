@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Keywords\Pages;
 
-use App\Filament\Resources\KeywordResource;
+use App\Filament\Resources\Keywords\KeywordResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Projects;
 
 use App\Enums\NavigationGroups;
 use App\Filament\Resources\Projects\Pages\CreateProject;

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Rankings\Pages;
 
-use App\Filament\Resources\RankingResource;
+use App\Filament\Resources\Rankings\RankingResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;

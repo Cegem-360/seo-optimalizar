@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Google;
 
 use App\Models\Project;
 use App\Services\GoogleSearchConsoleService;

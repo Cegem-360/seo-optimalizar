@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Keywords;
 
 use App\Jobs\ImportSearchConsoleDataJob;
 use App\Models\Project;

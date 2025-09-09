@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\RankingResource\Pages;
+namespace App\Filament\Resources\Rankings\RankingResource\Pages;
 
-use App\Filament\Resources\RankingResource;
+use App\Filament\Resources\Rankings\RankingResource;
 use Filament\Actions\Action;
 use Filament\Pages\Concerns\InteractsWithHeaderActions;
 use Filament\Resources\Pages\Page;

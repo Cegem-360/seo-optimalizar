@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Reports;
 
 use App\Enums\NavigationGroups;
 use App\Filament\Resources\Reports\Pages\CreateReport;

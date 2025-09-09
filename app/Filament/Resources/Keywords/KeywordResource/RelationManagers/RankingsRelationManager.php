@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\KeywordResource\RelationManagers;
+namespace App\Filament\Resources\Keywords\KeywordResource\RelationManagers;
 
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;

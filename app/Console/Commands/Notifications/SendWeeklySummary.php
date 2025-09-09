@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Notifications;
 
 use App\Models\Project;
 use App\Models\Ranking;
@@ -8,6 +8,7 @@ use App\Notifications\WeeklySummaryNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Log;
 
 class SendWeeklySummary extends Command
@@ -15,6 +16,11 @@ class SendWeeklySummary extends Command
     protected $signature = 'seo:send-weekly-summary {--project= : Send summary for specific project ID}';
 
     protected $description = 'Send weekly SEO summary emails to project users';
+
+    public function __construct(private readonly UrlGenerator $urlGenerator)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -56,7 +62,7 @@ class SendWeeklySummary extends Command
                 }
 
                 foreach ($users as $user) {
-                    $user->notify(new WeeklySummaryNotification($project, $summaryData));
+                    $user->notify(new WeeklySummaryNotification($project, $summaryData, $this->urlGenerator));
                     $totalSent++;
                 }
 

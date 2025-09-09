@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Analysis;
 
 use App\Models\Keyword;
 use App\Models\Project;
