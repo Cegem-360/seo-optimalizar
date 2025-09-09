@@ -13,12 +13,14 @@ class ApiRateLimiter
     /**
      * Rate limits for different API services
      */
-    private array $serviceLimits = [
+    private const SERVICE_LIMITS = [
         'google_search_console' => ['requests' => 100, 'per' => 'hour'],
         'google_analytics' => ['requests' => 100, 'per' => 'hour'],
         'serpapi' => ['requests' => 100, 'per' => 'month'], // SerpAPI is usually limited monthly
         'google_pagespeed_insights' => ['requests' => 25, 'per' => 'day'],
     ];
+
+    private array $serviceLimits = self::SERVICE_LIMITS;
 
     public function __construct(private readonly ResponseFactory $responseFactory) {}
 
@@ -84,14 +86,13 @@ class ApiRateLimiter
      */
     public static function hasQuota(string $service, ?int $projectId = null): bool
     {
-        $static = new static();
         $key = sprintf('api-rate-limit:%s:', $service) . ($projectId ?? 'global');
 
-        if (! isset($static->serviceLimits[$service])) {
+        if (! isset(self::SERVICE_LIMITS[$service])) {
             return true;
         }
 
-        $limit = $static->serviceLimits[$service];
+        $limit = self::SERVICE_LIMITS[$service];
 
         return RateLimiter::remaining($key, $limit['requests']) > 0;
     }
@@ -101,14 +102,13 @@ class ApiRateLimiter
      */
     public static function getRemainingQuota(string $service, ?int $projectId = null): int
     {
-        $static = new static();
         $key = sprintf('api-rate-limit:%s:', $service) . ($projectId ?? 'global');
 
-        if (! isset($static->serviceLimits[$service])) {
+        if (! isset(self::SERVICE_LIMITS[$service])) {
             return PHP_INT_MAX;
         }
 
-        $limit = $static->serviceLimits[$service];
+        $limit = self::SERVICE_LIMITS[$service];
 
         return RateLimiter::remaining($key, $limit['requests']);
     }
@@ -118,6 +118,6 @@ class ApiRateLimiter
      */
     public static function getServiceLimits(): array
     {
-        return (new static())->serviceLimits;
+        return self::SERVICE_LIMITS;
     }
 }

@@ -22,6 +22,7 @@ return RectorConfig::configure()
         __DIR__ . '/vendor',
         __DIR__ . '/node_modules',
         __DIR__ . '/database/migrations',
+        __DIR__ . '/app/Providers/ApiServiceProvider.php',
         DisallowedEmptyRuleFixerRector::class,
     ])
     ->withSets([
