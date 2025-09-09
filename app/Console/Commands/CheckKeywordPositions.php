@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\ImportSearchConsoleDataJob;
 use App\Models\Project;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +19,7 @@ class CheckKeywordPositions extends Command
         $this->info('Starting keyword position check...');
 
         $projects = $this->option('project')
-            ? \App\Models\Project::query()->where('id', $this->option('project'))->get()
+            ? Project::query()->where('id', $this->option('project'))->get()
             : Project::all();
 
         if ($projects->isEmpty()) {
@@ -37,7 +38,7 @@ class CheckKeywordPositions extends Command
                 $totalDispatched++;
 
                 $this->info('✓ Job dispatched for ' . $project->name);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error(sprintf('✗ Error dispatching job for %s: ', $project->name) . $e->getMessage());
                 Log::error(sprintf('Position check job dispatch error for project %s: ', $project->id) . $e->getMessage());
             }

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use Exception;
 use Illuminate\Console\Command;
 
 class UpdateKeywordMetrics extends Command
@@ -32,7 +33,7 @@ class UpdateKeywordMetrics extends Command
         $service = $this->option('service');
 
         if ($projectId) {
-            $projects = [\App\Models\Project::query()->findOrFail($projectId)];
+            $projects = [Project::query()->findOrFail($projectId)];
             $this->info('Updating keywords for project: ' . $projects[0]->name);
         } else {
             $projects = Project::all();
@@ -56,7 +57,7 @@ class UpdateKeywordMetrics extends Command
                 } else {
                     $this->warn('Google Ads service not configured for project: ' . $project->name);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error(sprintf('Error processing project %s: %s', $project->name, $e->getMessage()));
             }
         }

@@ -1,10 +1,14 @@
 <?php
 
+use App\Models\ApiCredential;
+use App\Models\Project;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn (): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory => view('welcome'));
+Route::get('/', fn (): View|Factory => view('welcome'));
 
 // Google OAuth2 flow for Search Console
 Route::get('/auth/google', function () {
@@ -56,7 +60,7 @@ Route::get('/auth/google/callback', function (Request $request) {
 
     if (isset($tokens['refresh_token'])) {
         // Save to database for the first project (or you can select which project)
-        $project = \App\Models\Project::query()->first();
+        $project = Project::query()->first();
 
         if ($project) {
             // Check if credentials exist
@@ -79,7 +83,7 @@ Route::get('/auth/google/callback', function (Request $request) {
                 ]);
             } else {
                 // Create new
-                \App\Models\ApiCredential::query()->create([
+                ApiCredential::query()->create([
                     'project_id' => $project->id,
                     'service' => 'google_search_console',
                     'credentials' => $credentials,

@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Services\GoogleSearchConsoleService;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
 
 class TestGoogleConnection extends Command
 {
@@ -14,7 +16,7 @@ class TestGoogleConnection extends Command
     /**
      * Create a new console command instance.
      */
-    public function __construct(private readonly \Illuminate\Contracts\Config\Repository $repository)
+    public function __construct(private readonly Repository $repository)
     {
         parent::__construct();
     }
@@ -61,7 +63,7 @@ class TestGoogleConnection extends Command
             }
 
             return self::SUCCESS;
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->error('Connection failed: ' . $exception->getMessage());
             $this->newLine();
 

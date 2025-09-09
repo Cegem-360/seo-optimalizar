@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use Exception;
 use Illuminate\Console\Command;
 
 class AnalyzeSerpWithGemini extends Command
@@ -33,7 +34,7 @@ class AnalyzeSerpWithGemini extends Command
         $limit = (int) $this->option('limit');
 
         if ($projectId) {
-            $projects = [\App\Models\Project::query()->findOrFail($projectId)];
+            $projects = [Project::query()->findOrFail($projectId)];
             $this->info('Analyzing SERP for project: ' . $projects[0]->name);
         } else {
             $projects = Project::all();
@@ -88,11 +89,11 @@ class AnalyzeSerpWithGemini extends Command
                         } else {
                             $this->warn('Could not analyze keyword: ' . $keyword->keyword);
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         $this->error(sprintf('Error analyzing %s: %s', $keyword->keyword, $e->getMessage()));
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error(sprintf('Error processing project %s: %s', $project->name, $e->getMessage()));
             }
         }

@@ -3,8 +3,10 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class SemrushApiService extends BaseApiService
 {
@@ -17,7 +19,7 @@ class SemrushApiService extends BaseApiService
         $apiKey = $this->getCredential('api_key');
 
         if (! $apiKey) {
-            throw new \Exception('Missing SEMrush API key');
+            throw new Exception('Missing SEMrush API key');
         }
 
         $pendingRequest->withHeaders([
@@ -37,7 +39,7 @@ class SemrushApiService extends BaseApiService
             ]);
 
             return $response->successful();
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -57,15 +59,15 @@ class SemrushApiService extends BaseApiService
             $this->logResponse($response);
             $this->markCredentialsAsUsed();
 
-            if (!$response->successful()) {
-                throw new \Exception(
+            if (! $response->successful()) {
+                throw new Exception(
                     sprintf('API request failed for %s: %d - %s', $this->serviceName, $response->status(), $response->body())
                 );
             }
 
             $data = $response->body();
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 // Parse CSV-like response
                 $lines = explode("\n", trim($data));
                 if (count($lines) >= 2) {
@@ -83,8 +85,8 @@ class SemrushApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception $exception) {
-            \Illuminate\Support\Facades\Log::error('SEMrush API error', [
+        } catch (Exception $exception) {
+            Log::error('SEMrush API error', [
                 'keyword' => $keyword,
                 'error' => $exception->getMessage(),
             ]);
@@ -112,7 +114,7 @@ class SemrushApiService extends BaseApiService
         return $results;
     }
 
-    public function updateKeywordMetrics(Keyword $keyword, string $database = 'us'): bool
+    public function updateKeywordMetrics(Keyword $keyword): bool
     {
         $data = $this->getKeywordData($keyword->keyword, $this->getDatabaseFromGeoTarget($keyword->geo_target));
 
@@ -146,8 +148,8 @@ class SemrushApiService extends BaseApiService
 
                 // Rate limiting
                 sleep(1);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to update keyword metrics', [
+            } catch (Exception $e) {
+                Log::warning('Failed to update keyword metrics', [
                     'keyword_id' => $keyword->id,
                     'keyword' => $keyword->keyword,
                     'error' => $e->getMessage(),

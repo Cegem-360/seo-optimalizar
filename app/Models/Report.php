@@ -5,6 +5,7 @@ namespace App\Models;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,9 +75,9 @@ class Report extends Model
         $builder->where('status', 'pending');
     }
 
-    protected function formattedPeriod(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function formattedPeriod(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function (): string {
+        return Attribute::make(get: function (): string {
             if (! $this->period_start || ! $this->period_end) {
                 return 'N/A';
             }

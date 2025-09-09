@@ -3,6 +3,7 @@
 namespace App\Services\Api;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -32,7 +33,7 @@ class GoogleAnalyticsService extends BaseApiService
         $clientSecret = $this->getCredential('client_secret');
 
         if (! $refreshToken || ! $clientId || ! $clientSecret) {
-            throw new \Exception('Missing Google Analytics credentials');
+            throw new Exception('Missing Google Analytics credentials');
         }
 
         $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
@@ -43,7 +44,7 @@ class GoogleAnalyticsService extends BaseApiService
         ]);
 
         if (! $response->successful()) {
-            throw new \Exception('Failed to refresh Google Analytics access token');
+            throw new Exception('Failed to refresh Google Analytics access token');
         }
 
         $data = $response->json();
@@ -80,7 +81,7 @@ class GoogleAnalyticsService extends BaseApiService
             ]);
 
             return $response->successful();
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -282,6 +283,6 @@ class GoogleAnalyticsService extends BaseApiService
             }
         }
 
-        return new \Illuminate\Support\Collection($processedData);
+        return new Collection($processedData);
     }
 }

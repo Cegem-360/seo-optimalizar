@@ -2,6 +2,9 @@
 
 namespace App\Services\Api;
 
+use App\Models\PageSpeedResult;
+use Exception;
+use GuzzleHttp\Client;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 
@@ -16,7 +19,7 @@ class PageSpeedInsightsService extends BaseApiService
         $apiKey = $this->getCredential('api_key');
 
         if (! $apiKey) {
-            throw new \Exception('Missing PageSpeed Insights API key');
+            throw new Exception('Missing PageSpeed Insights API key');
         }
 
         $pendingRequest->withHeaders([
@@ -30,7 +33,7 @@ class PageSpeedInsightsService extends BaseApiService
             // Use direct HTTP call instead of makeRequest to avoid facade issues
             $apiKey = $this->getCredential('api_key');
 
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $response = $client->get($this->baseUrl . '/runPagespeed', [
                 'query' => [
                     'key' => $apiKey,
@@ -42,7 +45,7 @@ class PageSpeedInsightsService extends BaseApiService
             $data = json_decode($response->getBody()->getContents(), true);
 
             return $response->getStatusCode() === 200 && isset($data['id']);
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -67,7 +70,7 @@ class PageSpeedInsightsService extends BaseApiService
         // Use direct HTTP call to avoid facade issues
         $apiKey = $this->getCredential('api_key');
 
-        $client = new \GuzzleHttp\Client();
+        $client = new Client();
         $response = $client->get($this->baseUrl . '/runPagespeed', [
             'query' => [
                 'key' => $apiKey,
@@ -78,7 +81,7 @@ class PageSpeedInsightsService extends BaseApiService
         ]);
 
         if ($response->getStatusCode() !== 200) {
-            throw new \Exception('PageSpeed API request failed: ' . $response->getStatusCode());
+            throw new Exception('PageSpeed API request failed: ' . $response->getStatusCode());
         }
 
         $data = json_decode($response->getBody()->getContents(), true);
@@ -240,7 +243,7 @@ class PageSpeedInsightsService extends BaseApiService
         $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
         $analysis = $this->analyzeUrl($url, $strategy);
 
-        $suggestions = new \Illuminate\Support\Collection();
+        $suggestions = new Collection();
 
         if (isset($analysis['lighthouse_result']['audits'])) {
             $audits = $analysis['lighthouse_result']['audits'];
@@ -306,14 +309,14 @@ class PageSpeedInsightsService extends BaseApiService
         // You would need to implement your own storage mechanism
         // This is a placeholder for future implementation
 
-        return new \Illuminate\Support\Collection();
+        return new Collection();
     }
 
     private function storeResults(array $processed, array $rawData): void
     {
         $coreWebVitals = $processed['core_web_vitals'] ?? [];
 
-        \App\Models\PageSpeedResult::query()->create([
+        PageSpeedResult::query()->create([
             'project_id' => $this->project->id,
             'url' => $processed['url'],
             'strategy' => $processed['strategy'],

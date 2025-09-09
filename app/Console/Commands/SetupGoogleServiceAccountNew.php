@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
 
 class SetupGoogleServiceAccountNew extends Command
 {
@@ -13,7 +14,7 @@ class SetupGoogleServiceAccountNew extends Command
     /**
      * Create a new console command instance.
      */
-    public function __construct(private readonly \Illuminate\Filesystem\Filesystem $filesystem)
+    public function __construct(private readonly Filesystem $filesystem)
     {
         parent::__construct();
     }

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\GoogleSearchConsoleService;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -31,7 +32,7 @@ class SyncGoogleSearchConsole extends Command
         }
 
         if ($projectId = $this->option('project')) {
-            $projects = \App\Models\Project::query()->where('id', $projectId)->get();
+            $projects = Project::query()->where('id', $projectId)->get();
             if ($projects->isEmpty()) {
                 $this->error(sprintf('Project with ID %s not found.', $projectId));
 
@@ -59,7 +60,7 @@ class SyncGoogleSearchConsole extends Command
                 $importedCount = $this->googleSearchConsoleService->importAndUpdateRankings($project);
 
                 $this->line(sprintf(' ✓ Imported %s ranking entries for %s', $importedCount, $project->name));
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 $this->error(sprintf(' ✗ Failed to sync %s: %s', $project->name, $exception->getMessage()));
 
                 Log::error('GSC sync failed', [

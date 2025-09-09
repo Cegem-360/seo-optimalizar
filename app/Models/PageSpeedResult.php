@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -36,9 +37,9 @@ class PageSpeedResult extends Model
         return $this->belongsTo(Project::class);
     }
 
-    protected function overallScore(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function overallScore(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function (): ?float {
+        return Attribute::make(get: function (): ?float {
             $scores = array_filter([
                 $this->performance_score,
                 $this->accessibility_score,
@@ -50,9 +51,9 @@ class PageSpeedResult extends Model
         });
     }
 
-    protected function performanceGrade(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function performanceGrade(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: fn (): string => match (true) {
+        return Attribute::make(get: fn (): string => match (true) {
             $this->performance_score >= 90 => 'excellent',
             $this->performance_score >= 50 => 'needs-improvement',
             default => 'poor',

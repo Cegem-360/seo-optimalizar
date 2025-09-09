@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ApiCredential;
+use App\Models\Project;
 use Illuminate\Console\Command;
 
 class SetupGoogleServiceAccount extends Command
@@ -26,7 +28,7 @@ class SetupGoogleServiceAccount extends Command
     public function handle(): int
     {
         $projectId = $this->argument('project');
-        $project = \App\Models\Project::query()->find($projectId);
+        $project = Project::query()->find($projectId);
 
         if (! $project) {
             $this->error(sprintf('Project %s not found', $projectId));
@@ -83,7 +85,7 @@ class SetupGoogleServiceAccount extends Command
             ]);
             $this->info('Updated existing credentials');
         } else {
-            \App\Models\ApiCredential::query()->create([
+            ApiCredential::query()->create([
                 'project_id' => $project->id,
                 'service' => 'google_search_console',
                 'credentials' => $credentials,

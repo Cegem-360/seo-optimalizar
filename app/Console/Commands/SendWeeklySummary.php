@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\Project;
+use App\Models\Ranking;
 use App\Notifications\WeeklySummaryNotification;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +21,7 @@ class SendWeeklySummary extends Command
         $this->info('Generating and sending weekly SEO summaries...');
 
         $projects = $this->option('project')
-            ? \App\Models\Project::query()->where('id', $this->option('project'))->get()
+            ? Project::query()->where('id', $this->option('project'))->get()
             : Project::all();
 
         if ($projects->isEmpty()) {
@@ -59,7 +61,7 @@ class SendWeeklySummary extends Command
                 }
 
                 $this->info(sprintf('✓ Summary sent to %s users for %s', $users->count(), $project->name));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error(sprintf('✗ Error generating summary for %s: ', $project->name) . $e->getMessage());
                 Log::error(sprintf('Weekly summary generation error for project %s: ', $project->id) . $e->getMessage());
             }
@@ -76,7 +78,7 @@ class SendWeeklySummary extends Command
         $totalKeywords = $keywords->count();
 
         // Get latest rankings for each keyword
-        $latestRankings = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
+        $latestRankings = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         })
             ->with(['keyword'])

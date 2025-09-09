@@ -3,6 +3,7 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
+use Exception;
 use Google\Ads\GoogleAds\Lib\OAuth2TokenBuilder;
 use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient;
 use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClientBuilder;
@@ -12,6 +13,7 @@ use Google\Ads\GoogleAds\V21\Services\GenerateKeywordIdeasRequest;
 use Google\Ads\GoogleAds\V21\Services\KeywordSeed;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class GoogleAdsApiService extends BaseApiService
 {
@@ -29,15 +31,15 @@ class GoogleAdsApiService extends BaseApiService
         try {
             $client = $this->getClient();
 
-            return $client instanceof \Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient;
-        } catch (\Exception) {
+            return $client instanceof GoogleAdsClient;
+        } catch (Exception) {
             return false;
         }
     }
 
     private function getClient(): ?GoogleAdsClient
     {
-        if ($this->googleAdsClient instanceof \Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient) {
+        if ($this->googleAdsClient instanceof GoogleAdsClient) {
             return $this->googleAdsClient;
         }
 
@@ -54,8 +56,8 @@ class GoogleAdsApiService extends BaseApiService
                 ->build();
 
             return $this->googleAdsClient;
-        } catch (\Exception $exception) {
-            \Illuminate\Support\Facades\Log::error('Google Ads API client error', [
+        } catch (Exception $exception) {
+            Log::error('Google Ads API client error', [
                 'error' => $exception->getMessage(),
             ]);
 
@@ -67,7 +69,7 @@ class GoogleAdsApiService extends BaseApiService
     {
         try {
             $client = $this->getClient();
-            if (! $client instanceof \Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient) {
+            if (! $client instanceof GoogleAdsClient) {
                 return null;
             }
 
@@ -114,8 +116,8 @@ class GoogleAdsApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception $exception) {
-            \Illuminate\Support\Facades\Log::error('Google Ads API error', [
+        } catch (Exception $exception) {
+            Log::error('Google Ads API error', [
                 'keyword' => $keyword,
                 'error' => $exception->getMessage(),
             ]);
@@ -178,8 +180,8 @@ class GoogleAdsApiService extends BaseApiService
 
                 // Rate limiting
                 usleep(200000); // 0.2 seconds
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to update keyword metrics', [
+            } catch (Exception $e) {
+                Log::warning('Failed to update keyword metrics', [
                     'keyword_id' => $keyword->id,
                     'keyword' => $keyword->keyword,
                     'error' => $e->getMessage(),

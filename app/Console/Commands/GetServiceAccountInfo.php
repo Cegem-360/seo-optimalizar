@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Filesystem\Filesystem;
 
 class GetServiceAccountInfo extends Command
 {
@@ -13,7 +15,7 @@ class GetServiceAccountInfo extends Command
     /**
      * Create a new console command instance.
      */
-    public function __construct(private readonly \Illuminate\Filesystem\Filesystem $filesystem, private readonly \Illuminate\Contracts\Config\Repository $repository)
+    public function __construct(private readonly Filesystem $filesystem, private readonly Repository $repository)
     {
         parent::__construct();
     }

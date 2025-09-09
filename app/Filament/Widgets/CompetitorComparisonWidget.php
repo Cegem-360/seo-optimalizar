@@ -2,8 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Database\DatabaseManager;
 
 class CompetitorComparisonWidget extends ChartWidget
 {
@@ -13,7 +15,7 @@ class CompetitorComparisonWidget extends ChartWidget
 
     protected int|string|array $columnSpan = 1;
 
-    public function __construct(private readonly \Illuminate\Database\DatabaseManager $databaseManager) {}
+    public function __construct(private readonly DatabaseManager $databaseManager) {}
 
     protected function getType(): string
     {
@@ -44,7 +46,7 @@ class CompetitorComparisonWidget extends ChartWidget
         }
 
         // Get latest rankings for each keyword
-        $rankings = \App\Models\Ranking::query()
+        $rankings = Ranking::query()
             ->whereHas('keyword', function ($query) use ($tenant): void {
                 $query->where('project_id', $tenant->id);
             })

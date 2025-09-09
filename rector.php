@@ -8,6 +8,7 @@ use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
+    ->withImportNames(importShortClasses: true, removeUnusedImports: true)
     ->withPaths([
         __DIR__ . '/app',
         __DIR__ . '/config',

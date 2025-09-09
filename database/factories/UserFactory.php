@@ -2,11 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Hashing\BcryptHasher;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
@@ -21,7 +24,7 @@ class UserFactory extends Factory
      * @param  int|null  $count
      * @param  string|null  $connection
      */
-    public function __construct($count, $connection, ?bool $expandRelationships, array $excludeRelationships, private readonly \Illuminate\Hashing\BcryptHasher $bcryptHasher, ?\Illuminate\Support\Collection $states = null, ?\Illuminate\Support\Collection $has = null, ?\Illuminate\Support\Collection $for = null, ?\Illuminate\Support\Collection $afterMaking = null, ?\Illuminate\Support\Collection $afterCreating = null, ?\Illuminate\Support\Collection $recycle = null)
+    public function __construct($count, $connection, ?bool $expandRelationships, array $excludeRelationships, private readonly BcryptHasher $bcryptHasher, ?Collection $states = null, ?Collection $has = null, ?Collection $for = null, ?Collection $afterMaking = null, ?Collection $afterCreating = null, ?Collection $recycle = null)
     {
         parent::__construct($count, $states, $has, $for, $afterMaking, $afterCreating, $connection, $recycle, $expandRelationships, $excludeRelationships);
     }

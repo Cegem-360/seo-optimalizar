@@ -94,7 +94,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     {
         return $this->notificationPreferences()
             ->where('project_id', $project->id)
-            ->first() ?? \App\Models\NotificationPreference::query()->make([
+            ->first() ?? NotificationPreference::query()->make([
                 'user_id' => $this->id,
                 'project_id' => $project->id,
                 'email_ranking_changes' => true,

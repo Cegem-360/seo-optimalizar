@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\PageSpeedResult;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -18,16 +19,16 @@ class PageSpeedOverview extends StatsOverviewWidget
             return [];
         }
 
-        $recentResults = \App\Models\PageSpeedResult::query()->where('project_id', $tenant->id)
+        $recentResults = PageSpeedResult::query()->where('project_id', $tenant->id)
             ->where('analyzed_at', '>=', now()->subDays(30))
             ->get();
 
-        $latestMobile = \App\Models\PageSpeedResult::query()->where('project_id', $tenant->id)
+        $latestMobile = PageSpeedResult::query()->where('project_id', $tenant->id)
             ->where('strategy', 'mobile')
             ->latest('analyzed_at')
             ->first();
 
-        $latestDesktop = \App\Models\PageSpeedResult::query()->where('project_id', $tenant->id)
+        $latestDesktop = PageSpeedResult::query()->where('project_id', $tenant->id)
             ->where('strategy', 'desktop')
             ->latest('analyzed_at')
             ->first();
@@ -82,7 +83,7 @@ class PageSpeedOverview extends StatsOverviewWidget
             return [];
         }
 
-        return \App\Models\PageSpeedResult::query()->where('project_id', $tenant->id)
+        return PageSpeedResult::query()->where('project_id', $tenant->id)
             ->where('strategy', $strategy)
             ->where('analyzed_at', '>=', now()->subDays(7))
             ->orderBy('analyzed_at')

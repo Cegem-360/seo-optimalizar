@@ -6,13 +6,15 @@ use App\Enums\NavigationGroups;
 use App\Filament\Resources\PageSpeedResults\Pages\CreatePageSpeedResult;
 use App\Filament\Resources\PageSpeedResults\Pages\EditPageSpeedResult;
 use App\Filament\Resources\PageSpeedResults\Pages\ListPageSpeedResults;
+use App\Filament\Resources\PageSpeedResults\Pages\PageSpeedDashboard;
 use App\Filament\Resources\PageSpeedResults\Schemas\PageSpeedResultForm;
 use App\Filament\Resources\PageSpeedResults\Tables\PageSpeedResultsTable;
+use App\Filament\Resources\PageSpeedResults\Widgets\PageSpeedOverviewWidget;
+use App\Filament\Resources\PageSpeedResults\Widgets\PageSpeedRecentResultsTable;
+use App\Filament\Resources\PageSpeedResults\Widgets\PageSpeedTrendChart;
 use App\Models\PageSpeedResult;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -54,9 +56,9 @@ class PageSpeedResultResource extends Resource
     public static function getWidgets(): array
     {
         return [
-            Widgets\PageSpeedOverviewWidget::class,
-            Widgets\PageSpeedTrendChart::class,
-            Widgets\PageSpeedRecentResultsTable::class,
+            PageSpeedOverviewWidget::class,
+            PageSpeedTrendChart::class,
+            PageSpeedRecentResultsTable::class,
         ];
     }
 
@@ -64,7 +66,7 @@ class PageSpeedResultResource extends Resource
     {
         return [
             'index' => ListPageSpeedResults::route('/'),
-            'dashboard' => Pages\PageSpeedDashboard::route('/dashboard'),
+            'dashboard' => PageSpeedDashboard::route('/dashboard'),
             'create' => CreatePageSpeedResult::route('/create'),
             'edit' => EditPageSpeedResult::route('/{record}/edit'),
         ];

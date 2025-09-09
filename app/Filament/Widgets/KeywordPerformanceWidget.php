@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Keyword;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -23,10 +24,10 @@ class KeywordPerformanceWidget extends BaseWidget
                 $tenant = Filament::getTenant();
 
                 if (! $tenant) {
-                    return \App\Models\Keyword::query()->whereRaw('1 = 0');
+                    return Keyword::query()->whereRaw('1 = 0');
                 }
 
-                return \App\Models\Keyword::query()
+                return Keyword::query()
                     ->where('project_id', $tenant->id)
                     ->whereHas('rankings')
                     ->withAvg('rankings', 'position')

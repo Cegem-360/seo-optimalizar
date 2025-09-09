@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
@@ -46,7 +47,7 @@ class TrafficOverviewWidget extends ChartWidget
         $startDate = Carbon::now()->subDays($days);
 
         // Get rankings data grouped by date
-        $rankings = \App\Models\Ranking::query()
+        $rankings = Ranking::query()
             ->whereHas('keyword', function ($query) use ($tenant): void {
                 $query->where('project_id', $tenant->id);
             })

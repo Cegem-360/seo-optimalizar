@@ -3,7 +3,9 @@
 namespace App\Services\Api;
 
 use App\Models\Project;
+use Exception;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 
 class ApiServiceManager
 {
@@ -28,7 +30,7 @@ class ApiServiceManager
             'google_pagespeed_insights' => new PageSpeedInsightsService($this->project),
             'google_ads' => new GoogleAdsApiService($this->project),
             'gemini' => new GeminiApiService($this->project),
-            default => throw new \InvalidArgumentException('Unknown service: ' . $serviceName),
+            default => throw new InvalidArgumentException('Unknown service: ' . $serviceName),
         };
     }
 
@@ -59,7 +61,7 @@ class ApiServiceManager
 
     public function getConfiguredServices(): Collection
     {
-        $configuredServices = new \Illuminate\Support\Collection();
+        $configuredServices = new Collection();
 
         $availableServices = [
             'google_search_console' => 'Google Search Console',
@@ -78,7 +80,7 @@ class ApiServiceManager
                     'configured' => $service->isConfigured(),
                     'service' => $service,
                 ]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $configuredServices->push([
                     'key' => $serviceKey,
                     'name' => $serviceName,
@@ -118,7 +120,7 @@ class ApiServiceManager
                     'success' => $success,
                     'message' => $success ? 'Connection successful' : 'Connection failed',
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $results[$serviceKey] = [
                     'name' => $configuredService['name'],
                     'success' => false,
@@ -145,7 +147,7 @@ class ApiServiceManager
                     'count' => $synced,
                 ];
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $results['google_search_console'] = [
                 'success' => false,
                 'message' => 'Error syncing Search Console data: ' . $exception->getMessage(),
@@ -161,7 +163,7 @@ class ApiServiceManager
             $service = $this->getService($serviceName);
 
             return $service->isConfigured();
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }

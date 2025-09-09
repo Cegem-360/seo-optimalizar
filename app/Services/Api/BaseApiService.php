@@ -4,6 +4,7 @@ namespace App\Services\Api;
 
 use App\Models\ApiCredential;
 use App\Models\Project;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -36,7 +37,7 @@ abstract class BaseApiService
     protected function makeRequest(): PendingRequest
     {
         if (! $this->isConfigured()) {
-            throw new \Exception('API credentials not configured for service: ' . $this->serviceName);
+            throw new Exception('API credentials not configured for service: ' . $this->serviceName);
         }
 
         return Http::retry($this->retryAttempts, $this->retryDelayMs)
@@ -86,7 +87,7 @@ abstract class BaseApiService
         $this->markCredentialsAsUsed();
 
         if (! $response->successful()) {
-            throw new \Exception(
+            throw new Exception(
                 sprintf('API request failed for %s: %d - %s', $this->serviceName, $response->status(), $response->body())
             );
         }
@@ -96,7 +97,7 @@ abstract class BaseApiService
 
     protected function markCredentialsAsUsed(): void
     {
-        if ($this->credentials instanceof \App\Models\ApiCredential) {
+        if ($this->credentials instanceof ApiCredential) {
             $this->credentials->markAsUsed();
         }
     }
@@ -110,6 +111,6 @@ abstract class BaseApiService
 
     public function isConfigured(): bool
     {
-        return $this->credentials instanceof \App\Models\ApiCredential && $this->credentials->is_active;
+        return $this->credentials instanceof ApiCredential && $this->credentials->is_active;
     }
 }

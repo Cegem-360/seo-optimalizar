@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Keyword;
 use App\Services\Api\ApiServiceManager;
 use BackedEnum;
+use Exception;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
@@ -13,6 +15,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 /**
@@ -53,7 +56,7 @@ class SerpAnalysis extends Page implements HasSchemas
                     ->options(function () {
                         $project = filament()->getTenant();
 
-                        if (! $project instanceof \Illuminate\Database\Eloquent\Model) {
+                        if (! $project instanceof Model) {
                             return [];
                         }
 
@@ -120,7 +123,7 @@ class SerpAnalysis extends Page implements HasSchemas
                 return;
             }
 
-            $keywords = \App\Models\Keyword::query()->whereIn('id', $keywordIds)->get();
+            $keywords = Keyword::query()->whereIn('id', $keywordIds)->get();
 
             if ($keywords->isEmpty()) {
                 Notification::make()
@@ -177,7 +180,7 @@ class SerpAnalysis extends Page implements HasSchemas
                     ->danger()
                     ->send();
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->isLoading = false;
             $this->currentKeyword = null;
 

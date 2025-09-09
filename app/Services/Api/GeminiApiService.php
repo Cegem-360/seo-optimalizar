@@ -3,7 +3,8 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
-use App\Models\Ranking;
+use Exception;
+use GuzzleHttp\Client;
 use Illuminate\Http\Client\PendingRequest;
 
 class GeminiApiService extends BaseApiService
@@ -17,7 +18,7 @@ class GeminiApiService extends BaseApiService
         $apiKey = $this->getCredential('api_key');
 
         if (! $apiKey) {
-            throw new \Exception('Missing Google Gemini API key');
+            throw new Exception('Missing Google Gemini API key');
         }
 
         $pendingRequest->withHeaders([
@@ -40,11 +41,11 @@ class GeminiApiService extends BaseApiService
             }
 
             // Egyszerű direct HTTP teszt
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $response = $client->get($this->baseUrl . '/models?key=' . $apiKey);
 
             return $response->getStatusCode() === 200;
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -64,7 +65,7 @@ class GeminiApiService extends BaseApiService
             $prompt = $this->buildAnalysisPrompt($keyword, $serpData);
 
             // Egyszerűbb HTTP kérés közvetlenül
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
                 'json' => [
                     'contents' => [
@@ -99,7 +100,7 @@ class GeminiApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception) {
+        } catch (Exception) {
             return null;
         }
     }
@@ -133,7 +134,7 @@ class GeminiApiService extends BaseApiService
 
             $prompt = $this->buildPositionAnalysisPrompt($keyword->keyword, $currentPosition, $url, $competitors);
 
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
                 'json' => [
                     'contents' => [
@@ -168,7 +169,7 @@ class GeminiApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception) {
+        } catch (Exception) {
             return null;
         }
     }
@@ -454,7 +455,7 @@ class GeminiApiService extends BaseApiService
                     'location' => $keyword->geo_target ?: 'Hungary',
                 ],
             ];
-        } catch (\Exception) {
+        } catch (Exception) {
             // Fallback dummy data ha minden más meghibásodna
             return [
                 'organic_results' => [

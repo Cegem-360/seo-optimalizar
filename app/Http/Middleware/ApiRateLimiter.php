@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,12 +20,12 @@ class ApiRateLimiter
         'google_pagespeed_insights' => ['requests' => 25, 'per' => 'day'],
     ];
 
-    public function __construct(private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory) {}
+    public function __construct(private readonly ResponseFactory $responseFactory) {}
 
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request):Response  $next
      */
     public function handle(Request $request, Closure $next, ?string $service = null): Response
     {

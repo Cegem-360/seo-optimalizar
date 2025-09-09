@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Keyword;
 use Illuminate\Database\Seeder;
 
 class KeywordDataSeeder extends Seeder
@@ -25,7 +26,7 @@ class KeywordDataSeeder extends Seeder
             ['min_volume' => 10, 'max_volume' => 100, 'min_difficulty' => 20, 'max_difficulty' => 70],
         ];
 
-        \App\Models\Keyword::query()->whereNull('search_volume')
+        Keyword::query()->whereNull('search_volume')
             ->orWhereNull('difficulty_score')
             ->chunk(100, function ($keywords) use ($sampleData): void {
                 foreach ($keywords as $keyword) {
@@ -41,7 +42,7 @@ class KeywordDataSeeder extends Seeder
                 $this->command->info('Updated ' . $keywords->count() . ' keywords...');
             });
 
-        $total = \App\Models\Keyword::query()->whereNotNull('search_volume')->count();
+        $total = Keyword::query()->whereNotNull('search_volume')->count();
         $this->command->info(sprintf('Successfully updated %s keywords with sample data!', $total));
     }
 }

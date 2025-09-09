@@ -4,7 +4,9 @@ namespace App\Services\Api;
 
 use App\Models\Keyword;
 use App\Models\Ranking;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Log;
 
 class SerpApiService extends BaseApiService
 {
@@ -17,7 +19,7 @@ class SerpApiService extends BaseApiService
         $apiKey = $this->getCredential('api_key');
 
         if (! $apiKey) {
-            throw new \Exception('Missing SerpApi API key');
+            throw new Exception('Missing SerpApi API key');
         }
 
         $pendingRequest->withHeaders([
@@ -36,7 +38,7 @@ class SerpApiService extends BaseApiService
             ]);
 
             return $response->successful();
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -98,8 +100,8 @@ class SerpApiService extends BaseApiService
 
                     // Rate limiting - SerpApi has strict limits
                     sleep(1); // 1 second between requests
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning('Failed to sync keyword: ' . $keyword->keyword, [
+                } catch (Exception $e) {
+                    Log::warning('Failed to sync keyword: ' . $keyword->keyword, [
                         'error' => $e->getMessage(),
                         'keyword_id' => $keyword->id,
                     ]);
@@ -129,7 +131,7 @@ class SerpApiService extends BaseApiService
         $previousPosition = $latestRanking?->position;
 
         // Create new ranking record
-        \App\Models\Ranking::query()->create([
+        Ranking::query()->create([
             'keyword_id' => $keyword->id,
             'position' => $positionData !== null && $positionData !== [] ? $positionData['position'] : null,
             'previous_position' => $previousPosition,

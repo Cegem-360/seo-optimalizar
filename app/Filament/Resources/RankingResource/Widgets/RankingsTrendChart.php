@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RankingResource\Widgets;
 
+use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 
@@ -26,7 +27,7 @@ class RankingsTrendChart extends ChartWidget
             $date = now()->subDays($i);
             $labels[] = $date->format('M d');
 
-            $dayQuery = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
+            $dayQuery = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             })->whereBetween('checked_at', [
                 $date->copy()->startOfDay(),

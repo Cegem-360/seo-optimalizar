@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RankingResource\Widgets;
 
+use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -13,7 +14,7 @@ class RankingsOverviewWidget extends StatsOverviewWidget
         $project = Filament::getTenant();
 
         // Base query for current project
-        $baseQuery = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
+        $baseQuery = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         })->recentlyChecked(30);
 
@@ -124,7 +125,7 @@ class RankingsOverviewWidget extends StatsOverviewWidget
         $improvements = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $count = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
+            $count = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             })
                 ->improved()

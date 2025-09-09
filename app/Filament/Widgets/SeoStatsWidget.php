@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Keyword;
+use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -17,16 +19,16 @@ class SeoStatsWidget extends StatsOverviewWidget
             return [];
         }
 
-        $totalKeywords = \App\Models\Keyword::query()->where('project_id', $tenant->id)->count();
-        $totalRankings = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
+        $totalKeywords = Keyword::query()->where('project_id', $tenant->id)->count();
+        $totalRankings = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
             $query->where('project_id', $tenant->id);
         })->count();
 
-        $avgPosition = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
+        $avgPosition = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
             $query->where('project_id', $tenant->id);
         })->avg('position');
 
-        $topPositions = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
+        $topPositions = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
             $query->where('project_id', $tenant->id);
         })->where('position', '<=', 10)->count();
 

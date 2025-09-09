@@ -7,15 +7,17 @@ use App\Models\Project;
 use App\Models\Ranking;
 use App\Notifications\RankingChangeNotification;
 use Carbon\Carbon;
+use Exception;
 use Google\Client as GoogleClient;
 use Google\Service\SearchConsole;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSearchConsoleService
 {
     /**
-     * @var \Illuminate\Contracts\Config\Repository
+     * @var Repository
      */
     public $repository;
 
@@ -23,7 +25,7 @@ class GoogleSearchConsoleService
 
     private readonly SearchConsole $searchConsole;
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
+    public function __construct(Repository $repository)
     {
         $this->repository = $repository;
         $this->googleClient = new GoogleClient();
@@ -90,7 +92,7 @@ class GoogleSearchConsoleService
             $response = $this->searchConsole->searchanalytics->query($project->url, $searchAnalyticsQueryRequest);
 
             return $this->processSearchConsoleResponse($response, $project);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             Log::error('Google Search Console API Error: ' . $exception->getMessage());
 
             return [];
@@ -134,7 +136,7 @@ class GoogleSearchConsoleService
 
         foreach ($performanceData as $data) {
             // Find or create keyword
-            $keyword = \App\Models\Keyword::query()->firstOrCreate([
+            $keyword = Keyword::query()->firstOrCreate([
                 'project_id' => $project->id,
                 'keyword' => $data['keyword'],
             ], [
@@ -148,7 +150,7 @@ class GoogleSearchConsoleService
             $previousRanking = $keyword->rankings()->latest('checked_at')->first();
 
             // Create new ranking entry
-            $ranking = \App\Models\Ranking::query()->create([
+            $ranking = Ranking::query()->create([
                 'keyword_id' => $keyword->id,
                 'position' => $data['position'],
                 'previous_position' => $previousRanking ? $previousRanking->position : null,
@@ -180,7 +182,7 @@ class GoogleSearchConsoleService
             $sites = $this->searchConsole->sites->listSites();
 
             return $sites->getSiteEntry() ?? [];
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             Log::error('Error fetching Search Console sites: ' . $exception->getMessage());
 
             return [];
@@ -302,7 +304,7 @@ class GoogleSearchConsoleService
                  'position' => $ranking->position,
                  'previous_position' => $ranking->previous_position,
              ]); */
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             Log::error('Failed to send ranking notification: ' . $exception->getMessage());
         }
     }

@@ -7,10 +7,11 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\RegisterTenant;
 use Filament\Schemas\Schema;
+use Illuminate\Contracts\Auth\Guard;
 
 class RegisterProject extends RegisterTenant
 {
-    public function __construct(private readonly \Illuminate\Contracts\Auth\Guard $guard) {}
+    public function __construct(private readonly Guard $guard) {}
 
     public static function getLabel(): string
     {
@@ -43,7 +44,7 @@ class RegisterProject extends RegisterTenant
 
     protected function handleRegistration(array $data): Project
     {
-        $project = \App\Models\Project::query()->create($data);
+        $project = Project::query()->create($data);
 
         // Attach the current user to the project
         $project->users()->attach($this->guard->user());

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use Exception;
 use Illuminate\Console\Command;
 
 class PageSpeedAnalyze extends Command
@@ -31,7 +32,7 @@ class PageSpeedAnalyze extends Command
         $strategy = $this->option('strategy');
 
         if ($projectId) {
-            $project = \App\Models\Project::query()->find($projectId);
+            $project = Project::query()->find($projectId);
             if (! $project) {
                 $this->error(sprintf('Project with ID %s not found.', $projectId));
 
@@ -52,7 +53,7 @@ class PageSpeedAnalyze extends Command
             }
 
             $projectId = $this->ask('Which project would you like to analyze?');
-            $project = \App\Models\Project::query()->find($projectId);
+            $project = Project::query()->find($projectId);
 
             if (! $project) {
                 $this->error('Invalid project ID.');
@@ -117,7 +118,7 @@ class PageSpeedAnalyze extends Command
             $this->info('✅ Analysis completed successfully!');
 
             return 0;
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->error('Error analyzing PageSpeed: ' . $exception->getMessage());
 
             return 1;

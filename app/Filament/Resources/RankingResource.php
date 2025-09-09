@@ -3,17 +3,19 @@
 namespace App\Filament\Resources;
 
 use App\Enums\NavigationGroups;
+use App\Filament\Resources\RankingResource\Pages\RankingsDashboard;
+use App\Filament\Resources\RankingResource\Widgets\RankingsDistributionChart;
+use App\Filament\Resources\RankingResource\Widgets\RankingsOverviewWidget;
+use App\Filament\Resources\RankingResource\Widgets\RankingsTrendChart;
 use App\Filament\Resources\Rankings\Pages\CreateRanking;
 use App\Filament\Resources\Rankings\Pages\EditRanking;
 use App\Filament\Resources\Rankings\Pages\ListRankings;
 use App\Filament\Resources\Rankings\Schemas\RankingForm;
 use App\Filament\Resources\Rankings\Tables\RankingsTable;
 use App\Models\Ranking;
-use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -62,9 +64,9 @@ class RankingResource extends Resource
     public static function getWidgets(): array
     {
         return [
-            RankingResource\Widgets\RankingsOverviewWidget::class,
-            RankingResource\Widgets\RankingsTrendChart::class,
-            RankingResource\Widgets\RankingsDistributionChart::class,
+            RankingsOverviewWidget::class,
+            RankingsTrendChart::class,
+            RankingsDistributionChart::class,
         ];
     }
 
@@ -72,7 +74,7 @@ class RankingResource extends Resource
     {
         return [
             'index' => ListRankings::route('/'),
-            'dashboard' => RankingResource\Pages\RankingsDashboard::route('/dashboard'),
+            'dashboard' => RankingsDashboard::route('/dashboard'),
             'create' => CreateRanking::route('/create'),
             'edit' => EditRanking::route('/{record}/edit'),
         ];

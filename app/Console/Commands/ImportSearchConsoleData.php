@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\GoogleSearchConsoleService;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -39,7 +40,7 @@ class ImportSearchConsoleData extends Command
 
         // Get projects to import for
         $projects = $this->option('project')
-            ? \App\Models\Project::query()->where('id', $this->option('project'))->get()
+            ? Project::query()->where('id', $this->option('project'))->get()
             : Project::all();
 
         if ($projects->isEmpty()) {
@@ -58,7 +59,7 @@ class ImportSearchConsoleData extends Command
                 $totalImported += $importedCount;
 
                 $this->info(sprintf('✓ Imported %d ranking records for %s', $importedCount, $project->name));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error(sprintf('✗ Error importing data for %s: ', $project->name) . $e->getMessage());
                 Log::error(sprintf('Search Console import error for project %s: ', $project->id) . $e->getMessage());
             }

@@ -7,6 +7,7 @@ use App\Services\Api\GoogleAnalyticsService;
 use App\Services\Api\GoogleSearchConsoleService;
 use App\Services\Api\PageSpeedInsightsService;
 use App\Services\Api\SerpApiService;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Client\Factory as HttpClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -16,7 +17,7 @@ class ApiServiceProvider extends ServiceProvider
     /**
      * Create a new service provider instance.
      *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @param  Application  $app
      */
     public function __construct($app)
     {
@@ -29,15 +30,15 @@ class ApiServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Register API services as singletons within project context
-        $this->app->bind(GoogleSearchConsoleService::class, fn ($app, $parameters): \App\Services\Api\GoogleSearchConsoleService => new GoogleSearchConsoleService($parameters['project']));
+        $this->app->bind(GoogleSearchConsoleService::class, fn ($app, $parameters): GoogleSearchConsoleService => new GoogleSearchConsoleService($parameters['project']));
 
-        $this->app->bind(GoogleAnalyticsService::class, fn ($app, $parameters): \App\Services\Api\GoogleAnalyticsService => new GoogleAnalyticsService($parameters['project']));
+        $this->app->bind(GoogleAnalyticsService::class, fn ($app, $parameters): GoogleAnalyticsService => new GoogleAnalyticsService($parameters['project']));
 
-        $this->app->bind(SerpApiService::class, fn ($app, $parameters): \App\Services\Api\SerpApiService => new SerpApiService($parameters['project']));
+        $this->app->bind(SerpApiService::class, fn ($app, $parameters): SerpApiService => new SerpApiService($parameters['project']));
 
-        $this->app->bind(PageSpeedInsightsService::class, fn ($app, $parameters): \App\Services\Api\PageSpeedInsightsService => new PageSpeedInsightsService($parameters['project']));
+        $this->app->bind(PageSpeedInsightsService::class, fn ($app, $parameters): PageSpeedInsightsService => new PageSpeedInsightsService($parameters['project']));
 
-        $this->app->bind(ApiServiceManager::class, fn ($app, $parameters): \App\Services\Api\ApiServiceManager => new ApiServiceManager($parameters['project']));
+        $this->app->bind(ApiServiceManager::class, fn ($app, $parameters): ApiServiceManager => new ApiServiceManager($parameters['project']));
     }
 
     /**
@@ -59,9 +60,9 @@ class ApiServiceProvider extends ServiceProvider
                     'verify' => true,
                     'http_errors' => false, // Handle errors manually
                 ])
-                ->beforeSending(function ($request, $options): void {
+                ->beforeSending(function ($request): void {
                     // Log API requests in debug mode
-                    if ($this->repository->get('app.debug')) {
+                    if (config('app.debug')) {
                         Log::debug('API Request', [
                             'url' => $request->url(),
                             'method' => $request->method(),

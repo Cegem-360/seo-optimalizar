@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RankingResource\Widgets;
 
+use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 
@@ -17,7 +18,7 @@ class RankingsDistributionChart extends ChartWidget
     {
         $project = Filament::getTenant();
 
-        $baseQuery = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
+        $baseQuery = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         })->recentlyChecked(30);
 

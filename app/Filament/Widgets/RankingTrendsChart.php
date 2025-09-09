@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Ranking;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
@@ -28,7 +29,7 @@ class RankingTrendsChart extends ChartWidget
             $date = Carbon::now()->subDays($i);
             $labels[] = $date->format('M j');
 
-            $avgPosition = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
+            $avgPosition = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
                 $query->where('project_id', $tenant->id);
             })
                 ->whereDate('checked_at', $date)

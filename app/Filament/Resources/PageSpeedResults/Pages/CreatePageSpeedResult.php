@@ -5,6 +5,8 @@ namespace App\Filament\Resources\PageSpeedResults\Pages;
 use App\Filament\Resources\PageSpeedResults\PageSpeedResultResource;
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use Exception;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -20,7 +22,7 @@ class CreatePageSpeedResult extends CreateRecord
         return 'PageSpeed analysis started';
     }
 
-    protected function getCreateFormAction(): \Filament\Actions\Action
+    protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()
             ->label('Run Analysis');
@@ -62,7 +64,7 @@ class CreatePageSpeedResult extends CreateRecord
                 // Redirect to the list page instead of creating a duplicate
                 $this->redirect($this->getResource()::getUrl('index'));
                 $this->halt();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Notification::make()
                     ->title('PageSpeed Analysis Failed')
                     ->body('Error: ' . $e->getMessage())

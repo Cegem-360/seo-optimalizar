@@ -5,7 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\NavigationGroups;
 use App\Models\NotificationPreference;
 use App\Notifications\RankingChangeNotification;
-use BackedEnum;
+use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -19,7 +19,9 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Config\Repository;
+use stdClass;
 use UnitEnum;
 
 /**
@@ -44,7 +46,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
 
     protected string $view = 'filament.pages.manage-notification-settings';
 
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Config\Repository $repository) {}
+    public function __construct(private readonly AuthManager $authManager, private readonly Repository $repository) {}
 
     public function mount(): void
     {
@@ -146,7 +148,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
 
         $record = $this->getRecord();
 
-        if (! $record instanceof \App\Models\NotificationPreference) {
+        if (! $record instanceof NotificationPreference) {
             $tenant = Filament::getTenant();
             $user = $this->authManager->user();
 
@@ -175,7 +177,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
         $preference = $this->getRecord();
 
         // Create a test ranking change notification
-        $testRanking = new \stdClass();
+        $testRanking = new stdClass();
         $testRanking->position = 3;
         $testRanking->previous_position = 8;
         $testRanking->keyword = (object) [
@@ -216,7 +218,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
                 ->body('A test notification has been sent to your configured channels.')
                 ->success()
                 ->send();
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             Notification::make()
                 ->title('Failed to send test')
                 ->body('Error: ' . $exception->getMessage())

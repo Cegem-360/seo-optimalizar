@@ -5,6 +5,7 @@ namespace App\Models;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,9 +52,9 @@ class Ranking extends Model
         return $this->belongsTo(Keyword::class);
     }
 
-    protected function positionChange(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function positionChange(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function (): null|int|float {
+        return Attribute::make(get: function (): null|int|float {
             if ($this->previous_position === null) {
                 return null;
             }
@@ -62,9 +63,9 @@ class Ranking extends Model
         });
     }
 
-    protected function positionTrend(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function positionTrend(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function (): string {
+        return Attribute::make(get: function (): string {
             $change = $this->position_change;
             if ($change === null) {
                 return 'new';

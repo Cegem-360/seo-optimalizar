@@ -5,6 +5,7 @@ namespace App\Services\Api;
 use App\Models\Keyword;
 use App\Models\Ranking;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -34,7 +35,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $clientSecret = $this->getCredential('client_secret');
 
         if (! $refreshToken || ! $clientId || ! $clientSecret) {
-            throw new \Exception('Missing Google Search Console credentials');
+            throw new Exception('Missing Google Search Console credentials');
         }
 
         $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
@@ -45,7 +46,7 @@ class GoogleSearchConsoleService extends BaseApiService
         ]);
 
         if (! $response->successful()) {
-            throw new \Exception('Failed to refresh Google Search Console access token');
+            throw new Exception('Failed to refresh Google Search Console access token');
         }
 
         $data = $response->json();
@@ -58,7 +59,7 @@ class GoogleSearchConsoleService extends BaseApiService
             $response = $this->makeRequest()->get($this->baseUrl . '/sites');
 
             return $response->successful();
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -68,7 +69,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $response = $this->makeRequest()->get($this->baseUrl . '/sites');
         $data = $this->handleResponse($response);
 
-        return new \Illuminate\Support\Collection($data['siteEntry'] ?? []);
+        return new Collection($data['siteEntry'] ?? []);
     }
 
     public function getSearchAnalytics(array $dimensions = ['query'], ?Carbon $startDate = null, ?Carbon $endDate = null, int $rowLimit = 1000): Collection
@@ -91,7 +92,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $data = $this->handleResponse($response);
 
-        return new \Illuminate\Support\Collection($data['rows'] ?? []);
+        return new Collection($data['rows'] ?? []);
     }
 
     public function getKeywordData(Collection $keywords, ?Carbon $startDate = null, ?Carbon $endDate = null): Collection
@@ -99,7 +100,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $keywordStrings = $keywords->pluck('keyword')->toArray();
 
         if (empty($keywordStrings)) {
-            return new \Illuminate\Support\Collection();
+            return new Collection();
         }
 
         $startDate ??= now()->subDays(7);
@@ -129,7 +130,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $data = $this->handleResponse($response);
 
-        return new \Illuminate\Support\Collection($data['rows'] ?? []);
+        return new Collection($data['rows'] ?? []);
     }
 
     public function syncKeywordRankings(): int
@@ -167,7 +168,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $latestRanking = $keyword->rankings()->latest('checked_at')->first();
         $previousPosition = $latestRanking?->position;
 
-        \App\Models\Ranking::query()->create([
+        Ranking::query()->create([
             'keyword_id' => $keyword->id,
             'position' => $position ? round($position) : null,
             'previous_position' => $previousPosition,

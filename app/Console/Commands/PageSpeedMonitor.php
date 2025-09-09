@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class PageSpeedMonitor extends Command
@@ -35,7 +37,7 @@ class PageSpeedMonitor extends Command
         $force = $this->option('force');
 
         $projects = $projectId
-            ? (new \Illuminate\Support\Collection([\App\Models\Project::query()->find($projectId)]))->filter()
+            ? (new Collection([Project::query()->find($projectId)]))->filter()
             : $this->getMonitorableProjects();
 
         if ($projects->isEmpty()) {
@@ -54,14 +56,14 @@ class PageSpeedMonitor extends Command
         }
 
         // Summary
-        $successful = (new \Illuminate\Support\Collection($results))->where('success', true)->count();
+        $successful = (new Collection($results))->where('success', true)->count();
         $total = count($results);
 
         $this->newLine();
         $this->info(sprintf('✅ Monitoring completed: %d/%d projects analyzed successfully.', $successful, $total));
 
         if ($successful < $total) {
-            $errors = (new \Illuminate\Support\Collection($results))->where('success', false)->pluck('error');
+            $errors = (new Collection($results))->where('success', false)->pluck('error');
             $this->warn('Errors occurred:');
             foreach ($errors as $error) {
                 $this->line('  - ' . $error);
@@ -73,7 +75,7 @@ class PageSpeedMonitor extends Command
 
     private function getMonitorableProjects()
     {
-        return \App\Models\Project::query()->whereHas('apiCredentials', function ($query): void {
+        return Project::query()->whereHas('apiCredentials', function ($query): void {
             $query->where('service', 'google_pagespeed_insights')
                 ->where('is_active', true);
         })->get();
@@ -126,7 +128,7 @@ class PageSpeedMonitor extends Command
                         ]); */
 
             return ['success' => true, 'analyzed' => $analyzed];
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $error = sprintf('Error analyzing %s: ', $project->name) . $exception->getMessage();
             $this->line('  ❌ ' . $error);
 

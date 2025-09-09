@@ -6,6 +6,7 @@ use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -16,7 +17,7 @@ class WeeklySummaryNotification extends Notification implements ShouldQueue
     public function __construct(
         public Project $project,
         public array $summaryData,
-        private readonly \Illuminate\Contracts\Routing\UrlGenerator $urlGenerator
+        private readonly UrlGenerator $urlGenerator
     ) {}
 
     public function via(object $notifiable): array

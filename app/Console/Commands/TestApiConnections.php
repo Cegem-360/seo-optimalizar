@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use Exception;
 use Illuminate\Console\Command;
 
 class TestApiConnections extends Command
@@ -32,7 +33,7 @@ class TestApiConnections extends Command
         $projectId = $this->argument('project');
 
         if ($projectId) {
-            $project = \App\Models\Project::query()->find($projectId);
+            $project = Project::query()->find($projectId);
             if (! $project) {
                 $this->error(sprintf('Project with ID %s not found.', $projectId));
 
@@ -91,7 +92,7 @@ class TestApiConnections extends Command
                 $this->warn('No API services are configured for this project.');
                 $this->line('Please add API credentials in the Filament admin panel.');
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->error(sprintf('Error testing project %s: ', $project->name) . $exception->getMessage());
         }
     }

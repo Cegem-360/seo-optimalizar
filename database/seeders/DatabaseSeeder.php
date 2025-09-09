@@ -2,17 +2,19 @@
 
 namespace Database\Seeders;
 
+use App\Models\Project;
 use App\Models\User;
+use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    public function __construct(private readonly \Illuminate\Contracts\Hashing\Hasher $hasher) {}
+    public function __construct(private readonly Hasher $hasher) {}
 
     public function run(): void
     {
         // Create admin user
-        $user = \App\Models\User::query()->create([
+        $user = User::query()->create([
             'name' => 'Admin User',
             'email' => 'admin@admin.com',
             'password' => $this->hasher->make('password'),
@@ -20,13 +22,13 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Create SEO projects
-        $project1 = \App\Models\Project::query()->create([
+        $project1 = Project::query()->create([
             'name' => 'Main Website SEO',
             'url' => 'https://example.com',
             'description' => 'SEO monitoring for the main company website',
         ]);
 
-        $project2 = \App\Models\Project::query()->create([
+        $project2 = Project::query()->create([
             'name' => 'Blog SEO Tracking',
             'url' => 'https://blog.example.com',
             'description' => 'SEO monitoring for the company blog',

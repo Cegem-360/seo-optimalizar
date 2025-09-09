@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Keyword;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Keyword>
+ * @extends Factory<Keyword>
  */
 class KeywordFactory extends Factory
 {
