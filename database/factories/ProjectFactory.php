@@ -16,18 +16,18 @@ class ProjectFactory extends Factory
      */
     public function definition(): array
     {
-        $domain = fake()->domainName();
-
+        $domain = $this->faker->domainName();
+        
         return [
-            'name' => fake()->company() . ' SEO Project',
+            'name' => $this->faker->company() . ' SEO Project',
             'url' => 'https://' . $domain,
-            'description' => fake()->optional()->paragraph(),
+            'description' => $this->faker->optional()->paragraph(),
         ];
     }
 
     public function withUrl(string $url): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (array $attributes) => [
             'url' => $url,
         ]);
     }

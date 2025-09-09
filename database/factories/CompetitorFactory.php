@@ -17,28 +17,28 @@ class CompetitorFactory extends Factory
      */
     public function definition(): array
     {
-        $domain = fake()->domainName();
-
+        $domain = $this->faker->domainName();
+        
         return [
             'project_id' => Project::factory(),
-            'name' => fake()->company(),
+            'name' => $this->faker->company(),
             'url' => 'https://' . $domain,
             'domain' => $domain,
-            'description' => fake()->optional()->sentence(),
-            'is_active' => fake()->boolean(80),
+            'description' => $this->faker->optional()->sentence(),
+            'is_active' => $this->faker->boolean(80),
         ];
     }
 
     public function active(): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (array $attributes) => [
             'is_active' => true,
         ]);
     }
 
     public function inactive(): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (array $attributes) => [
             'is_active' => false,
         ]);
     }

@@ -20,6 +20,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 /**
@@ -43,8 +44,6 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
     public ?array $data = [];
 
     protected string $view = 'filament.pages.manage-notification-settings';
-
-    public function __construct(private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Config\Repository $repository) {}
 
     public function mount(): void
     {
@@ -146,9 +145,9 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
 
         $record = $this->getRecord();
 
-        if (! $record instanceof \App\Models\NotificationPreference) {
+        if (! $record) {
             $tenant = Filament::getTenant();
-            $user = $this->authManager->user();
+            $user = Auth::user();
 
             $record = new NotificationPreference();
             $record->user_id = $user->id;
@@ -171,7 +170,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
 
     public function sendTestNotification(): void
     {
-        $user = $this->authManager->user();
+        $user = Auth::user();
         $preference = $this->getRecord();
 
         // Create a test ranking change notification
@@ -194,7 +193,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
                 $channels[] = 'database';
             }
 
-            if ($channels === []) {
+            if (empty($channels)) {
                 Notification::make()
                     ->title('No channels enabled')
                     ->body('Please enable at least one notification channel for Top 3 Achievements to send a test.')
@@ -207,7 +206,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
             $user->notify(new RankingChangeNotification(
                 $testRanking,
                 'top3',
-                $this->repository->get('app.url'),
+                config('app.url'),
                 $channels
             ));
 
@@ -216,10 +215,10 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
                 ->body('A test notification has been sent to your configured channels.')
                 ->success()
                 ->send();
-        } catch (\Exception $exception) {
+        } catch (\Exception $e) {
             Notification::make()
                 ->title('Failed to send test')
-                ->body('Error: ' . $exception->getMessage())
+                ->body('Error: ' . $e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -228,7 +227,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
     public function getRecord(): ?NotificationPreference
     {
         $tenant = Filament::getTenant();
-        $user = $this->authManager->user();
+        $user = Auth::user();
 
         if (! $tenant || ! $user) {
             return null;

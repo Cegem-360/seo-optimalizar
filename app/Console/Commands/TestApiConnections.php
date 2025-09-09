@@ -30,22 +30,20 @@ class TestApiConnections extends Command
         $this->info('Testing API connections...');
 
         $projectId = $this->argument('project');
-
+        
         if ($projectId) {
-            $project = \App\Models\Project::query()->find($projectId);
-            if (! $project) {
-                $this->error(sprintf('Project with ID %s not found.', $projectId));
-
+            $project = Project::find($projectId);
+            if (!$project) {
+                $this->error("Project with ID {$projectId} not found.");
                 return 1;
             }
-
+            
             $this->testProject($project);
         } else {
             $projects = Project::all();
-
+            
             if ($projects->isEmpty()) {
                 $this->warn('No projects found in the database.');
-
                 return 0;
             }
 
@@ -60,8 +58,8 @@ class TestApiConnections extends Command
 
     private function testProject(Project $project): void
     {
-        $this->line(sprintf('Testing project: <info>%s</info> (ID: %s)', $project->name, $project->id));
-        $this->line('URL: ' . $project->url);
+        $this->line("Testing project: <info>{$project->name}</info> (ID: {$project->id})");
+        $this->line("URL: {$project->url}");
         $this->newLine();
 
         try {
@@ -69,7 +67,7 @@ class TestApiConnections extends Command
             $results = $apiManager->testAllConnections();
 
             $table = [];
-            foreach ($results as $result) {
+            foreach ($results as $service => $result) {
                 $status = $result['success'] ? '✅ Connected' : '❌ Failed';
                 $table[] = [
                     $result['name'],
@@ -85,14 +83,15 @@ class TestApiConnections extends Command
             $configuredCount = $configuredServices->where('configured', true)->count();
             $totalCount = $configuredServices->count();
 
-            $this->info(sprintf('Configured services: %d/%d', $configuredCount, $totalCount));
+            $this->info("Configured services: {$configuredCount}/{$totalCount}");
 
             if ($configuredCount === 0) {
                 $this->warn('No API services are configured for this project.');
                 $this->line('Please add API credentials in the Filament admin panel.');
             }
-        } catch (\Exception $exception) {
-            $this->error(sprintf('Error testing project %s: ', $project->name) . $exception->getMessage());
+
+        } catch (\Exception $e) {
+            $this->error("Error testing project {$project->name}: " . $e->getMessage());
         }
     }
 }

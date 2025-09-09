@@ -35,7 +35,7 @@ class PageSpeedMonitor extends Command
         $force = $this->option('force');
 
         $projects = $projectId
-            ? (new \Illuminate\Support\Collection([\App\Models\Project::query()->find($projectId)]))->filter()
+            ? collect([Project::find($projectId)])->filter()
             : $this->getMonitorableProjects();
 
         if ($projects->isEmpty()) {
@@ -44,7 +44,7 @@ class PageSpeedMonitor extends Command
             return 0;
         }
 
-        $this->info(sprintf('Found %s project(s) to monitor.', $projects->count()));
+        $this->info("Found {$projects->count()} project(s) to monitor.");
         $this->newLine();
 
         $results = [];
@@ -54,17 +54,17 @@ class PageSpeedMonitor extends Command
         }
 
         // Summary
-        $successful = (new \Illuminate\Support\Collection($results))->where('success', true)->count();
+        $successful = collect($results)->where('success', true)->count();
         $total = count($results);
 
         $this->newLine();
-        $this->info(sprintf('✅ Monitoring completed: %d/%d projects analyzed successfully.', $successful, $total));
+        $this->info("✅ Monitoring completed: {$successful}/{$total} projects analyzed successfully.");
 
         if ($successful < $total) {
-            $errors = (new \Illuminate\Support\Collection($results))->where('success', false)->pluck('error');
+            $errors = collect($results)->where('success', false)->pluck('error');
             $this->warn('Errors occurred:');
             foreach ($errors as $error) {
-                $this->line('  - ' . $error);
+                $this->line("  - {$error}");
             }
         }
 
@@ -73,7 +73,7 @@ class PageSpeedMonitor extends Command
 
     private function getMonitorableProjects()
     {
-        return \App\Models\Project::query()->whereHas('apiCredentials', function ($query): void {
+        return Project::whereHas('apiCredentials', function ($query) {
             $query->where('service', 'google_pagespeed_insights')
                 ->where('is_active', true);
         })->get();
@@ -81,7 +81,7 @@ class PageSpeedMonitor extends Command
 
     private function monitorProject(Project $project, string $strategy, bool $force): array
     {
-        $this->line(sprintf('📊 Analyzing: <info>%s</info> (%s)', $project->name, $project->url));
+        $this->line("📊 Analyzing: <info>{$project->name}</info> ({$project->url})");
 
         try {
             // Check if we should skip based on recent analysis
@@ -96,7 +96,7 @@ class PageSpeedMonitor extends Command
 
             if (! $pageSpeed->isConfigured()) {
                 $error = 'PageSpeed API not configured';
-                $this->line('  ❌ ' . $error);
+                $this->line("  ❌ {$error}");
 
                 return ['success' => false, 'error' => $error];
             }
@@ -105,13 +105,13 @@ class PageSpeedMonitor extends Command
             $analyzed = [];
 
             foreach ($strategies as $currentStrategy) {
-                $this->line(sprintf('  🔄 Running %s analysis...', $currentStrategy));
+                $this->line("  🔄 Running {$currentStrategy} analysis...");
 
                 $results = $pageSpeed->analyzeProjectUrl($currentStrategy);
                 $analyzed[] = $currentStrategy;
 
                 $score = $results['scores']['performance'] ?? 0;
-                $this->line(sprintf('  ✅ %s completed - Performance: %s/100', $currentStrategy, $score));
+                $this->line("  ✅ {$currentStrategy} completed - Performance: {$score}/100");
 
                 // Small delay between requests to respect rate limits
                 if (count($strategies) > 1) {
@@ -126,14 +126,14 @@ class PageSpeedMonitor extends Command
                         ]); */
 
             return ['success' => true, 'analyzed' => $analyzed];
-        } catch (\Exception $exception) {
-            $error = sprintf('Error analyzing %s: ', $project->name) . $exception->getMessage();
-            $this->line('  ❌ ' . $error);
+        } catch (\Exception $e) {
+            $error = "Error analyzing {$project->name}: " . $e->getMessage();
+            $this->line("  ❌ {$error}");
 
             Log::error('PageSpeed monitoring failed', [
                 'project_id' => $project->id,
                 'project_name' => $project->name,
-                'error' => $exception->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return ['success' => false, 'error' => $error];

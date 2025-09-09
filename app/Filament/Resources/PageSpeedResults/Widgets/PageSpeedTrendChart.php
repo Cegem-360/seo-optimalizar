@@ -3,27 +3,28 @@
 namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 
 class PageSpeedTrendChart extends ChartWidget
 {
     protected ?string $heading = 'Performance Trends (Last 30 Days)';
-
-    protected int|string|array $columnSpan = 'full';
-
+    
+    protected int | string | array $columnSpan = 'full';
+    
     public ?string $filter = 'mobile';
-
+    
     protected function getData(): array
     {
         $project = Filament::getTenant();
-
+        
         $results = PageSpeedResult::forProject($project->id)
             ->strategy($this->filter)
             ->recent(30)
             ->orderBy('analyzed_at')
             ->get();
-
+            
         return [
             'datasets' => [
                 [
@@ -63,7 +64,7 @@ class PageSpeedTrendChart extends ChartWidget
     {
         return 'line';
     }
-
+    
     protected function getFilters(): ?array
     {
         return [
@@ -71,7 +72,7 @@ class PageSpeedTrendChart extends ChartWidget
             'desktop' => 'Desktop',
         ];
     }
-
+    
     protected function getOptions(): array
     {
         return [

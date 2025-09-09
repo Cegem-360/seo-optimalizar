@@ -2,28 +2,27 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
+return new class extends Migration
 {
-    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
-
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        $this->builder->create('competitors', function (Blueprint $blueprint): void {
-            $blueprint->id();
-            $blueprint->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $blueprint->string('name');
-            $blueprint->string('url');
-            $blueprint->string('domain');
-            $blueprint->text('description')->nullable();
-            $blueprint->boolean('is_active')->default(true);
-            $blueprint->timestamps();
+        Schema::create('competitors', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('url');
+            $table->string('domain');
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
 
-            $blueprint->index(['project_id', 'is_active']);
-            $blueprint->unique(['project_id', 'domain']);
+            $table->index(['project_id', 'is_active']);
+            $table->unique(['project_id', 'domain']);
         });
     }
 
@@ -32,6 +31,6 @@ return new class() extends Migration
      */
     public function down(): void
     {
-        $this->builder->dropIfExists('competitors');
+        Schema::dropIfExists('competitors');
     }
 };

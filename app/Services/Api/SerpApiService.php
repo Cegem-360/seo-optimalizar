@@ -5,22 +5,22 @@ namespace App\Services\Api;
 use App\Models\Keyword;
 use App\Models\Ranking;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Collection;
 
 class SerpApiService extends BaseApiService
 {
     protected string $serviceName = 'serpapi';
-
     private string $baseUrl = 'https://serpapi.com/search';
 
-    protected function configureRequest(PendingRequest $pendingRequest): void
+    protected function configureRequest(PendingRequest $request): void
     {
         $apiKey = $this->getCredential('api_key');
-
-        if (! $apiKey) {
+        
+        if (!$apiKey) {
             throw new \Exception('Missing SerpApi API key');
         }
 
-        $pendingRequest->withHeaders([
+        $request->withHeaders([
             'Accept' => 'application/json',
         ]);
     }
@@ -34,9 +34,9 @@ class SerpApiService extends BaseApiService
                 'engine' => 'google',
                 'num' => 1,
             ]);
-
+            
             return $response->successful();
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -55,21 +55,20 @@ class SerpApiService extends BaseApiService
         ];
 
         $response = $this->makeRequest()->get($this->baseUrl, $params);
-
         return $this->handleResponse($response);
     }
 
     public function getKeywordPosition(string $query, string $targetDomain, string $location = 'Hungary'): ?array
     {
         $searchResults = $this->searchKeyword($query, $location);
-
-        if (! isset($searchResults['organic_results'])) {
+        
+        if (!isset($searchResults['organic_results'])) {
             return null;
         }
 
         foreach ($searchResults['organic_results'] as $index => $result) {
             $resultDomain = $this->extractDomain($result['link'] ?? '');
-
+            
             if ($this->domainsMatch($resultDomain, $targetDomain)) {
                 return [
                     'position' => $index + 1,
@@ -95,17 +94,17 @@ class SerpApiService extends BaseApiService
                 try {
                     $this->syncSingleKeyword($keyword);
                     $synced++;
-
+                    
                     // Rate limiting - SerpApi has strict limits
                     sleep(1); // 1 second between requests
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning('Failed to sync keyword: ' . $keyword->keyword, [
+                    \Log::warning("Failed to sync keyword: {$keyword->keyword}", [
                         'error' => $e->getMessage(),
                         'keyword_id' => $keyword->id,
                     ]);
                 }
             }
-
+            
             // Longer pause between batches
             sleep(5);
         }
@@ -117,7 +116,7 @@ class SerpApiService extends BaseApiService
     {
         $targetDomain = $this->extractDomain($this->project->url);
         $location = $this->getLocationFromGeoTarget($keyword->geo_target);
-
+        
         $positionData = $this->getKeywordPosition(
             $keyword->keyword,
             $targetDomain,
@@ -129,9 +128,9 @@ class SerpApiService extends BaseApiService
         $previousPosition = $latestRanking?->position;
 
         // Create new ranking record
-        \App\Models\Ranking::query()->create([
+        Ranking::create([
             'keyword_id' => $keyword->id,
-            'position' => $positionData !== null && $positionData !== [] ? $positionData['position'] : null,
+            'position' => $positionData ? $positionData['position'] : null,
             'previous_position' => $previousPosition,
             'url' => $positionData['url'] ?? null,
             'featured_snippet' => $positionData['featured_snippet'] ?? false,
@@ -143,7 +142,6 @@ class SerpApiService extends BaseApiService
     private function extractDomain(string $url): string
     {
         $parsedUrl = parse_url($url);
-
         return $parsedUrl['host'] ?? '';
     }
 
@@ -152,8 +150,8 @@ class SerpApiService extends BaseApiService
         // Remove www. prefix for comparison
         $domain1 = preg_replace('/^www\./', '', $domain1);
         $domain2 = preg_replace('/^www\./', '', $domain2);
-
-        return strtolower((string) $domain1) === strtolower((string) $domain2);
+        
+        return strtolower($domain1) === strtolower($domain2);
     }
 
     private function isFeaturedSnippet(array $searchResults, array $result): bool
@@ -161,16 +159,12 @@ class SerpApiService extends BaseApiService
         // Check if this result is in the featured snippet
         if (isset($searchResults['answer_box'])) {
             $answerBoxLink = $searchResults['answer_box']['link'] ?? '';
-
             return $answerBoxLink === ($result['link'] ?? '');
         }
 
         return false;
     }
 
-    /**
-     * @return string[]
-     */
     private function extractSerpFeatures(array $searchResults): array
     {
         $features = [];
@@ -179,23 +173,23 @@ class SerpApiService extends BaseApiService
         if (isset($searchResults['answer_box'])) {
             $features[] = 'featured_snippet';
         }
-
+        
         if (isset($searchResults['people_also_ask'])) {
             $features[] = 'people_also_ask';
         }
-
+        
         if (isset($searchResults['images_results'])) {
             $features[] = 'image_pack';
         }
-
+        
         if (isset($searchResults['videos_results'])) {
             $features[] = 'video_carousel';
         }
-
+        
         if (isset($searchResults['local_results'])) {
             $features[] = 'local_pack';
         }
-
+        
         if (isset($searchResults['shopping_results'])) {
             $features[] = 'shopping_results';
         }
@@ -205,7 +199,7 @@ class SerpApiService extends BaseApiService
 
     private function getCountryCode(string $location): string
     {
-        return match (strtolower($location)) {
+        return match(strtolower($location)) {
             'hungary' => 'hu',
             'united states', 'usa' => 'us',
             'united kingdom', 'uk' => 'gb',
@@ -217,7 +211,7 @@ class SerpApiService extends BaseApiService
 
     private function getLocationFromGeoTarget(string $geoTarget): string
     {
-        return match (strtolower($geoTarget)) {
+        return match(strtolower($geoTarget)) {
             'hu', 'hungary' => 'Hungary',
             'us', 'usa' => 'United States',
             'uk', 'gb' => 'United Kingdom',

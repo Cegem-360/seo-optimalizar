@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 
 abstract class BaseApiService
 {
+    protected Project $project;
+
     protected ?ApiCredential $credentials = null;
 
     protected string $serviceName;
@@ -19,8 +21,9 @@ abstract class BaseApiService
 
     protected int $retryDelayMs = 1000;
 
-    public function __construct(protected Project $project)
+    public function __construct(Project $project)
     {
+        $this->project = $project;
         $this->loadCredentials();
     }
 
@@ -36,7 +39,7 @@ abstract class BaseApiService
     protected function makeRequest(): PendingRequest
     {
         if (! $this->isConfigured()) {
-            throw new \Exception('API credentials not configured for service: ' . $this->serviceName);
+            throw new \Exception("API credentials not configured for service: {$this->serviceName}");
         }
 
         return Http::retry($this->retryAttempts, $this->retryDelayMs)
@@ -44,15 +47,15 @@ abstract class BaseApiService
             ->withOptions([
                 'verify' => true,
             ])
-            ->beforeSending(function (PendingRequest $pendingRequest): void {
-                $this->configureRequest($pendingRequest);
-                $this->logRequest($pendingRequest);
+            ->beforeSending(function (PendingRequest $request) {
+                $this->configureRequest($request);
+                $this->logRequest($request);
             });
     }
 
-    abstract protected function configureRequest(PendingRequest $pendingRequest): void;
+    abstract protected function configureRequest(PendingRequest $request): void;
 
-    protected function logRequest(PendingRequest $pendingRequest): void
+    protected function logRequest(PendingRequest $request): void
     {
         /* Log::info("API Request to {$this->serviceName}", [
             'project_id' => $this->project->id,
@@ -71,7 +74,7 @@ abstract class BaseApiService
         ]); */
 
         if (! $response->successful()) {
-            Log::warning('API Error from ' . $this->serviceName, [
+            Log::warning("API Error from {$this->serviceName}", [
                 'project_id' => $this->project->id,
                 'service' => $this->serviceName,
                 'status' => $response->status(),
@@ -87,7 +90,7 @@ abstract class BaseApiService
 
         if (! $response->successful()) {
             throw new \Exception(
-                sprintf('API request failed for %s: %d - %s', $this->serviceName, $response->status(), $response->body())
+                "API request failed for {$this->serviceName}: {$response->status()} - {$response->body()}"
             );
         }
 
@@ -96,7 +99,7 @@ abstract class BaseApiService
 
     protected function markCredentialsAsUsed(): void
     {
-        if ($this->credentials instanceof \App\Models\ApiCredential) {
+        if ($this->credentials) {
             $this->credentials->markAsUsed();
         }
     }
@@ -110,6 +113,6 @@ abstract class BaseApiService
 
     public function isConfigured(): bool
     {
-        return $this->credentials instanceof \App\Models\ApiCredential && $this->credentials->is_active;
+        return $this->credentials !== null && $this->credentials->is_active;
     }
 }

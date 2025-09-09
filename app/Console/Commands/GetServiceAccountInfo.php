@@ -3,52 +3,42 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
 class GetServiceAccountInfo extends Command
 {
     protected $signature = 'google:service-account-info';
-
+    
     protected $description = 'Get Service Account Client ID and info for domain-wide delegation';
-
-    /**
-     * Create a new console command instance.
-     */
-    public function __construct(private readonly \Illuminate\Filesystem\Filesystem $filesystem, private readonly \Illuminate\Contracts\Config\Repository $repository)
-    {
-        parent::__construct();
-    }
 
     public function handle(): int
     {
-        $credentialsPath = $this->repository->get('services.google.credentials_path');
-
-        if (! $credentialsPath) {
+        $credentialsPath = config('services.google.credentials_path');
+        
+        if (!$credentialsPath) {
             $this->error('GOOGLE_APPLICATION_CREDENTIALS not set in .env');
-
             return self::FAILURE;
         }
-
+        
         $fullPath = base_path($credentialsPath);
-
-        if (! $this->filesystem->exists($fullPath)) {
+        
+        if (!File::exists($fullPath)) {
             $this->error('Service account file not found at: ' . $fullPath);
             $this->info('Run: php artisan google:setup-service-account');
-
             return self::FAILURE;
         }
-
-        $json = json_decode((string) $this->filesystem->get($fullPath), true);
-
-        if (! $json) {
+        
+        $json = json_decode(File::get($fullPath), true);
+        
+        if (!$json) {
             $this->error('Invalid JSON file');
-
             return self::FAILURE;
         }
-
+        
         $this->info('Service Account Information:');
         $this->info('============================');
         $this->newLine();
-
+        
         $this->table(
             ['Field', 'Value'],
             [
@@ -58,7 +48,7 @@ class GetServiceAccountInfo extends Command
                 ['Private Key ID', substr($json['private_key_id'] ?? '', 0, 20) . '...'],
             ]
         );
-
+        
         $this->newLine();
         $this->info('To enable Domain-Wide Delegation:');
         $this->info('1. Copy the Client ID above');
@@ -69,13 +59,13 @@ class GetServiceAccountInfo extends Command
         $this->line('   https://www.googleapis.com/auth/webmasters.readonly');
         $this->line('   https://www.googleapis.com/auth/webmasters');
         $this->newLine();
-
-        $this->info('Current impersonation email: ' . $this->repository->get('services.google.workspace_subject', 'Not set'));
-
-        if (! $this->repository->get('services.google.workspace_subject')) {
+        
+        $this->info('Current impersonation email: ' . config('services.google.workspace_subject', 'Not set'));
+        
+        if (!config('services.google.workspace_subject')) {
             $this->warn('Add to .env: GOOGLE_WORKSPACE_SUBJECT="tamas@cegem360.com"');
         }
-
+        
         return self::SUCCESS;
     }
 }

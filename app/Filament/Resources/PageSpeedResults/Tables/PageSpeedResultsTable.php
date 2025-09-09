@@ -31,7 +31,7 @@ class PageSpeedResultsTable
 
                 TextColumn::make('performance_score')
                     ->label('Performance')
-                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? $state . '/100' : 'N/A')
+                    ->formatStateUsing(fn (?int $state): string => $state ? "{$state}/100" : 'N/A')
                     ->badge()
                     ->color(fn (?int $state): string => match (true) {
                         $state >= 90 => 'success',
@@ -42,7 +42,7 @@ class PageSpeedResultsTable
 
                 TextColumn::make('accessibility_score')
                     ->label('Accessibility')
-                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? $state . '/100' : 'N/A')
+                    ->formatStateUsing(fn (?int $state): string => $state ? "{$state}/100" : 'N/A')
                     ->badge()
                     ->color(fn (?int $state): string => match (true) {
                         $state >= 90 => 'success',
@@ -54,7 +54,7 @@ class PageSpeedResultsTable
 
                 TextColumn::make('seo_score')
                     ->label('SEO')
-                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? $state . '/100' : 'N/A')
+                    ->formatStateUsing(fn (?int $state): string => $state ? "{$state}/100" : 'N/A')
                     ->badge()
                     ->color(fn (?int $state): string => match (true) {
                         $state >= 90 => 'success',
@@ -100,7 +100,7 @@ class PageSpeedResultsTable
                         'poor' => 'Poor (<50)',
                     ])
                     ->query(function ($query, array $data) {
-                        if (! $data['value']) {
+                        if (!$data['value']) {
                             return $query;
                         }
 

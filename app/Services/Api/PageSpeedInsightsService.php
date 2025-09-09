@@ -2,24 +2,25 @@
 
 namespace App\Services\Api;
 
+use App\Models\PageSpeedResult;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class PageSpeedInsightsService extends BaseApiService
 {
     protected string $serviceName = 'google_pagespeed_insights';
-
     private string $baseUrl = 'https://www.googleapis.com/pagespeedonline/v5';
 
-    protected function configureRequest(PendingRequest $pendingRequest): void
+    protected function configureRequest(PendingRequest $request): void
     {
         $apiKey = $this->getCredential('api_key');
-
-        if (! $apiKey) {
+        
+        if (!$apiKey) {
             throw new \Exception('Missing PageSpeed Insights API key');
         }
 
-        $pendingRequest->withHeaders([
+        $request->withHeaders([
             'Accept' => 'application/json',
         ]);
     }
@@ -29,20 +30,19 @@ class PageSpeedInsightsService extends BaseApiService
         try {
             // Use direct HTTP call instead of makeRequest to avoid facade issues
             $apiKey = $this->getCredential('api_key');
-
+            
             $client = new \GuzzleHttp\Client();
-            $response = $client->get($this->baseUrl . '/runPagespeed', [
+            $response = $client->get("{$this->baseUrl}/runPagespeed", [
                 'query' => [
                     'key' => $apiKey,
                     'url' => 'https://www.google.com',
                     'strategy' => 'mobile',
-                ],
+                ]
             ]);
-
+            
             $data = json_decode($response->getBody()->getContents(), true);
-
             return $response->getStatusCode() === 200 && isset($data['id']);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -56,7 +56,7 @@ class PageSpeedInsightsService extends BaseApiService
             'category' => $categories,
         ];
 
-        $response = $this->makeRequest()->get($this->baseUrl . '/runPagespeed', $params);
+        $response = $this->makeRequest()->get("{$this->baseUrl}/runPagespeed", $params);
         $data = $this->handleResponse($response);
 
         return $this->processPageSpeedData($data);
@@ -66,23 +66,23 @@ class PageSpeedInsightsService extends BaseApiService
     {
         // Use direct HTTP call to avoid facade issues
         $apiKey = $this->getCredential('api_key');
-
+        
         $client = new \GuzzleHttp\Client();
-        $response = $client->get($this->baseUrl . '/runPagespeed', [
+        $response = $client->get("{$this->baseUrl}/runPagespeed", [
             'query' => [
                 'key' => $apiKey,
                 'url' => $this->project->url,
                 'strategy' => $strategy,
                 'category' => ['performance', 'accessibility', 'best-practices', 'seo'],
-            ],
+            ]
         ]);
-
+        
         if ($response->getStatusCode() !== 200) {
             throw new \Exception('PageSpeed API request failed: ' . $response->getStatusCode());
         }
-
+        
         $data = json_decode($response->getBody()->getContents(), true);
-
+        
         // Simple processing without facades
         $processed = [
             'url' => $data['id'] ?? '',
@@ -93,7 +93,7 @@ class PageSpeedInsightsService extends BaseApiService
         // Overall scores
         if (isset($data['lighthouseResult']['categories'])) {
             $categories = $data['lighthouseResult']['categories'];
-
+            
             $processed['scores'] = [
                 'performance' => isset($categories['performance']) ? round($categories['performance']['score'] * 100) : null,
                 'accessibility' => isset($categories['accessibility']) ? round($categories['accessibility']['score'] * 100) : null,
@@ -106,7 +106,7 @@ class PageSpeedInsightsService extends BaseApiService
         if (isset($data['lighthouseResult']['audits'])) {
             $audits = $data['lighthouseResult']['audits'];
             $coreWebVitals = [];
-
+            
             // First Contentful Paint (FCP)
             if (isset($audits['first-contentful-paint'])) {
                 $coreWebVitals['fcp'] = [
@@ -142,20 +142,20 @@ class PageSpeedInsightsService extends BaseApiService
                     'score' => $audits['speed-index']['score'] ?? null,
                 ];
             }
-
+            
             $processed['core_web_vitals'] = $coreWebVitals;
         }
 
         // Store results in database
         $this->storeResults($processed, $data);
-
+        
         return $processed;
     }
 
-    public function analyzeBothStrategies(?string $url = null): array
+    public function analyzeBothStrategies(string $url = null): array
     {
-        $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
-
+        $url = $url ?: $this->project->url;
+        
         $results = [
             'mobile' => $this->analyzeUrl($url, 'mobile'),
             'desktop' => $this->analyzeUrl($url, 'desktop'),
@@ -167,16 +167,16 @@ class PageSpeedInsightsService extends BaseApiService
         return $results;
     }
 
-    public function getCoreWebVitals(?string $url = null, string $strategy = 'mobile'): array
+    public function getCoreWebVitals(string $url = null, string $strategy = 'mobile'): array
     {
-        $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
+        $url = $url ?: $this->project->url;
         $analysis = $this->analyzeUrl($url, $strategy);
 
         $coreWebVitals = [];
-
+        
         if (isset($analysis['lighthouse_result']['audits'])) {
             $audits = $analysis['lighthouse_result']['audits'];
-
+            
             // First Contentful Paint (FCP)
             if (isset($audits['first-contentful-paint'])) {
                 $coreWebVitals['fcp'] = [
@@ -235,16 +235,16 @@ class PageSpeedInsightsService extends BaseApiService
         return $coreWebVitals;
     }
 
-    public function getOptimizationSuggestions(?string $url = null, string $strategy = 'mobile'): Collection
+    public function getOptimizationSuggestions(string $url = null, string $strategy = 'mobile'): Collection
     {
-        $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
+        $url = $url ?: $this->project->url;
         $analysis = $this->analyzeUrl($url, $strategy);
 
-        $suggestions = new \Illuminate\Support\Collection();
-
+        $suggestions = collect();
+        
         if (isset($analysis['lighthouse_result']['audits'])) {
             $audits = $analysis['lighthouse_result']['audits'];
-
+            
             foreach ($audits as $auditKey => $audit) {
                 // Only include audits that have suggestions and are not perfect scores
                 if (isset($audit['score']) && $audit['score'] < 1 && isset($audit['title'])) {
@@ -275,7 +275,7 @@ class PageSpeedInsightsService extends BaseApiService
         // Overall scores
         if (isset($data['lighthouseResult']['categories'])) {
             $categories = $data['lighthouseResult']['categories'];
-
+            
             $processed['scores'] = [
                 'performance' => isset($categories['performance']) ? round($categories['performance']['score'] * 100) : null,
                 'accessibility' => isset($categories['accessibility']) ? round($categories['accessibility']['score'] * 100) : null,
@@ -305,15 +305,15 @@ class PageSpeedInsightsService extends BaseApiService
         // Note: PageSpeed Insights doesn't store historical data
         // You would need to implement your own storage mechanism
         // This is a placeholder for future implementation
-
-        return new \Illuminate\Support\Collection();
+        
+        return collect();
     }
 
     private function storeResults(array $processed, array $rawData): void
     {
         $coreWebVitals = $processed['core_web_vitals'] ?? [];
-
-        \App\Models\PageSpeedResult::query()->create([
+        
+        PageSpeedResult::create([
             'project_id' => $this->project->id,
             'url' => $processed['url'],
             'strategy' => $processed['strategy'],

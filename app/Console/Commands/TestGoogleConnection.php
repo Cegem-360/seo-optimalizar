@@ -8,43 +8,34 @@ use Illuminate\Console\Command;
 class TestGoogleConnection extends Command
 {
     protected $signature = 'google:test-connection';
-
+    
     protected $description = 'Test Google Search Console API connection';
 
-    /**
-     * Create a new console command instance.
-     */
-    public function __construct(private readonly \Illuminate\Contracts\Config\Repository $repository)
-    {
-        parent::__construct();
-    }
-
-    public function handle(GoogleSearchConsoleService $googleSearchConsoleService): int
+    public function handle(GoogleSearchConsoleService $service): int
     {
         $this->info('Testing Google Search Console API connection...');
         $this->newLine();
-
+        
         // Check if credentials are configured
-        if (! $googleSearchConsoleService->hasCredentials()) {
+        if (!$service->hasCredentials()) {
             $this->error('No credentials configured!');
             $this->info('Run: php artisan google:setup-service-account');
-
             return self::FAILURE;
         }
-
+        
         // Check authentication type
-        if ($googleSearchConsoleService->isUsingServiceAccount()) {
+        if ($service->isUsingServiceAccount()) {
             $this->info('✓ Using Service Account authentication');
         } else {
             $this->info('✓ Using OAuth authentication');
         }
-
+        
         // Try to list sites
         try {
             $this->info('Fetching available sites...');
-            $sites = $googleSearchConsoleService->getSites();
-
-            if ($sites === []) {
+            $sites = $service->getSites();
+            
+            if (empty($sites)) {
                 $this->warn('No sites found. Make sure the service account has access to at least one Search Console property.');
                 $this->info('Add the service account email to your Search Console property:');
                 $this->info('1. Go to https://search.google.com/search-console');
@@ -59,21 +50,21 @@ class TestGoogleConnection extends Command
                     $this->line(' - ' . $site->getSiteUrl());
                 }
             }
-
+            
             return self::SUCCESS;
-        } catch (\Exception $exception) {
-            $this->error('Connection failed: ' . $exception->getMessage());
+        } catch (\Exception $e) {
+            $this->error('Connection failed: ' . $e->getMessage());
             $this->newLine();
-
-            if (str_contains($exception->getMessage(), 'Could not load the default credentials')) {
+            
+            if (str_contains($e->getMessage(), 'Could not load the default credentials')) {
                 $this->info('Service Account file might be missing or invalid.');
-                $this->info('Check that the file exists at: ' . base_path($this->repository->get('services.google.credentials_path')));
-            } elseif (str_contains($exception->getMessage(), '403')) {
+                $this->info('Check that the file exists at: ' . base_path(config('services.google.credentials_path')));
+            } elseif (str_contains($e->getMessage(), '403')) {
                 $this->info('Access denied. Make sure:');
                 $this->info('1. Search Console API is enabled in Google Cloud Console');
                 $this->info('2. Service account has access to your Search Console property');
             }
-
+            
             return self::FAILURE;
         }
     }

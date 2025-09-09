@@ -7,13 +7,17 @@ use Illuminate\Support\Collection;
 
 class ApiServiceManager
 {
+    private Project $project;
     private array $services = [];
 
-    public function __construct(private readonly Project $project) {}
+    public function __construct(Project $project)
+    {
+        $this->project = $project;
+    }
 
     public function getService(string $serviceName): BaseApiService
     {
-        if (! isset($this->services[$serviceName])) {
+        if (!isset($this->services[$serviceName])) {
             $this->services[$serviceName] = $this->createService($serviceName);
         }
 
@@ -28,7 +32,7 @@ class ApiServiceManager
             'google_pagespeed_insights' => new PageSpeedInsightsService($this->project),
             'google_ads' => new GoogleAdsApiService($this->project),
             'gemini' => new GeminiApiService($this->project),
-            default => throw new \InvalidArgumentException('Unknown service: ' . $serviceName),
+            default => throw new \InvalidArgumentException("Unknown service: {$serviceName}"),
         };
     }
 
@@ -41,6 +45,7 @@ class ApiServiceManager
     {
         return $this->getService('google_analytics');
     }
+
 
     public function getPageSpeedInsights(): PageSpeedInsightsService
     {
@@ -59,8 +64,8 @@ class ApiServiceManager
 
     public function getConfiguredServices(): Collection
     {
-        $configuredServices = new \Illuminate\Support\Collection();
-
+        $configuredServices = collect();
+        
         $availableServices = [
             'google_search_console' => 'Google Search Console',
             'google_analytics' => 'Google Analytics',
@@ -94,33 +99,32 @@ class ApiServiceManager
     public function testAllConnections(): array
     {
         $results = [];
-        $configuredServices = $this->getConfiguredServices();
+        $services = $this->getConfiguredServices();
 
-        foreach ($configuredServices as $configuredService) {
-            $serviceKey = $configuredService['key'];
-
-            if (! $configuredService['configured']) {
+        foreach ($services as $serviceInfo) {
+            $serviceKey = $serviceInfo['key'];
+            
+            if (!$serviceInfo['configured']) {
                 $results[$serviceKey] = [
-                    'name' => $configuredService['name'],
+                    'name' => $serviceInfo['name'],
                     'success' => false,
                     'message' => 'Service not configured',
                 ];
-
                 continue;
             }
 
             try {
-                $service = $configuredService['service'];
+                $service = $serviceInfo['service'];
                 $success = $service->testConnection();
-
+                
                 $results[$serviceKey] = [
-                    'name' => $configuredService['name'],
+                    'name' => $serviceInfo['name'],
                     'success' => $success,
                     'message' => $success ? 'Connection successful' : 'Connection failed',
                 ];
             } catch (\Exception $e) {
                 $results[$serviceKey] = [
-                    'name' => $configuredService['name'],
+                    'name' => $serviceInfo['name'],
                     'success' => false,
                     'message' => 'Error: ' . $e->getMessage(),
                 ];
@@ -141,16 +145,17 @@ class ApiServiceManager
                 $synced = $gsc->syncKeywordRankings();
                 $results['google_search_console'] = [
                     'success' => true,
-                    'message' => sprintf('Synced %d keywords from Google Search Console', $synced),
+                    'message' => "Synced {$synced} keywords from Google Search Console",
                     'count' => $synced,
                 ];
             }
-        } catch (\Exception $exception) {
+        } catch (\Exception $e) {
             $results['google_search_console'] = [
                 'success' => false,
-                'message' => 'Error syncing Search Console data: ' . $exception->getMessage(),
+                'message' => 'Error syncing Search Console data: ' . $e->getMessage(),
             ];
         }
+
 
         return $results;
     }
@@ -159,9 +164,8 @@ class ApiServiceManager
     {
         try {
             $service = $this->getService($serviceName);
-
             return $service->isConfigured();
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return false;
         }
     }

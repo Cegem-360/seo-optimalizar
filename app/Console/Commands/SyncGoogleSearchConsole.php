@@ -16,14 +16,14 @@ class SyncGoogleSearchConsole extends Command
     protected $description = 'Sync Google Search Console data for projects';
 
     public function __construct(
-        private readonly GoogleSearchConsoleService $googleSearchConsoleService
+        private readonly GoogleSearchConsoleService $searchConsoleService
     ) {
         parent::__construct();
     }
 
     public function handle(): int
     {
-        if (! $this->googleSearchConsoleService->hasCredentials()) {
+        if (! $this->searchConsoleService->hasCredentials()) {
             $this->error('Google Search Console credentials are not configured.');
             $this->warn('Please set up your Google Cloud credentials in the config/services.php file.');
 
@@ -31,9 +31,9 @@ class SyncGoogleSearchConsole extends Command
         }
 
         if ($projectId = $this->option('project')) {
-            $projects = \App\Models\Project::query()->where('id', $projectId)->get();
+            $projects = Project::where('id', $projectId)->get();
             if ($projects->isEmpty()) {
-                $this->error(sprintf('Project with ID %s not found.', $projectId));
+                $this->error("Project with ID {$projectId} not found.");
 
                 return Command::FAILURE;
             }
@@ -52,20 +52,20 @@ class SyncGoogleSearchConsole extends Command
         }
 
         $this->info('Starting Google Search Console sync...');
-        $this->withProgressBar($projects, function (Project $project): void {
+        $this->withProgressBar($projects, function (Project $project) {
             try {
-                $this->line(' Syncing project: ' . $project->name);
+                $this->line(" Syncing project: {$project->name}");
 
-                $importedCount = $this->googleSearchConsoleService->importAndUpdateRankings($project);
+                $importedCount = $this->searchConsoleService->importAndUpdateRankings($project);
 
-                $this->line(sprintf(' ✓ Imported %s ranking entries for %s', $importedCount, $project->name));
-            } catch (\Exception $exception) {
-                $this->error(sprintf(' ✗ Failed to sync %s: %s', $project->name, $exception->getMessage()));
+                $this->line(" ✓ Imported {$importedCount} ranking entries for {$project->name}");
+            } catch (\Exception $e) {
+                $this->error(" ✗ Failed to sync {$project->name}: {$e->getMessage()}");
 
                 Log::error('GSC sync failed', [
                     'project_id' => $project->id,
                     'project_name' => $project->name,
-                    'error' => $exception->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         });

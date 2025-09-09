@@ -47,7 +47,7 @@ class TrafficOverviewWidget extends ChartWidget
 
         // Get rankings data grouped by date
         $rankings = \App\Models\Ranking::query()
-            ->whereHas('keyword', function ($query) use ($tenant): void {
+            ->whereHas('keyword', function ($query) use ($tenant) {
                 $query->where('project_id', $tenant->id);
             })
             ->whereBetween('checked_at', [$startDate, $endDate])

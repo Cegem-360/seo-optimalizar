@@ -18,41 +18,41 @@ class CompetitorRankingFactory extends Factory
      */
     public function definition(): array
     {
-        $position = fake()->numberBetween(1, 100);
-        $previousPosition = fake()->optional(0.7)->numberBetween(1, 100);
-
+        $position = $this->faker->numberBetween(1, 100);
+        $previousPosition = $this->faker->optional(0.7)->numberBetween(1, 100);
+        
         return [
             'competitor_id' => Competitor::factory(),
             'keyword_id' => Keyword::factory(),
             'position' => $position,
             'previous_position' => $previousPosition,
-            'url' => fake()->optional(0.8)->url(),
-            'featured_snippet' => fake()->boolean(5),
-            'serp_features' => fake()->optional()->randomElements([
-                'featured_snippet', 'people_also_ask', 'image_pack',
-                'video_carousel', 'local_pack', 'shopping_results',
-            ], fake()->numberBetween(0, 3)),
-            'checked_at' => fake()->dateTimeBetween('-30 days', 'now'),
+            'url' => $this->faker->optional(0.8)->url(),
+            'featured_snippet' => $this->faker->boolean(5),
+            'serp_features' => $this->faker->optional()->randomElements([
+                'featured_snippet', 'people_also_ask', 'image_pack', 
+                'video_carousel', 'local_pack', 'shopping_results'
+            ], $this->faker->numberBetween(0, 3)),
+            'checked_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
         ];
     }
 
     public function topTen(): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'position' => fake()->numberBetween(1, 10),
+        return $this->state(fn (array $attributes) => [
+            'position' => $this->faker->numberBetween(1, 10),
         ]);
     }
 
     public function topThree(): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'position' => fake()->numberBetween(1, 3),
+        return $this->state(fn (array $attributes) => [
+            'position' => $this->faker->numberBetween(1, 3),
         ]);
     }
 
     public function withFeaturedSnippet(): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (array $attributes) => [
             'featured_snippet' => true,
             'position' => 1,
         ]);

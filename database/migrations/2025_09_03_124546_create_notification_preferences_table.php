@@ -2,17 +2,16 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
+return new class extends Migration
 {
-    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
-
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        $this->builder->create('notification_preferences', function (Blueprint $blueprint): void {
+        Schema::create('notification_preferences', function (Blueprint $blueprint): void {
             $blueprint->id();
             $blueprint->foreignId('user_id')->constrained()->cascadeOnDelete();
             $blueprint->foreignId('project_id')->constrained()->cascadeOnDelete();
@@ -45,6 +44,6 @@ return new class() extends Migration
      */
     public function down(): void
     {
-        $this->builder->dropIfExists('notification_preferences');
+        Schema::dropIfExists('notification_preferences');
     }
 };

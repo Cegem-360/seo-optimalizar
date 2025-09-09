@@ -73,7 +73,7 @@ class KeywordPerformanceWidget extends BaseWidget
 
                 TextColumn::make('position_change')
                     ->label('Change (7d)')
-                    ->getStateUsing(function ($record): string {
+                    ->getStateUsing(function ($record) {
                         $latest = $record->rankings()
                             ->orderBy('checked_at', 'desc')
                             ->first();
@@ -88,26 +88,23 @@ class KeywordPerformanceWidget extends BaseWidget
                         }
 
                         $change = $weekAgo->position - $latest->position;
+
                         if ($change > 0) {
                             return '↑ ' . abs($change);
-                        }
-
-                        if ($change < 0) {
+                        } elseif ($change < 0) {
                             return '↓ ' . abs($change);
                         }
 
                         return '–';
                     })
                     ->badge()
-                    ->color(function ($state): string {
+                    ->color(function ($state) {
                         if ($state === '–') {
                             return 'gray';
                         }
-
                         if (str_starts_with($state, '↑')) {
                             return 'success';
                         }
-
                         if (str_starts_with($state, '↓')) {
                             return 'danger';
                         }
