@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Keyword;
+use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use BackedEnum;
 use Exception;
@@ -15,7 +16,6 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 /**
@@ -56,7 +56,7 @@ class SerpAnalysis extends Page implements HasSchemas
                     ->options(function () {
                         $project = filament()->getTenant();
 
-                        if (! $project instanceof \App\Models\Project) {
+                        if (! $project instanceof Project) {
                             return [];
                         }
 
@@ -111,11 +111,11 @@ class SerpAnalysis extends Page implements HasSchemas
             }
 
             $project = filament()->getTenant();
-            
-            if (! $project instanceof \App\Models\Project) {
+
+            if (! $project instanceof Project) {
                 return;
             }
-            
+
             $manager = ApiServiceManager::forProject($project);
 
             if (! $manager->hasService('gemini')) {

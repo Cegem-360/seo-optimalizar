@@ -36,37 +36,42 @@ class ApiServiceManager
 
     public function getGoogleSearchConsole(): GoogleSearchConsoleService
     {
-        /** @var GoogleSearchConsoleService $service */
-        $service = $this->getService('google_search_console');
-        return $service;
+        /** @var GoogleSearchConsoleService $baseApiService */
+        $baseApiService = $this->getService('google_search_console');
+
+        return $baseApiService;
     }
 
     public function getGoogleAnalytics(): GoogleAnalyticsService
     {
-        /** @var GoogleAnalyticsService $service */
-        $service = $this->getService('google_analytics');
-        return $service;
+        /** @var GoogleAnalyticsService $baseApiService */
+        $baseApiService = $this->getService('google_analytics');
+
+        return $baseApiService;
     }
 
     public function getPageSpeedInsights(): PageSpeedInsightsService
     {
-        /** @var PageSpeedInsightsService $service */
-        $service = $this->getService('google_pagespeed_insights');
-        return $service;
+        /** @var PageSpeedInsightsService $baseApiService */
+        $baseApiService = $this->getService('google_pagespeed_insights');
+
+        return $baseApiService;
     }
 
     public function getGoogleAds(): GoogleAdsApiService
     {
-        /** @var GoogleAdsApiService $service */
-        $service = $this->getService('google_ads');
-        return $service;
+        /** @var GoogleAdsApiService $baseApiService */
+        $baseApiService = $this->getService('google_ads');
+
+        return $baseApiService;
     }
 
     public function getGemini(): GeminiApiService
     {
-        /** @var GeminiApiService $service */
-        $service = $this->getService('gemini');
-        return $service;
+        /** @var GeminiApiService $baseApiService */
+        $baseApiService = $this->getService('gemini');
+
+        return $baseApiService;
     }
 
     public function getConfiguredServices(): Collection

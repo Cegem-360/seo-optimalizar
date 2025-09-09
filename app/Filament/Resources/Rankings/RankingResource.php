@@ -12,6 +12,7 @@ use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsOverviewWidg
 use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsTrendChart;
 use App\Filament\Resources\Rankings\Schemas\RankingForm;
 use App\Filament\Resources\Rankings\Tables\RankingsTable;
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -35,7 +36,7 @@ class RankingResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof \App\Models\Project) {
+        if ($tenant instanceof Project) {
             $builder->whereHas('keyword', function (Builder $builder) use ($tenant): void {
                 $builder->where('project_id', $tenant->id);
             });

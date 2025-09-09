@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Rankings\RankingResource\Widgets;
 
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
@@ -12,8 +13,8 @@ class RankingsOverviewWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $project = Filament::getTenant();
-        
-        if (! $project instanceof \App\Models\Project) {
+
+        if (! $project instanceof Project) {
             return [];
         }
 
@@ -124,8 +125,8 @@ class RankingsOverviewWidget extends StatsOverviewWidget
     protected function getImprovementTrend(): array
     {
         $project = Filament::getTenant();
-        
-        if (! $project instanceof \App\Models\Project) {
+
+        if (! $project instanceof Project) {
             return [];
         }
 

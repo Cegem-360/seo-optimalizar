@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\BadgeColumn;
@@ -83,7 +84,7 @@ class RecentRankingsTable extends TableWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return Ranking::query()->whereRaw('1 = 0');
         }
 

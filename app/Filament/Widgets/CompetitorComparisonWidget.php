@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
@@ -26,7 +27,7 @@ class CompetitorComparisonWidget extends ChartWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return [
                 'datasets' => [
                     [

@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property-read Project|null $project
  * @property-read User|null $user
+ *
  * @method static Builder<static>|NotificationPreference newModelQuery()
  * @method static Builder<static>|NotificationPreference newQuery()
  * @method static Builder<static>|NotificationPreference query()
+ *
  * @mixin Model
  */
 class NotificationPreference extends Model

@@ -27,13 +27,13 @@ abstract class BaseApiService
 
     protected function loadCredentials(): void
     {
-        /** @var \App\Models\ApiCredential|null $credentials */
+        /** @var ApiCredential|null $credentials */
         $credentials = $this->project
             ->apiCredentials()
             ->where('service', $this->serviceName)
             ->where('is_active', true)
             ->first();
-            
+
         $this->credentials = $credentials;
     }
 

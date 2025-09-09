@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\Tables;
 
 use App\Jobs\ImportSearchConsoleDataJob;
+use App\Models\Project;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -56,7 +57,7 @@ class ProjectsTable
                     ->icon('heroicon-o-cloud-arrow-down')
                     ->label('Import from Search Console')
                     ->action(function ($record): void {
-                        if ($record instanceof \App\Models\Project) {
+                        if ($record instanceof Project) {
                             ImportSearchConsoleDataJob::dispatch($record);
                         }
                     })
@@ -74,7 +75,7 @@ class ProjectsTable
                         ->label('Import from Search Console')
                         ->action(function (Collection $records): void {
                             foreach ($records as $record) {
-                                if ($record instanceof \App\Models\Project) {
+                                if ($record instanceof Project) {
                                     ImportSearchConsoleDataJob::dispatch($record);
                                 }
                             }

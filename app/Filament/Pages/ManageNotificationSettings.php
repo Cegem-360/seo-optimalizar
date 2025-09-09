@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\NavigationGroups;
 use App\Models\NotificationPreference;
+use App\Models\Project;
 use App\Notifications\RankingChangeNotification;
 use Exception;
 use Filament\Actions\Action;
@@ -152,7 +153,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
             $tenant = Filament::getTenant();
             $user = $this->authManager->user();
 
-            if (! $tenant instanceof \App\Models\Project) {
+            if (! $tenant instanceof Project) {
                 return;
             }
 
@@ -236,7 +237,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
         $tenant = Filament::getTenant();
         $user = $this->authManager->user();
 
-        if (! $tenant instanceof \App\Models\Project || ! $user) {
+        if (! $tenant instanceof Project || ! $user) {
             return null;
         }
 

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Project|null $project
  * @property-read Collection<int, Ranking> $rankings
  * @property-read int|null $rankings_count
+ *
  * @method static Builder<static>|Keyword byCategory(string $category)
  * @method static Builder<static>|Keyword byIntentType(string $intentType)
  * @method static KeywordFactory factory($count = null, $state = [])
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder<static>|Keyword newModelQuery()
  * @method static Builder<static>|Keyword newQuery()
  * @method static Builder<static>|Keyword query()
+ *
  * @mixin Model
  */
 class Keyword extends Model
@@ -34,7 +36,7 @@ class Keyword extends Model
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
             $tenant = Filament::getTenant();
-            if ($tenant instanceof \App\Models\Project) {
+            if ($tenant instanceof Project) {
                 $builder->where('project_id', $tenant->id);
             }
         });

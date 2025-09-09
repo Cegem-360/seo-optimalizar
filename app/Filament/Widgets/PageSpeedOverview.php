@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\PageSpeedResult;
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -15,7 +16,7 @@ class PageSpeedOverview extends StatsOverviewWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return [];
         }
 
@@ -79,7 +80,7 @@ class PageSpeedOverview extends StatsOverviewWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return [];
         }
 

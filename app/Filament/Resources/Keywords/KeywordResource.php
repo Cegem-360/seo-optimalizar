@@ -10,6 +10,7 @@ use App\Filament\Resources\Keywords\Pages\ListKeywords;
 use App\Filament\Resources\Keywords\Schemas\KeywordForm;
 use App\Filament\Resources\Keywords\Tables\KeywordsTable;
 use App\Models\Keyword;
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -34,7 +35,7 @@ class KeywordResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof \App\Models\Project) {
+        if ($tenant instanceof Project) {
             $builder->where('project_id', $tenant->id);
         }
 

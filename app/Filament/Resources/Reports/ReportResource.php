@@ -8,6 +8,7 @@ use App\Filament\Resources\Reports\Pages\EditReport;
 use App\Filament\Resources\Reports\Pages\ListReports;
 use App\Filament\Resources\Reports\Schemas\ReportForm;
 use App\Filament\Resources\Reports\Tables\ReportsTable;
+use App\Models\Project;
 use App\Models\Report;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -31,7 +32,7 @@ class ReportResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof \App\Models\Project) {
+        if ($tenant instanceof Project) {
             $builder->where('project_id', $tenant->id);
         }
 

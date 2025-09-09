@@ -27,10 +27,12 @@ use Illuminate\Notifications\Notifiable;
  * @property-read int|null $notifications_count
  * @property-read Collection<int, Project> $projects
  * @property-read int|null $projects_count
+ *
  * @method static UserFactory factory($count = null, $state = [])
  * @method static Builder<static>|User newModelQuery()
  * @method static Builder<static>|User newQuery()
  * @method static Builder<static>|User query()
+ *
  * @mixin Model
  */
 class User extends Authenticatable implements FilamentUser, HasTenants
@@ -114,21 +116,21 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         $preference = $this->notificationPreferences()
             ->where('project_id', $project->id)
             ->first();
-            
+
         return $preference ?? NotificationPreference::query()->make([
-                'user_id' => $this->id,
-                'project_id' => $project->id,
-                'email_ranking_changes' => true,
-                'email_top3_achievements' => true,
-                'email_first_page_entries' => true,
-                'email_significant_drops' => true,
-                'email_weekly_summary' => true,
-                'app_ranking_changes' => true,
-                'app_top3_achievements' => true,
-                'app_first_page_entries' => true,
-                'app_significant_drops' => true,
-                'significant_change_threshold' => 5,
-                'only_significant_changes' => false,
-            ]);
+            'user_id' => $this->id,
+            'project_id' => $project->id,
+            'email_ranking_changes' => true,
+            'email_top3_achievements' => true,
+            'email_first_page_entries' => true,
+            'email_significant_drops' => true,
+            'email_weekly_summary' => true,
+            'app_ranking_changes' => true,
+            'app_top3_achievements' => true,
+            'app_first_page_entries' => true,
+            'app_significant_drops' => true,
+            'significant_change_threshold' => 5,
+            'only_significant_changes' => false,
+        ]);
     }
 }

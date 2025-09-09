@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ApiCredentials\Schemas;
 
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\KeyValue;
@@ -24,7 +25,7 @@ class ApiCredentialForm
                         Grid::make(2)
                             ->schema([
                                 Hidden::make('project_id')
-                                    ->default(fn () => Filament::getTenant() instanceof \App\Models\Project ? Filament::getTenant()->id : null)
+                                    ->default(fn () => Filament::getTenant() instanceof Project ? Filament::getTenant()->id : null)
                                     ->required(),
 
                                 Select::make('service')

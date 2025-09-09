@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Project;
 use App\Models\Ranking;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
@@ -15,7 +16,7 @@ class RankingTrendsChart extends ChartWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return [
                 'datasets' => [],
                 'labels' => [],

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Database\Factories\ReportFactory;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -14,8 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property-read string $formatted_period
  * @property-read Project|null $project
- * @property \Carbon\Carbon|null $period_start
- * @property \Carbon\Carbon|null $period_end
+ * @property Carbon|null $period_start
+ * @property Carbon|null $period_end
+ *
  * @method static Builder<static>|Report byType(string $type)
  * @method static Builder<static>|Report completed()
  * @method static ReportFactory factory($count = null, $state = [])
@@ -24,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Report pending()
  * @method static Builder<static>|Report query()
  * @method static Builder<static>|Report recent(int $days = 30)
+ *
  * @mixin Model
  */
 class Report extends Model
@@ -34,7 +37,7 @@ class Report extends Model
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
             $tenant = Filament::getTenant();
-            if ($tenant instanceof \App\Models\Project) {
+            if ($tenant instanceof Project) {
                 $builder->where('project_id', $tenant->id);
             }
         });

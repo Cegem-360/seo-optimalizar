@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
@@ -36,7 +37,7 @@ class TrafficOverviewWidget extends ChartWidget
         $tenant = Filament::getTenant();
         $days = (int) $this->filter;
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return [
                 'datasets' => [],
                 'labels' => [],

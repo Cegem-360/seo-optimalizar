@@ -3,7 +3,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -86,13 +89,15 @@
         ],
         "fix": [
             "@pint",
-            "@php artisan ide-helper:models --write --reset --quiet",
             "@rector",
             "@phpstan"
         ],
         "check": [
             "@pint:check",
             "@rector:check"
+        ],
+        "ide-gen": [
+            "@php artisan ide-helper:models --write --reset --quiet"
         ]
     },
     "extra": {

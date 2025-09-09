@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Database\Eloquent\Collection;
 
 class PageSpeedTrendChart extends ChartWidget
 {
@@ -17,12 +19,12 @@ class PageSpeedTrendChart extends ChartWidget
     protected function getData(): array
     {
         $project = Filament::getTenant();
-        
-        if (! $project instanceof \App\Models\Project) {
+
+        if (! $project instanceof Project) {
             return ['datasets' => [], 'labels' => []];
         }
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\PageSpeedResult> $results */
+        /** @var Collection<int, PageSpeedResult> $results */
         $results = PageSpeedResult::forProject($project->id)
             ->strategy($this->filter)
             ->recent(30)
@@ -60,7 +62,7 @@ class PageSpeedTrendChart extends ChartWidget
                     'tension' => 0.3,
                 ],
             ],
-            'labels' => $results->map(fn (\App\Models\PageSpeedResult $item) => $item->analyzed_at ? $item->analyzed_at->format('M d, H:i') : '')->toArray(),
+            'labels' => $results->map(fn (PageSpeedResult $pageSpeedResult) => $pageSpeedResult->analyzed_at ? $pageSpeedResult->analyzed_at->format('M d, H:i') : '')->toArray(),
         ];
     }
 

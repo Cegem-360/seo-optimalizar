@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Database\Factories\ApiCredentialFactory;
-use App\Models\Project;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,10 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property-read Project|null $project
  * @property array<string, mixed> $credentials
+ *
  * @method static ApiCredentialFactory factory($count = null, $state = [])
  * @method static Builder<static>|ApiCredential newModelQuery()
  * @method static Builder<static>|ApiCredential newQuery()
  * @method static Builder<static>|ApiCredential query()
+ *
  * @mixin Model
  */
 class ApiCredential extends Model
@@ -27,7 +28,7 @@ class ApiCredential extends Model
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
             $tenant = Filament::getTenant();
-            if ($tenant instanceof \App\Models\Project) {
+            if ($tenant instanceof Project) {
                 $builder->where('project_id', $tenant->id);
             }
         });

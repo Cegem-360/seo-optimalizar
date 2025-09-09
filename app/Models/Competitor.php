@@ -16,11 +16,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, CompetitorRanking> $competitorRankings
  * @property-read int|null $competitor_rankings_count
  * @property-read Project|null $project
+ *
  * @method static Builder<static>|Competitor active()
  * @method static CompetitorFactory factory($count = null, $state = [])
  * @method static Builder<static>|Competitor newModelQuery()
  * @method static Builder<static>|Competitor newQuery()
  * @method static Builder<static>|Competitor query()
+ *
  * @mixin Model
  */
 class Competitor extends Model
@@ -31,7 +33,7 @@ class Competitor extends Model
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
             $tenant = Filament::getTenant();
-            if ($tenant instanceof \App\Models\Project) {
+            if ($tenant instanceof Project) {
                 $builder->where('project_id', $tenant->id);
             }
         });

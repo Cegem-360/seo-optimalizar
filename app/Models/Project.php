@@ -23,16 +23,20 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read int|null $notification_preferences_count
  * @property-read Collection<int, PageSpeedResult> $pageSpeedResults
  * @property-read int|null $page_speed_results_count
+ * @property-read Collection<int, Ranking> $rankings
+ * @property-read int|null $rankings_count
  * @property-read Collection<int, Report> $reports
  * @property-read int|null $reports_count
  * @property-read Collection<int, User> $users
  * @property-read int|null $users_count
+ *
  * @method static Builder<static>|Project active()
  * @method static ProjectFactory factory($count = null, $state = [])
  * @method static Builder<static>|Project newModelQuery()
  * @method static Builder<static>|Project newQuery()
  * @method static Builder<static>|Project query()
  * @method static Builder<static>|Project withKeywordCount()
+ *
  * @mixin Model
  */
 class Project extends Model

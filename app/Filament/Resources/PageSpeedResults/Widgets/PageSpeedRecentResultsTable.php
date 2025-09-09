@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -22,7 +23,7 @@ class PageSpeedRecentResultsTable extends TableWidget
     {
         return $table
             ->query(fn (): Builder => PageSpeedResult::query()
-                ->forProject(Filament::getTenant() instanceof \App\Models\Project ? Filament::getTenant()->id : 0)
+                ->forProject(Filament::getTenant() instanceof Project ? Filament::getTenant()->id : 0)
                 ->orderBy('analyzed_at', 'desc')
                 ->limit(10)
             )

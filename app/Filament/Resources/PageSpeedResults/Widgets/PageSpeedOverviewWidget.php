@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -12,12 +13,12 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $project = Filament::getTenant();
-        
-        if (! $project instanceof \App\Models\Project) {
+
+        if (! $project instanceof Project) {
             return [];
         }
 
-        /** @var \App\Models\PageSpeedResult|null $latestResult */
+        /** @var PageSpeedResult|null $latestResult */
         $latestResult = PageSpeedResult::forProject($project->id)
             ->latest('analyzed_at')
             ->first();
@@ -103,8 +104,8 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
     protected function getPerformanceTrend(): array
     {
         $project = Filament::getTenant();
-        
-        if (! $project instanceof \App\Models\Project) {
+
+        if (! $project instanceof Project) {
             return [];
         }
 

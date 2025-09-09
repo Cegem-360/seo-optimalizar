@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Keyword;
+use App\Models\Project;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -23,7 +24,7 @@ class KeywordPerformanceWidget extends BaseWidget
             ->query(function (): Builder {
                 $tenant = Filament::getTenant();
 
-                if (! $tenant instanceof \App\Models\Project) {
+                if (! $tenant instanceof Project) {
                     return Keyword::query()->whereRaw('1 = 0');
                 }
 

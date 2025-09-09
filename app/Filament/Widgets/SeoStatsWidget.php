@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Keyword;
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Support\Icons\Heroicon;
@@ -15,7 +16,7 @@ class SeoStatsWidget extends StatsOverviewWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof \App\Models\Project) {
+        if (! $tenant instanceof Project) {
             return [];
         }
 

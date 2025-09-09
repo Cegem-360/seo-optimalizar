@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -11,13 +12,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read float|null $overall_score
  * @property-read string $performance_grade
  * @property-read Project|null $project
- * @property \Carbon\Carbon|null $analyzed_at
+ * @property Carbon|null $analyzed_at
+ *
  * @method static Builder<static>|PageSpeedResult forProject(int $projectId)
  * @method static Builder<static>|PageSpeedResult newModelQuery()
  * @method static Builder<static>|PageSpeedResult newQuery()
  * @method static Builder<static>|PageSpeedResult query()
  * @method static Builder<static>|PageSpeedResult recent(int $days = 30)
  * @method static Builder<static>|PageSpeedResult strategy(string $strategy)
+ *
  * @mixin Model
  */
 class PageSpeedResult extends Model

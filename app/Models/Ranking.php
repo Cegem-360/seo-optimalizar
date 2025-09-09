@@ -13,8 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property-read Keyword|null $keyword
- * @property-read int|float|null|null $position_change
+ * @property-read int|null $position_change
  * @property-read string $position_trend
+ *
  * @method static Builder<static>|Ranking declined()
  * @method static RankingFactory factory($count = null, $state = [])
  * @method static Builder<static>|Ranking improved()
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Ranking recentlyChecked(int $days = 7)
  * @method static Builder<static>|Ranking topTen()
  * @method static Builder<static>|Ranking topThree()
+ *
  * @mixin Model
  */
 class Ranking extends Model
@@ -34,7 +36,7 @@ class Ranking extends Model
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
             $tenant = Filament::getTenant();
-            if ($tenant instanceof \App\Models\Project) {
+            if ($tenant instanceof Project) {
                 $builder->whereHas('keyword', function (Builder $builder) use ($tenant): void {
                     $builder->where('project_id', $tenant->id);
                 });
@@ -70,7 +72,7 @@ class Ranking extends Model
 
     protected function positionChange(): Attribute
     {
-        return Attribute::make(get: function (): null|int {
+        return Attribute::make(get: function (): ?int {
             if ($this->previous_position === null) {
                 return null;
             }

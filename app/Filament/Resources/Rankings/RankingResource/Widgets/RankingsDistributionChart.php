@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Rankings\RankingResource\Widgets;
 
+use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
@@ -17,8 +18,8 @@ class RankingsDistributionChart extends ChartWidget
     protected function getData(): array
     {
         $project = Filament::getTenant();
-        
-        if (! $project instanceof \App\Models\Project) {
+
+        if (! $project instanceof Project) {
             return ['datasets' => [], 'labels' => []];
         }
 
