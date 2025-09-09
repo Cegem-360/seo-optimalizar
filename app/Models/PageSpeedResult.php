@@ -31,57 +31,62 @@ class PageSpeedResult extends Model
         'analyzed_at',
     ];
 
-    protected $casts = [
-        'raw_data' => 'array',
-        'analyzed_at' => 'datetime',
-        'lcp_value' => 'decimal:2',
-        'lcp_score' => 'decimal:2',
-        'fcp_value' => 'decimal:2',
-        'fcp_score' => 'decimal:2',
-        'cls_value' => 'decimal:3',
-        'cls_score' => 'decimal:2',
-        'speed_index_value' => 'decimal:2',
-        'speed_index_score' => 'decimal:2',
-    ];
-
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    public function getOverallScoreAttribute(): ?float
+    protected function overallScore(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
-        $scores = array_filter([
-            $this->performance_score,
-            $this->accessibility_score,
-            $this->best_practices_score,
-            $this->seo_score,
-        ]);
-        
-        return empty($scores) ? null : round(array_sum($scores) / count($scores), 1);
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: function (): ?float {
+            $scores = array_filter([
+                $this->performance_score,
+                $this->accessibility_score,
+                $this->best_practices_score,
+                $this->seo_score,
+            ]);
+
+            return $scores === [] ? null : round(array_sum($scores) / count($scores), 1);
+        });
     }
 
-    public function getPerformanceGradeAttribute(): string
+    protected function performanceGrade(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
-        return match (true) {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(get: fn (): string => match (true) {
             $this->performance_score >= 90 => 'excellent',
             $this->performance_score >= 50 => 'needs-improvement',
             default => 'poor',
-        };
+        });
     }
 
-    public function scopeForProject($query, int $projectId)
+    protected function scopeForProject($query, int $projectId)
     {
         return $query->where('project_id', $projectId);
     }
 
-    public function scopeStrategy($query, string $strategy)
+    protected function scopeStrategy($query, string $strategy)
     {
         return $query->where('strategy', $strategy);
     }
 
-    public function scopeRecent($query, int $days = 30)
+    protected function scopeRecent($query, int $days = 30)
     {
         return $query->where('analyzed_at', '>=', now()->subDays($days));
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'raw_data' => 'array',
+            'analyzed_at' => 'datetime',
+            'lcp_value' => 'decimal:2',
+            'lcp_score' => 'decimal:2',
+            'fcp_value' => 'decimal:2',
+            'fcp_score' => 'decimal:2',
+            'cls_value' => 'decimal:3',
+            'cls_score' => 'decimal:2',
+            'speed_index_value' => 'decimal:2',
+            'speed_index_score' => 'decimal:2',
+        ];
     }
 }

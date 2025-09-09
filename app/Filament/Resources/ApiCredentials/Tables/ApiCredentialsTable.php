@@ -77,7 +77,7 @@ class ApiCredentialsTable
                         'serpapi' => 'SerpAPI',
                         'mobile_friendly_test' => 'Mobile-Friendly Test',
                     ]),
-                    
+
                 SelectFilter::make('is_active')
                     ->label('Status')
                     ->options([

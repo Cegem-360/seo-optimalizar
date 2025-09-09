@@ -2,16 +2,17 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
+    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('reports', function (Blueprint $blueprint): void {
+        $this->builder->create('reports', function (Blueprint $blueprint): void {
             $blueprint->id();
             $blueprint->foreignId('project_id')->constrained()->cascadeOnDelete();
             $blueprint->string('title');
@@ -35,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reports');
+        $this->builder->dropIfExists('reports');
     }
 };

@@ -2,16 +2,17 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
+    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('jobs', function (Blueprint $blueprint): void {
+        $this->builder->create('jobs', function (Blueprint $blueprint): void {
             $blueprint->id();
             $blueprint->string('queue')->index();
             $blueprint->longText('payload');
@@ -21,7 +22,7 @@ return new class extends Migration
             $blueprint->unsignedInteger('created_at');
         });
 
-        Schema::create('job_batches', function (Blueprint $blueprint): void {
+        $this->builder->create('job_batches', function (Blueprint $blueprint): void {
             $blueprint->string('id')->primary();
             $blueprint->string('name');
             $blueprint->integer('total_jobs');
@@ -34,7 +35,7 @@ return new class extends Migration
             $blueprint->integer('finished_at')->nullable();
         });
 
-        Schema::create('failed_jobs', function (Blueprint $blueprint): void {
+        $this->builder->create('failed_jobs', function (Blueprint $blueprint): void {
             $blueprint->id();
             $blueprint->string('uuid')->unique();
             $blueprint->text('connection');
@@ -50,8 +51,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jobs');
-        Schema::dropIfExists('job_batches');
-        Schema::dropIfExists('failed_jobs');
+        $this->builder->dropIfExists('jobs');
+        $this->builder->dropIfExists('job_batches');
+        $this->builder->dropIfExists('failed_jobs');
     }
 };

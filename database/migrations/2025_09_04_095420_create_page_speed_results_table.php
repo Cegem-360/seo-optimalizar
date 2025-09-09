@@ -2,52 +2,53 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
+    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('page_speed_results', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->string('url');
-            $table->enum('strategy', ['mobile', 'desktop']);
-            
+        $this->builder->create('page_speed_results', function (Blueprint $blueprint): void {
+            $blueprint->id();
+            $blueprint->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $blueprint->string('url');
+            $blueprint->enum('strategy', ['mobile', 'desktop']);
+
             // Overall scores
-            $table->integer('performance_score')->nullable();
-            $table->integer('accessibility_score')->nullable();
-            $table->integer('best_practices_score')->nullable();
-            $table->integer('seo_score')->nullable();
-            
+            $blueprint->integer('performance_score')->nullable();
+            $blueprint->integer('accessibility_score')->nullable();
+            $blueprint->integer('best_practices_score')->nullable();
+            $blueprint->integer('seo_score')->nullable();
+
             // Core Web Vitals
-            $table->decimal('lcp_value', 8, 2)->nullable(); // Largest Contentful Paint (ms)
-            $table->string('lcp_display')->nullable();
-            $table->decimal('lcp_score', 3, 2)->nullable();
-            
-            $table->decimal('fcp_value', 8, 2)->nullable(); // First Contentful Paint (ms)
-            $table->string('fcp_display')->nullable();
-            $table->decimal('fcp_score', 3, 2)->nullable();
-            
-            $table->decimal('cls_value', 5, 3)->nullable(); // Cumulative Layout Shift
-            $table->string('cls_display')->nullable();
-            $table->decimal('cls_score', 3, 2)->nullable();
-            
-            $table->decimal('speed_index_value', 8, 2)->nullable(); // Speed Index (ms)
-            $table->string('speed_index_display')->nullable();
-            $table->decimal('speed_index_score', 3, 2)->nullable();
-            
+            $blueprint->decimal('lcp_value', 8, 2)->nullable(); // Largest Contentful Paint (ms)
+            $blueprint->string('lcp_display')->nullable();
+            $blueprint->decimal('lcp_score', 3, 2)->nullable();
+
+            $blueprint->decimal('fcp_value', 8, 2)->nullable(); // First Contentful Paint (ms)
+            $blueprint->string('fcp_display')->nullable();
+            $blueprint->decimal('fcp_score', 3, 2)->nullable();
+
+            $blueprint->decimal('cls_value', 5, 3)->nullable(); // Cumulative Layout Shift
+            $blueprint->string('cls_display')->nullable();
+            $blueprint->decimal('cls_score', 3, 2)->nullable();
+
+            $blueprint->decimal('speed_index_value', 8, 2)->nullable(); // Speed Index (ms)
+            $blueprint->string('speed_index_display')->nullable();
+            $blueprint->decimal('speed_index_score', 3, 2)->nullable();
+
             // Additional metadata
-            $table->json('raw_data')->nullable(); // Store full API response for detailed analysis
-            $table->timestamp('analyzed_at');
-            $table->timestamps();
-            
+            $blueprint->json('raw_data')->nullable(); // Store full API response for detailed analysis
+            $blueprint->timestamp('analyzed_at');
+            $blueprint->timestamps();
+
             // Indexes for efficient querying
-            $table->index(['project_id', 'strategy', 'analyzed_at']);
-            $table->index(['project_id', 'analyzed_at']);
+            $blueprint->index(['project_id', 'strategy', 'analyzed_at']);
+            $blueprint->index(['project_id', 'analyzed_at']);
         });
     }
 
@@ -56,6 +57,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('page_speed_results');
+        $this->builder->dropIfExists('page_speed_results');
     }
 };

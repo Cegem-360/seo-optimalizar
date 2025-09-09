@@ -11,16 +11,18 @@ use Illuminate\Support\Collection;
 class GoogleSearchConsoleService extends BaseApiService
 {
     protected string $serviceName = 'google_search_console';
+
     private string $baseUrl = 'https://www.googleapis.com/webmasters/v3';
+
     private ?string $accessToken = null;
 
-    protected function configureRequest(PendingRequest $request): void
+    protected function configureRequest(PendingRequest $pendingRequest): void
     {
-        if (!$this->accessToken) {
+        if ($this->accessToken === null || $this->accessToken === '' || $this->accessToken === '0') {
             $this->refreshAccessToken();
         }
 
-        $request->withToken($this->accessToken)
+        $pendingRequest->withToken($this->accessToken)
             ->accept('application/json');
     }
 
@@ -30,7 +32,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $clientId = $this->getCredential('client_id');
         $clientSecret = $this->getCredential('client_secret');
 
-        if (!$refreshToken || !$clientId || !$clientSecret) {
+        if (! $refreshToken || ! $clientId || ! $clientSecret) {
             throw new \Exception('Missing Google Search Console credentials');
         }
 
@@ -41,7 +43,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'client_secret' => $clientSecret,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception('Failed to refresh Google Search Console access token');
         }
 
@@ -52,26 +54,27 @@ class GoogleSearchConsoleService extends BaseApiService
     public function testConnection(): bool
     {
         try {
-            $response = $this->makeRequest()->get("{$this->baseUrl}/sites");
+            $response = $this->makeRequest()->get($this->baseUrl . '/sites');
+
             return $response->successful();
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }
 
     public function getSites(): Collection
     {
-        $response = $this->makeRequest()->get("{$this->baseUrl}/sites");
+        $response = $this->makeRequest()->get($this->baseUrl . '/sites');
         $data = $this->handleResponse($response);
 
-        return collect($data['siteEntry'] ?? []);
+        return new \Illuminate\Support\Collection($data['siteEntry'] ?? []);
     }
 
-    public function getSearchAnalytics(array $dimensions = ['query'], Carbon $startDate = null, Carbon $endDate = null, int $rowLimit = 1000): Collection
+    public function getSearchAnalytics(array $dimensions = ['query'], ?Carbon $startDate = null, ?Carbon $endDate = null, int $rowLimit = 1000): Collection
     {
-        $startDate = $startDate ?? now()->subDays(7);
-        $endDate = $endDate ?? now()->subDays(1);
-        
+        $startDate ??= now()->subDays(7);
+        $endDate ??= now()->subDays(1);
+
         $siteUrl = $this->project->url;
 
         $payload = [
@@ -83,23 +86,23 @@ class GoogleSearchConsoleService extends BaseApiService
         ];
 
         $response = $this->makeRequest()
-            ->post("{$this->baseUrl}/sites/" . urlencode($siteUrl) . "/searchAnalytics/query", $payload);
-        
+            ->post($this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
+
         $data = $this->handleResponse($response);
 
-        return collect($data['rows'] ?? []);
+        return new \Illuminate\Support\Collection($data['rows'] ?? []);
     }
 
-    public function getKeywordData(Collection $keywords, Carbon $startDate = null, Carbon $endDate = null): Collection
+    public function getKeywordData(Collection $keywords, ?Carbon $startDate = null, ?Carbon $endDate = null): Collection
     {
         $keywordStrings = $keywords->pluck('keyword')->toArray();
-        
+
         if (empty($keywordStrings)) {
-            return collect();
+            return new \Illuminate\Support\Collection();
         }
 
-        $startDate = $startDate ?? now()->subDays(7);
-        $endDate = $endDate ?? now()->subDays(1);
+        $startDate ??= now()->subDays(7);
+        $endDate ??= now()->subDays(1);
         $siteUrl = $this->project->url;
 
         $payload = [
@@ -112,20 +115,20 @@ class GoogleSearchConsoleService extends BaseApiService
                         [
                             'dimension' => 'query',
                             'operator' => 'contains',
-                            'expression' => implode('|', $keywordStrings)
-                        ]
-                    ]
-                ]
+                            'expression' => implode('|', $keywordStrings),
+                        ],
+                    ],
+                ],
             ],
             'rowLimit' => 1000,
         ];
 
         $response = $this->makeRequest()
-            ->post("{$this->baseUrl}/sites/" . urlencode($siteUrl) . "/searchAnalytics/query", $payload);
-        
+            ->post($this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
+
         $data = $this->handleResponse($response);
 
-        return collect($data['rows'] ?? []);
+        return new \Illuminate\Support\Collection($data['rows'] ?? []);
     }
 
     public function syncKeywordRankings(): int
@@ -135,10 +138,10 @@ class GoogleSearchConsoleService extends BaseApiService
 
         foreach ($keywords->chunk(50) as $keywordChunk) {
             $searchAnalytics = $this->getKeywordData($keywordChunk);
-            
+
             foreach ($keywordChunk as $keyword) {
                 $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
-                
+
                 if ($analytics) {
                     $this->createOrUpdateRanking($keyword, $analytics);
                     $synced++;
@@ -163,7 +166,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $latestRanking = $keyword->rankings()->latest('checked_at')->first();
         $previousPosition = $latestRanking?->position;
 
-        Ranking::create([
+        \App\Models\Ranking::query()->create([
             'keyword_id' => $keyword->id,
             'position' => $position ? round($position) : null,
             'previous_position' => $previousPosition,
@@ -179,11 +182,11 @@ class GoogleSearchConsoleService extends BaseApiService
 
         // Send notifications for significant changes
         if ($previousPosition && $position) {
-            $this->checkForNotifications($keyword, $position, $previousPosition);
+            $this->checkForNotifications($position, $previousPosition);
         }
     }
 
-    private function checkForNotifications(Keyword $keyword, int $currentPosition, int $previousPosition): void
+    private function checkForNotifications(int $currentPosition, int $previousPosition): void
     {
         $change = $previousPosition - $currentPosition;
         $changeType = null;
@@ -199,9 +202,7 @@ class GoogleSearchConsoleService extends BaseApiService
             $changeType = $change > 0 ? 'significant_improvement' : 'significant_decline';
         }
 
-        if ($changeType) {
-            // Here you would dispatch a notification job
-            // We'll implement this in the notification system later
-        }
+        // Here you would dispatch a notification job
+        // We'll implement this in the notification system later
     }
 }

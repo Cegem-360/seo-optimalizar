@@ -10,19 +10,19 @@ use Filament\Resources\Pages\Page;
 class RankingsDashboard extends Page
 {
     use InteractsWithHeaderActions;
-    
+
     protected static string $resource = RankingResource::class;
-    
+
     protected static ?string $title = 'Rankings Dashboard';
-    
+
     protected static ?string $navigationLabel = 'Dashboard';
-    
+
     protected static ?string $slug = 'dashboard';
-    
+
     protected ?string $heading = 'Rankings Analytics Dashboard';
-    
+
     protected ?string $subheading = 'Keyword ranking performance and trends overview';
-    
+
     protected function getHeaderActions(): array
     {
         return [
@@ -38,14 +38,14 @@ class RankingsDashboard extends Page
                 ->url(fn () => static::getResource()::getUrl('create')),
         ];
     }
-    
+
     protected function getHeaderWidgets(): array
     {
         return [
             RankingResource::getWidgets()[0], // RankingsOverviewWidget
         ];
     }
-    
+
     protected function getWidgets(): array
     {
         return [
@@ -53,7 +53,7 @@ class RankingsDashboard extends Page
             RankingResource::getWidgets()[2], // RankingsDistributionChart
         ];
     }
-    
+
     public function getWidgetData(): array
     {
         return [];

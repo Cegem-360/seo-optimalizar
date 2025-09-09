@@ -10,19 +10,19 @@ use Filament\Resources\Pages\Page;
 class PageSpeedDashboard extends Page
 {
     use InteractsWithHeaderActions;
-    
+
     protected static string $resource = PageSpeedResultResource::class;
-    
+
     protected static ?string $title = 'PageSpeed Dashboard';
-    
+
     protected static ?string $navigationLabel = 'Dashboard';
-    
+
     protected static ?string $slug = 'dashboard';
-    
+
     protected ?string $heading = 'PageSpeed Analytics Dashboard';
-    
+
     protected ?string $subheading = 'Performance metrics and trends overview';
-    
+
     protected function getHeaderActions(): array
     {
         return [
@@ -38,14 +38,14 @@ class PageSpeedDashboard extends Page
                 ->url(fn () => static::getResource()::getUrl('index')),
         ];
     }
-    
+
     protected function getHeaderWidgets(): array
     {
         return [
             PageSpeedResultResource::getWidgets()[0], // PageSpeedOverviewWidget
         ];
     }
-    
+
     protected function getWidgets(): array
     {
         return [
@@ -53,7 +53,7 @@ class PageSpeedDashboard extends Page
             PageSpeedResultResource::getWidgets()[2], // PageSpeedRecentResultsTable
         ];
     }
-    
+
     public function getWidgetData(): array
     {
         return [];

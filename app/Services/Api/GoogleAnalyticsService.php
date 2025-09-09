@@ -9,16 +9,18 @@ use Illuminate\Support\Collection;
 class GoogleAnalyticsService extends BaseApiService
 {
     protected string $serviceName = 'google_analytics';
+
     private string $baseUrl = 'https://analyticsreporting.googleapis.com/v4';
+
     private ?string $accessToken = null;
 
-    protected function configureRequest(PendingRequest $request): void
+    protected function configureRequest(PendingRequest $pendingRequest): void
     {
-        if (!$this->accessToken) {
+        if ($this->accessToken === null || $this->accessToken === '' || $this->accessToken === '0') {
             $this->refreshAccessToken();
         }
 
-        $request->withToken($this->accessToken)
+        $pendingRequest->withToken($this->accessToken)
             ->accept('application/json');
     }
 
@@ -28,7 +30,7 @@ class GoogleAnalyticsService extends BaseApiService
         $clientId = $this->getCredential('client_id');
         $clientSecret = $this->getCredential('client_secret');
 
-        if (!$refreshToken || !$clientId || !$clientSecret) {
+        if (! $refreshToken || ! $clientId || ! $clientSecret) {
             throw new \Exception('Missing Google Analytics credentials');
         }
 
@@ -39,7 +41,7 @@ class GoogleAnalyticsService extends BaseApiService
             'client_secret' => $clientSecret,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception('Failed to refresh Google Analytics access token');
         }
 
@@ -52,40 +54,40 @@ class GoogleAnalyticsService extends BaseApiService
         try {
             // Test with a simple query
             $propertyId = $this->getCredential('property_id');
-            if (!$propertyId) {
+            if (! $propertyId) {
                 return false;
             }
 
-            $response = $this->makeRequest()->post("{$this->baseUrl}/reports:batchGet", [
+            $response = $this->makeRequest()->post($this->baseUrl . '/reports:batchGet', [
                 'reportRequests' => [
                     [
                         'viewId' => $propertyId,
                         'dateRanges' => [
                             [
                                 'startDate' => '7daysAgo',
-                                'endDate' => 'today'
-                            ]
+                                'endDate' => 'today',
+                            ],
                         ],
                         'metrics' => [
-                            ['expression' => 'ga:sessions']
+                            ['expression' => 'ga:sessions'],
                         ],
                         'dimensions' => [
-                            ['name' => 'ga:date']
-                        ]
-                    ]
-                ]
+                            ['name' => 'ga:date'],
+                        ],
+                    ],
+                ],
             ]);
 
             return $response->successful();
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }
 
-    public function getOrganicTrafficData(Carbon $startDate = null, Carbon $endDate = null): Collection
+    public function getOrganicTrafficData(?Carbon $startDate = null, ?Carbon $endDate = null): Collection
     {
-        $startDate = $startDate ?? now()->subDays(30);
-        $endDate = $endDate ?? now()->subDays(1);
+        $startDate ??= now()->subDays(30);
+        $endDate ??= now()->subDays(1);
         $propertyId = $this->getCredential('property_id');
 
         $payload = [
@@ -95,8 +97,8 @@ class GoogleAnalyticsService extends BaseApiService
                     'dateRanges' => [
                         [
                             'startDate' => $startDate->format('Y-m-d'),
-                            'endDate' => $endDate->format('Y-m-d')
-                        ]
+                            'endDate' => $endDate->format('Y-m-d'),
+                        ],
                     ],
                     'metrics' => [
                         ['expression' => 'ga:sessions'],
@@ -107,7 +109,7 @@ class GoogleAnalyticsService extends BaseApiService
                     ],
                     'dimensions' => [
                         ['name' => 'ga:date'],
-                        ['name' => 'ga:medium']
+                        ['name' => 'ga:medium'],
                     ],
                     'dimensionFilterClauses' => [
                         [
@@ -115,25 +117,25 @@ class GoogleAnalyticsService extends BaseApiService
                                 [
                                     'dimensionName' => 'ga:medium',
                                     'operator' => 'EXACT',
-                                    'expressions' => ['organic']
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                                    'expressions' => ['organic'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
-        $response = $this->makeRequest()->post("{$this->baseUrl}/reports:batchGet", $payload);
+        $response = $this->makeRequest()->post($this->baseUrl . '/reports:batchGet', $payload);
         $data = $this->handleResponse($response);
 
         return $this->processAnalyticsData($data);
     }
 
-    public function getTopOrganicPages(Carbon $startDate = null, Carbon $endDate = null, int $maxResults = 50): Collection
+    public function getTopOrganicPages(?Carbon $startDate = null, ?Carbon $endDate = null, int $maxResults = 50): Collection
     {
-        $startDate = $startDate ?? now()->subDays(30);
-        $endDate = $endDate ?? now()->subDays(1);
+        $startDate ??= now()->subDays(30);
+        $endDate ??= now()->subDays(1);
         $propertyId = $this->getCredential('property_id');
 
         $payload = [
@@ -143,8 +145,8 @@ class GoogleAnalyticsService extends BaseApiService
                     'dateRanges' => [
                         [
                             'startDate' => $startDate->format('Y-m-d'),
-                            'endDate' => $endDate->format('Y-m-d')
-                        ]
+                            'endDate' => $endDate->format('Y-m-d'),
+                        ],
                     ],
                     'metrics' => [
                         ['expression' => 'ga:sessions'],
@@ -154,7 +156,7 @@ class GoogleAnalyticsService extends BaseApiService
                     ],
                     'dimensions' => [
                         ['name' => 'ga:pagePath'],
-                        ['name' => 'ga:pageTitle']
+                        ['name' => 'ga:pageTitle'],
                     ],
                     'dimensionFilterClauses' => [
                         [
@@ -162,32 +164,32 @@ class GoogleAnalyticsService extends BaseApiService
                                 [
                                     'dimensionName' => 'ga:medium',
                                     'operator' => 'EXACT',
-                                    'expressions' => ['organic']
-                                ]
-                            ]
-                        ]
+                                    'expressions' => ['organic'],
+                                ],
+                            ],
+                        ],
                     ],
                     'orderBys' => [
                         [
                             'fieldName' => 'ga:sessions',
-                            'sortOrder' => 'DESCENDING'
-                        ]
+                            'sortOrder' => 'DESCENDING',
+                        ],
                     ],
-                    'pageSize' => $maxResults
-                ]
-            ]
+                    'pageSize' => $maxResults,
+                ],
+            ],
         ];
 
-        $response = $this->makeRequest()->post("{$this->baseUrl}/reports:batchGet", $payload);
+        $response = $this->makeRequest()->post($this->baseUrl . '/reports:batchGet', $payload);
         $data = $this->handleResponse($response);
 
         return $this->processAnalyticsData($data);
     }
 
-    public function getOrganicKeywordData(Carbon $startDate = null, Carbon $endDate = null): Collection
+    public function getOrganicKeywordData(?Carbon $startDate = null, ?Carbon $endDate = null): Collection
     {
-        $startDate = $startDate ?? now()->subDays(30);
-        $endDate = $endDate ?? now()->subDays(1);
+        $startDate ??= now()->subDays(30);
+        $endDate ??= now()->subDays(1);
         $propertyId = $this->getCredential('property_id');
 
         // Note: Google Analytics 4 no longer provides keyword data due to "not provided"
@@ -199,15 +201,15 @@ class GoogleAnalyticsService extends BaseApiService
                     'dateRanges' => [
                         [
                             'startDate' => $startDate->format('Y-m-d'),
-                            'endDate' => $endDate->format('Y-m-d')
-                        ]
+                            'endDate' => $endDate->format('Y-m-d'),
+                        ],
                     ],
                     'metrics' => [
                         ['expression' => 'ga:sessions'],
                         ['expression' => 'ga:users'],
                     ],
                     'dimensions' => [
-                        ['name' => 'ga:keyword']
+                        ['name' => 'ga:keyword'],
                     ],
                     'dimensionFilterClauses' => [
                         [
@@ -215,27 +217,27 @@ class GoogleAnalyticsService extends BaseApiService
                                 [
                                     'dimensionName' => 'ga:medium',
                                     'operator' => 'EXACT',
-                                    'expressions' => ['organic']
+                                    'expressions' => ['organic'],
                                 ],
                                 [
                                     'dimensionName' => 'ga:keyword',
                                     'operator' => 'NOT_EXACT',
-                                    'expressions' => ['(not provided)', '(not set)']
-                                ]
-                            ]
-                        ]
+                                    'expressions' => ['(not provided)', '(not set)'],
+                                ],
+                            ],
+                        ],
                     ],
                     'orderBys' => [
                         [
                             'fieldName' => 'ga:sessions',
-                            'sortOrder' => 'DESCENDING'
-                        ]
-                    ]
-                ]
-            ]
+                            'sortOrder' => 'DESCENDING',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
-        $response = $this->makeRequest()->post("{$this->baseUrl}/reports:batchGet", $payload);
+        $response = $this->makeRequest()->post($this->baseUrl . '/reports:batchGet', $payload);
         $data = $this->handleResponse($response);
 
         return $this->processAnalyticsData($data);
@@ -250,7 +252,7 @@ class GoogleAnalyticsService extends BaseApiService
             $columnHeaders = $report['columnHeader'] ?? [];
             $dimensionHeaders = $columnHeaders['dimensions'] ?? [];
             $metricHeaders = $columnHeaders['metricHeader']['metricHeaderEntries'] ?? [];
-            
+
             $rows = $report['data']['rows'] ?? [];
 
             foreach ($rows as $row) {
@@ -258,24 +260,20 @@ class GoogleAnalyticsService extends BaseApiService
                 $metrics = $row['metrics'][0]['values'] ?? [];
 
                 $rowData = [];
-                
+
                 // Add dimensions
                 foreach ($dimensionHeaders as $index => $header) {
                     $rowData[str_replace('ga:', '', $header)] = $dimensions[$index] ?? null;
                 }
-                
+
                 // Add metrics
                 foreach ($metricHeaders as $index => $header) {
                     $metricName = str_replace('ga:', '', $header['name']);
                     $value = $metrics[$index] ?? 0;
-                    
+
                     // Convert percentage metrics
-                    if (in_array($metricName, ['bounceRate'])) {
-                        $value = round(floatval($value), 2);
-                    } else {
-                        $value = intval($value);
-                    }
-                    
+                    $value = $metricName == 'bounceRate' ? round(floatval($value), 2) : intval($value);
+
                     $rowData[$metricName] = $value;
                 }
 
@@ -283,6 +281,6 @@ class GoogleAnalyticsService extends BaseApiService
             }
         }
 
-        return collect($processedData);
+        return new \Illuminate\Support\Collection($processedData);
     }
 }

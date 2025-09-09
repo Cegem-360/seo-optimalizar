@@ -52,9 +52,10 @@ class ApiCredentialForm
                             ->label('API Credentials')
                             ->keyLabel('Credential Key')
                             ->valueLabel('Credential Value')
-                            ->helperText(function (callable $get) {
+                            ->helperText(function (callable $get): string {
                                 $service = $get('service');
-                                return match($service) {
+
+                                return match ($service) {
                                     'google_ads' => 'Google Ads: client_id, client_secret, refresh_token, developer_token, customer_id',
                                     'gemini' => 'Google Gemini: api_key',
                                     'google_search_console' => 'Google Search Console: credentials file content or service account JSON',
