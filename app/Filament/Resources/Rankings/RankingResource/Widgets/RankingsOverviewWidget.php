@@ -12,6 +12,10 @@ class RankingsOverviewWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return [];
+        }
 
         // Base query for current project
         $baseQuery = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
@@ -120,6 +124,10 @@ class RankingsOverviewWidget extends StatsOverviewWidget
     protected function getImprovementTrend(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return [];
+        }
 
         // Get last 7 days of improvement data
         $improvements = [];

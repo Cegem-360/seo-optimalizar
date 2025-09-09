@@ -140,6 +140,7 @@ class SemrushApiService extends BaseApiService
 
         $updated = 0;
 
+        /** @var Keyword $keyword */
         foreach ($keywords as $keyword) {
             try {
                 if ($this->updateKeywordMetrics($keyword)) {

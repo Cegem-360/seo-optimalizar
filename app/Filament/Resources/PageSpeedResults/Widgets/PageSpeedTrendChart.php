@@ -17,7 +17,12 @@ class PageSpeedTrendChart extends ChartWidget
     protected function getData(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return ['datasets' => [], 'labels' => []];
+        }
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\PageSpeedResult> $results */
         $results = PageSpeedResult::forProject($project->id)
             ->strategy($this->filter)
             ->recent(30)
@@ -55,7 +60,7 @@ class PageSpeedTrendChart extends ChartWidget
                     'tension' => 0.3,
                 ],
             ],
-            'labels' => $results->map(fn ($item) => $item->analyzed_at->format('M d, H:i'))->toArray(),
+            'labels' => $results->map(fn (\App\Models\PageSpeedResult $item) => $item->analyzed_at ? $item->analyzed_at->format('M d, H:i') : '')->toArray(),
         ];
     }
 

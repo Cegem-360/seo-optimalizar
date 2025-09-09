@@ -15,7 +15,7 @@ class PageSpeedOverview extends StatsOverviewWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant) {
+        if (! $tenant instanceof \App\Models\Project) {
             return [];
         }
 
@@ -39,13 +39,13 @@ class PageSpeedOverview extends StatsOverviewWidget
 
         return [
             Stat::make('Latest Mobile Performance', $latestMobile?->performance_score ? $latestMobile->performance_score . '/100' : 'No data')
-                ->description($latestMobile ? 'Analyzed ' . $latestMobile->analyzed_at->diffForHumans() : '')
+                ->description($latestMobile && $latestMobile->analyzed_at ? 'Analyzed ' . $latestMobile->analyzed_at->diffForHumans() : '')
                 ->descriptionIcon('heroicon-m-device-phone-mobile')
                 ->color($this->getScoreColor($latestMobile?->performance_score))
                 ->chart($this->getPerformanceTrend('mobile')),
 
             Stat::make('Latest Desktop Performance', $latestDesktop?->performance_score ? $latestDesktop->performance_score . '/100' : 'No data')
-                ->description($latestDesktop ? 'Analyzed ' . $latestDesktop->analyzed_at->diffForHumans() : '')
+                ->description($latestDesktop && $latestDesktop->analyzed_at ? 'Analyzed ' . $latestDesktop->analyzed_at->diffForHumans() : '')
                 ->descriptionIcon('heroicon-m-computer-desktop')
                 ->color($this->getScoreColor($latestDesktop?->performance_score))
                 ->chart($this->getPerformanceTrend('desktop')),
@@ -79,7 +79,7 @@ class PageSpeedOverview extends StatsOverviewWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant) {
+        if (! $tenant instanceof \App\Models\Project) {
             return [];
         }
 

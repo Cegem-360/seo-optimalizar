@@ -56,7 +56,9 @@ class ProjectsTable
                     ->icon('heroicon-o-cloud-arrow-down')
                     ->label('Import from Search Console')
                     ->action(function ($record): void {
-                        ImportSearchConsoleDataJob::dispatch($record);
+                        if ($record instanceof \App\Models\Project) {
+                            ImportSearchConsoleDataJob::dispatch($record);
+                        }
                     })
                     ->requiresConfirmation()
                     ->modalHeading('Import Search Console Data')
@@ -72,7 +74,9 @@ class ProjectsTable
                         ->label('Import from Search Console')
                         ->action(function (Collection $records): void {
                             foreach ($records as $record) {
-                                ImportSearchConsoleDataJob::dispatch($record);
+                                if ($record instanceof \App\Models\Project) {
+                                    ImportSearchConsoleDataJob::dispatch($record);
+                                }
                             }
                         })
                         ->requiresConfirmation()

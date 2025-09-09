@@ -56,7 +56,7 @@ class SerpAnalysis extends Page implements HasSchemas
                     ->options(function () {
                         $project = filament()->getTenant();
 
-                        if (! $project instanceof Model) {
+                        if (! $project instanceof \App\Models\Project) {
                             return [];
                         }
 
@@ -111,6 +111,11 @@ class SerpAnalysis extends Page implements HasSchemas
             }
 
             $project = filament()->getTenant();
+            
+            if (! $project instanceof \App\Models\Project) {
+                return;
+            }
+            
             $manager = ApiServiceManager::forProject($project);
 
             if (! $manager->hasService('gemini')) {
@@ -152,8 +157,8 @@ class SerpAnalysis extends Page implements HasSchemas
                 if ($analysis !== null && $analysis !== []) {
                     $this->analysisResults[] = [
                         'keyword' => $keyword->keyword,
-                        'current_position' => $latestRanking?->position ?? null,
-                        'checked_at' => $latestRanking?->checked_at ?? null,
+                        'current_position' => $latestRanking->position ?? null,
+                        'checked_at' => $latestRanking->checked_at ?? null,
                         'analysis' => $analysis,
                     ];
                 }

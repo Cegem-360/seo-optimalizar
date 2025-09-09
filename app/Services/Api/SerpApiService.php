@@ -93,6 +93,7 @@ class SerpApiService extends BaseApiService
         $synced = 0;
 
         foreach ($keywords->chunk($batchSize) as $keywordChunk) {
+            /** @var Keyword $keyword */
             foreach ($keywordChunk as $keyword) {
                 try {
                     $this->syncSingleKeyword($keyword);
@@ -127,6 +128,7 @@ class SerpApiService extends BaseApiService
         );
 
         // Get previous ranking for comparison
+        /** @var Ranking|null $latestRanking */
         $latestRanking = $keyword->rankings()->latest('checked_at')->first();
         $previousPosition = $latestRanking?->position;
 

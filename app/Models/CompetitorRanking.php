@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\CompetitorRankingFactory;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,6 +11,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read Competitor|null $competitor
+ * @property-read Keyword|null $keyword
+ * @property-read int|float|null|null $position_change
+ * @method static CompetitorRankingFactory factory($count = null, $state = [])
+ * @method static Builder<static>|CompetitorRanking newModelQuery()
+ * @method static Builder<static>|CompetitorRanking newQuery()
+ * @method static Builder<static>|CompetitorRanking query()
+ * @method static Builder<static>|CompetitorRanking recentlyChecked(int $days = 7)
+ * @method static Builder<static>|CompetitorRanking topTen()
+ * @mixin Model
+ */
 class CompetitorRanking extends Model
 {
     use HasFactory;
@@ -18,7 +31,7 @@ class CompetitorRanking extends Model
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
             $tenant = Filament::getTenant();
-            if ($tenant) {
+            if ($tenant instanceof \App\Models\Project) {
                 $builder->whereHas('competitor', function (Builder $builder) use ($tenant): void {
                     $builder->where('project_id', $tenant->id);
                 });
@@ -60,7 +73,7 @@ class CompetitorRanking extends Model
 
     protected function positionChange(): Attribute
     {
-        return Attribute::make(get: function (): null|int|float {
+        return Attribute::make(get: function (): null|int {
             if ($this->previous_position === null) {
                 return null;
             }

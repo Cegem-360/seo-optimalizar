@@ -31,7 +31,7 @@ class ReportResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant) {
+        if ($tenant instanceof \App\Models\Project) {
             $builder->where('project_id', $tenant->id);
         }
 

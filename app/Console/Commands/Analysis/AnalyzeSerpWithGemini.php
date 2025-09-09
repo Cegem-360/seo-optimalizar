@@ -74,6 +74,7 @@ class AnalyzeSerpWithGemini extends Command
 
                 $this->info(sprintf('Found %s keywords to analyze', $keywords->count()));
 
+                /** @var Keyword $keyword */
                 foreach ($keywords as $keyword) {
                     $this->line('Analyzing keyword: ' . $keyword->keyword);
 

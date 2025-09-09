@@ -21,18 +21,16 @@ enum NavigationGroups: string implements HasIcon, HasLabel
             self::Reports => 'Reports',
             self::Settings => 'Settings',
             self::Analytics => 'Analytics',
-            default => 'General',
         };
     }
 
-    public function getIcon(): ?string
+    public function getIcon(): string
     {
         return match ($this) {
             self::SeoManagement => Heroicon::MagnifyingGlass->getIconForSize(IconSize::Small),
             self::Reports => Heroicon::DocumentChartBar->getIconForSize(IconSize::Small),
             self::Settings => Heroicon::Cog6Tooth->getIconForSize(IconSize::Small),
             self::Analytics => Heroicon::ChartBar->getIconForSize(IconSize::Small),
-            default => Heroicon::Squares2x2->getIconForSize(IconSize::Small),
         };
     }
 }

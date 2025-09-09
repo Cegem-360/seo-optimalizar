@@ -24,7 +24,7 @@ class ApiCredentialForm
                         Grid::make(2)
                             ->schema([
                                 Hidden::make('project_id')
-                                    ->default(fn () => Filament::getTenant()?->id)
+                                    ->default(fn () => Filament::getTenant() instanceof \App\Models\Project ? Filament::getTenant()->id : null)
                                     ->required(),
 
                                 Select::make('service')

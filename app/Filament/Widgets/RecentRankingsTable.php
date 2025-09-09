@@ -83,7 +83,7 @@ class RecentRankingsTable extends TableWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant) {
+        if (! $tenant instanceof \App\Models\Project) {
             return Ranking::query()->whereRaw('1 = 0');
         }
 

@@ -2,13 +2,39 @@
 
 namespace App\Models;
 
+use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
+/**
+ * @property-read Collection<int, ApiCredential> $apiCredentials
+ * @property-read int|null $api_credentials_count
+ * @property-read Collection<int, Competitor> $competitors
+ * @property-read int|null $competitors_count
+ * @property-read Collection<int, Keyword> $keywords
+ * @property-read int|null $keywords_count
+ * @property-read Collection<int, NotificationPreference> $notificationPreferences
+ * @property-read int|null $notification_preferences_count
+ * @property-read Collection<int, PageSpeedResult> $pageSpeedResults
+ * @property-read int|null $page_speed_results_count
+ * @property-read Collection<int, Report> $reports
+ * @property-read int|null $reports_count
+ * @property-read Collection<int, User> $users
+ * @property-read int|null $users_count
+ * @method static Builder<static>|Project active()
+ * @method static ProjectFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Project newModelQuery()
+ * @method static Builder<static>|Project newQuery()
+ * @method static Builder<static>|Project query()
+ * @method static Builder<static>|Project withKeywordCount()
+ * @mixin Model
+ */
 class Project extends Model
 {
     use HasFactory;
@@ -34,9 +60,9 @@ class Project extends Model
         return $this->hasMany(Report::class);
     }
 
-    public function rankings(): HasMany
+    public function rankings(): HasManyThrough
     {
-        return $this->hasMany(Ranking::class)->through('keywords');
+        return $this->hasManyThrough(Ranking::class, Keyword::class);
     }
 
     public function competitors(): HasMany

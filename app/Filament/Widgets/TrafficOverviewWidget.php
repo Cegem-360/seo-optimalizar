@@ -36,7 +36,7 @@ class TrafficOverviewWidget extends ChartWidget
         $tenant = Filament::getTenant();
         $days = (int) $this->filter;
 
-        if (! $tenant) {
+        if (! $tenant instanceof \App\Models\Project) {
             return [
                 'datasets' => [],
                 'labels' => [],

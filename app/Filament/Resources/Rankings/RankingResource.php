@@ -3,13 +3,13 @@
 namespace App\Filament\Resources\Rankings;
 
 use App\Enums\NavigationGroups;
+use App\Filament\Resources\Rankings\Pages\CreateRanking;
+use App\Filament\Resources\Rankings\Pages\EditRanking;
+use App\Filament\Resources\Rankings\Pages\ListRankings;
 use App\Filament\Resources\Rankings\RankingResource\Pages\RankingsDashboard;
 use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsDistributionChart;
 use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsOverviewWidget;
 use App\Filament\Resources\Rankings\RankingResource\Widgets\RankingsTrendChart;
-use App\Filament\Resources\Rankings\Pages\CreateRanking;
-use App\Filament\Resources\Rankings\Pages\EditRanking;
-use App\Filament\Resources\Rankings\Pages\ListRankings;
 use App\Filament\Resources\Rankings\Schemas\RankingForm;
 use App\Filament\Resources\Rankings\Tables\RankingsTable;
 use App\Models\Ranking;
@@ -35,7 +35,7 @@ class RankingResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant) {
+        if ($tenant instanceof \App\Models\Project) {
             $builder->whereHas('keyword', function (Builder $builder) use ($tenant): void {
                 $builder->where('project_id', $tenant->id);
             });

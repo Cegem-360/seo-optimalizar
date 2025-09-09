@@ -135,6 +135,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
     public function syncKeywordRankings(): int
     {
+        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Keyword> $keywords */
         $keywords = $this->project->keywords()->get();
         $synced = 0;
 
@@ -142,6 +143,7 @@ class GoogleSearchConsoleService extends BaseApiService
             $searchAnalytics = $this->getKeywordData($keywordChunk);
 
             foreach ($keywordChunk as $keyword) {
+                
                 $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
 
                 if ($analytics) {
@@ -165,6 +167,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $ctr = $analytics['ctr'] ?? 0;
 
         // Get the latest ranking to compare positions
+        /** @var \App\Models\Ranking|null $latestRanking */
         $latestRanking = $keyword->rankings()->latest('checked_at')->first();
         $previousPosition = $latestRanking?->position;
 

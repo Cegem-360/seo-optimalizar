@@ -4,6 +4,7 @@ namespace App\Console\Commands\Notifications;
 
 use App\Models\Project;
 use App\Models\Ranking;
+use App\Models\User;
 use App\Notifications\WeeklySummaryNotification;
 use Carbon\Carbon;
 use Exception;
@@ -61,6 +62,7 @@ class SendWeeklySummary extends Command
                     continue;
                 }
 
+                /** @var User $user */
                 foreach ($users as $user) {
                     $user->notify(new WeeklySummaryNotification($project, $summaryData, $this->urlGenerator));
                     $totalSent++;

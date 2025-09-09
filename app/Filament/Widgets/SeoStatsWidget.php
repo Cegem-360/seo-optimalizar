@@ -15,7 +15,7 @@ class SeoStatsWidget extends StatsOverviewWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant) {
+        if (! $tenant instanceof \App\Models\Project) {
             return [];
         }
 

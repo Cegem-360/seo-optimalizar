@@ -3,8 +3,10 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
+use App\Models\Ranking;
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Client\PendingRequest;
 
 class GeminiApiService extends BaseApiService
@@ -126,8 +128,8 @@ class GeminiApiService extends BaseApiService
             }
 
             // Építsük fel a SERP adatokat a pozíció elemzéshez
-            $currentPosition = $latestRanking?->position ?? 'Nincs adat';
-            $url = $latestRanking?->url ?? $this->project->url;
+            $currentPosition = $latestRanking->position ?? 'Nincs adat';
+            $url = $latestRanking->url ?? $this->project->url;
 
             // Lekérjük a többi versenytársat is
             $competitors = $this->getCompetitorsForKeyword($keyword);
@@ -288,6 +290,7 @@ class GeminiApiService extends BaseApiService
             ->limit(30)
             ->get();
 
+        /** @var Ranking $allRanking */
         foreach ($allRankings as $allRanking) {
             $competitors[] = [
                 'position' => $allRanking->position,
@@ -408,6 +411,7 @@ class GeminiApiService extends BaseApiService
     {
         try {
             // Ranking adatok lekérése
+            /** @var Collection<int, Ranking> $rankings */
             $rankings = $keyword->rankings()
                 ->orderBy('checked_at', 'desc')
                 ->limit(10)
@@ -439,6 +443,7 @@ class GeminiApiService extends BaseApiService
 
             // Valós ranking adatok alapján SERP szimulálás
             $organicResults = [];
+            /** @var Ranking $ranking */
             foreach ($rankings as $index => $ranking) {
                 $organicResults[] = [
                     'title' => 'Eredmény ' . ($index + 1) . ' - ' . $keyword->keyword,

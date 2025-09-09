@@ -17,6 +17,10 @@ class RankingsDistributionChart extends ChartWidget
     protected function getData(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return ['datasets' => [], 'labels' => []];
+        }
 
         $baseQuery = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
             $query->where('project_id', $project->id);

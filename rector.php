@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
+use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
 use Rector\Strict\Rector\Empty_\DisallowedEmptyRuleFixerRector;
+use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
@@ -23,7 +27,24 @@ return RectorConfig::configure()
         __DIR__ . '/node_modules',
         __DIR__ . '/database/migrations',
         __DIR__ . '/app/Providers/ApiServiceProvider.php',
+
+        // Skip aggressive PHPDoc removal rules to preserve documentation
         DisallowedEmptyRuleFixerRector::class,
+        RemoveUselessParamTagRector::class => [
+            // Keep @param tags for complex types that help with IDE support
+            __DIR__ . '/app/Services',
+            __DIR__ . '/app/Console/Commands',
+        ],
+        RemoveUselessReturnTagRector::class => [
+            // Keep @return tags for better documentation
+            __DIR__ . '/app/Services',
+            __DIR__ . '/app/Console/Commands',
+        ],
+        RemoveUselessVarTagRector::class,
+        AddVoidReturnTypeWhereNoReturnRector::class => [
+            // Don't add void return types to commands as they might return exit codes
+            __DIR__ . '/app/Console/Commands',
+        ],
     ])
     ->withSets([
         LaravelLevelSetList::UP_TO_LARAVEL_110,

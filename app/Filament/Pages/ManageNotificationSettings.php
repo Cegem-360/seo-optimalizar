@@ -152,6 +152,10 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
             $tenant = Filament::getTenant();
             $user = $this->authManager->user();
 
+            if (! $tenant instanceof \App\Models\Project) {
+                return;
+            }
+
             $record = new NotificationPreference();
             $record->user_id = $user->id;
             $record->project_id = $tenant->id;
@@ -232,7 +236,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
         $tenant = Filament::getTenant();
         $user = $this->authManager->user();
 
-        if (! $tenant || ! $user) {
+        if (! $tenant instanceof \App\Models\Project || ! $user) {
             return null;
         }
 

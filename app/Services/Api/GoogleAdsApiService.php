@@ -7,7 +7,6 @@ use Exception;
 use Google\Ads\GoogleAds\Lib\OAuth2TokenBuilder;
 use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient;
 use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClientBuilder;
-use Google\Ads\GoogleAds\V21\Common\KeywordInfo;
 use Google\Ads\GoogleAds\V21\Enums\KeywordPlanNetworkEnum\KeywordPlanNetwork;
 use Google\Ads\GoogleAds\V21\Services\GenerateKeywordIdeasRequest;
 use Google\Ads\GoogleAds\V21\Services\KeywordSeed;
@@ -76,22 +75,18 @@ class GoogleAdsApiService extends BaseApiService
             $keywordPlanIdeaService = $client->getKeywordPlanIdeaServiceClient();
             $customerId = $this->getCredential('customer_id');
 
-            // Create keyword info
-            $keywordInfo = new KeywordInfo();
-            $keywordInfo->setText($keyword);
-
             // Create request
             $generateKeywordIdeasRequest = new GenerateKeywordIdeasRequest();
             $generateKeywordIdeasRequest->setCustomerId($customerId);
             $generateKeywordIdeasRequest->setKeywordSeed(
                 (new KeywordSeed())
-                    ->setKeywords([$keywordInfo])
+                    ->setKeywords([$keyword])
             );
             $generateKeywordIdeasRequest->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
 
             // Set geo targeting
             $geoTargetConstant = $this->getGeoTargetConstant($countryCode);
-            if ($geoTargetConstant !== null && $geoTargetConstant !== '' && $geoTargetConstant !== '0') {
+            if ($geoTargetConstant !== '' && $geoTargetConstant !== '0') {
                 $generateKeywordIdeasRequest->setGeoTargetConstants([$geoTargetConstant]);
             }
 
@@ -172,6 +167,7 @@ class GoogleAdsApiService extends BaseApiService
 
         $updated = 0;
 
+        /** @var Keyword $keyword */
         foreach ($keywords as $keyword) {
             try {
                 if ($this->updateKeywordMetrics($keyword)) {

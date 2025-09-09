@@ -36,27 +36,37 @@ class ApiServiceManager
 
     public function getGoogleSearchConsole(): GoogleSearchConsoleService
     {
-        return $this->getService('google_search_console');
+        /** @var GoogleSearchConsoleService $service */
+        $service = $this->getService('google_search_console');
+        return $service;
     }
 
     public function getGoogleAnalytics(): GoogleAnalyticsService
     {
-        return $this->getService('google_analytics');
+        /** @var GoogleAnalyticsService $service */
+        $service = $this->getService('google_analytics');
+        return $service;
     }
 
     public function getPageSpeedInsights(): PageSpeedInsightsService
     {
-        return $this->getService('google_pagespeed_insights');
+        /** @var PageSpeedInsightsService $service */
+        $service = $this->getService('google_pagespeed_insights');
+        return $service;
     }
 
     public function getGoogleAds(): GoogleAdsApiService
     {
-        return $this->getService('google_ads');
+        /** @var GoogleAdsApiService $service */
+        $service = $this->getService('google_ads');
+        return $service;
     }
 
     public function getGemini(): GeminiApiService
     {
-        return $this->getService('gemini');
+        /** @var GeminiApiService $service */
+        $service = $this->getService('gemini');
+        return $service;
     }
 
     public function getConfiguredServices(): Collection
@@ -168,8 +178,8 @@ class ApiServiceManager
         }
     }
 
-    public static function forProject(Project $project): static
+    public static function forProject(Project $project): self
     {
-        return new static($project);
+        return new self($project);
     }
 }

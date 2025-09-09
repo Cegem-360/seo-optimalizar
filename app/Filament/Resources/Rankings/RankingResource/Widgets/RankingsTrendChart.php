@@ -17,6 +17,11 @@ class RankingsTrendChart extends ChartWidget
     protected function getData(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return ['datasets' => [], 'labels' => []];
+        }
+        
         $days = (int) $this->filter;
         $labels = [];
         $topThreeData = [];

@@ -22,7 +22,7 @@ class PageSpeedRecentResultsTable extends TableWidget
     {
         return $table
             ->query(fn (): Builder => PageSpeedResult::query()
-                ->forProject(Filament::getTenant()->id)
+                ->forProject(Filament::getTenant() instanceof \App\Models\Project ? Filament::getTenant()->id : 0)
                 ->orderBy('analyzed_at', 'desc')
                 ->limit(10)
             )

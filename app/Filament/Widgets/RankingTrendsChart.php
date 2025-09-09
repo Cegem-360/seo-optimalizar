@@ -15,7 +15,7 @@ class RankingTrendsChart extends ChartWidget
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant) {
+        if (! $tenant instanceof \App\Models\Project) {
             return [
                 'datasets' => [],
                 'labels' => [],

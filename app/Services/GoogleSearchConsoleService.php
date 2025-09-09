@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Keyword;
 use App\Models\Project;
 use App\Models\Ranking;
+use App\Models\User;
 use App\Notifications\RankingChangeNotification;
 use Carbon\Carbon;
 use Exception;
@@ -136,6 +137,7 @@ class GoogleSearchConsoleService
 
         foreach ($performanceData as $data) {
             // Find or create keyword
+            /** @var Keyword $keyword */
             $keyword = Keyword::query()->firstOrCreate([
                 'project_id' => $project->id,
                 'keyword' => $data['keyword'],
@@ -147,13 +149,14 @@ class GoogleSearchConsoleService
             ]);
 
             // Get previous ranking for comparison
+            /** @var Ranking|null $previousRanking */
             $previousRanking = $keyword->rankings()->latest('checked_at')->first();
 
             // Create new ranking entry
             $ranking = Ranking::query()->create([
                 'keyword_id' => $keyword->id,
                 'position' => $data['position'],
-                'previous_position' => $previousRanking ? $previousRanking->position : null,
+                'previous_position' => $previousRanking?->position,
                 'url' => $data['url'],
                 'featured_snippet' => false,
                 'serp_features' => json_encode([
@@ -277,6 +280,7 @@ class GoogleSearchConsoleService
             // Get all users who have access to this project
             $users = $project->users()->get();
 
+            /** @var User $user */
             foreach ($users as $user) {
                 $preferences = $user->getNotificationPreferencesForProject($project);
 

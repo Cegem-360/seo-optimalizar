@@ -23,7 +23,7 @@ class KeywordPerformanceWidget extends BaseWidget
             ->query(function (): Builder {
                 $tenant = Filament::getTenant();
 
-                if (! $tenant) {
+                if (! $tenant instanceof \App\Models\Project) {
                     return Keyword::query()->whereRaw('1 = 0');
                 }
 
@@ -62,7 +62,7 @@ class KeywordPerformanceWidget extends BaseWidget
                             ->orderBy('checked_at', 'desc')
                             ->first();
 
-                        return $latestRanking?->position ?? '–';
+                        return $latestRanking->position ?? '–';
                     })
                     ->badge()
                     ->color(fn ($state): string => match (true) {

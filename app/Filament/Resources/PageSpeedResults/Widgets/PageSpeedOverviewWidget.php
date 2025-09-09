@@ -12,7 +12,12 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return [];
+        }
 
+        /** @var \App\Models\PageSpeedResult|null $latestResult */
         $latestResult = PageSpeedResult::forProject($project->id)
             ->latest('analyzed_at')
             ->first();
@@ -34,7 +39,7 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
 
         return [
             Stat::make('Latest Performance Score', $latestResult ? $latestResult->performance_score . '/100' : 'No data')
-                ->description($latestResult ? 'Last scan: ' . $latestResult->analyzed_at->diffForHumans() : null)
+                ->description($latestResult && $latestResult->analyzed_at ? 'Last scan: ' . $latestResult->analyzed_at->diffForHumans() : null)
                 ->color($this->getScoreColor($latestResult?->performance_score))
                 ->icon($this->getScoreIcon($latestResult?->performance_score)),
 
@@ -98,6 +103,10 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
     protected function getPerformanceTrend(): array
     {
         $project = Filament::getTenant();
+        
+        if (! $project instanceof \App\Models\Project) {
+            return [];
+        }
 
         $results = PageSpeedResult::forProject($project->id)
             ->recent(7)
