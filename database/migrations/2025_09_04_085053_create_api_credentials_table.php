@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
     /**
      * Run the migrations.
@@ -19,7 +19,7 @@ return new class extends Migration
                 'google_analytics',
                 'google_pagespeed_insights',
                 'serpapi',
-                'mobile_friendly_test'
+                'mobile_friendly_test',
             ]);
             $table->text('credentials'); // Encrypted JSON
             $table->boolean('is_active')->default(true);

@@ -14,13 +14,16 @@ use Illuminate\Support\Facades\Log;
 
 class GoogleSearchConsoleService
 {
+    /**
+     * @var \Illuminate\Contracts\Config\Repository
+     */
     public $repository;
 
     private readonly GoogleClient $googleClient;
 
     private readonly SearchConsole $searchConsole;
 
-    public function __construct(\Illuminate\Contracts\Config\Repository $repository, private readonly \Illuminate\Foundation\Application $application)
+    public function __construct(\Illuminate\Contracts\Config\Repository $repository)
     {
         $this->repository = $repository;
         $this->googleClient = new GoogleClient();
@@ -288,7 +291,7 @@ class GoogleSearchConsoleService
                         $channels[] = 'database';
                     }
 
-                    $notification = new RankingChangeNotification($ranking, $changeType, config('app.url'), $channels);
+                    $notification = new RankingChangeNotification($ranking, $changeType, $this->repository->get('app.url'), $channels);
                     $user->notify($notification);
                 }
             }

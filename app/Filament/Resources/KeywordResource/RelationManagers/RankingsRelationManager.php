@@ -68,27 +68,32 @@ class RankingsRelationManager extends RelationManager
 
                 TextColumn::make('change')
                     ->label('Change')
-                    ->getStateUsing(function ($record) {
+                    ->getStateUsing(function ($record): string {
                         if ($record->previous_position === null) {
                             return 'New';
                         }
+
                         $change = $record->previous_position - $record->position;
                         if ($change > 0) {
                             return '↑ ' . abs($change);
-                        } elseif ($change < 0) {
+                        }
+
+                        if ($change < 0) {
                             return '↓ ' . abs($change);
                         }
 
                         return '–';
                     })
                     ->badge()
-                    ->color(function ($state) {
+                    ->color(function ($state): string {
                         if ($state === 'New') {
                             return 'primary';
                         }
+
                         if (str_starts_with($state, '↑')) {
                             return 'success';
                         }
+
                         if (str_starts_with($state, '↓')) {
                             return 'danger';
                         }
@@ -108,8 +113,8 @@ class RankingsRelationManager extends RelationManager
 
                 TextColumn::make('serp_features')
                     ->label('CTR')
-                    ->getStateUsing(function ($record) {
-                        $features = json_decode($record->serp_features, true);
+                    ->getStateUsing(function ($record): string {
+                        $features = json_decode((string) $record->serp_features, true);
 
                         return isset($features['ctr'])
                             ? round($features['ctr'] * 100, 2) . '%'
@@ -130,15 +135,15 @@ class RankingsRelationManager extends RelationManager
             ])
             ->filters([
                 Filter::make('top_10')
-                    ->query(fn (Builder $query): Builder => $query->where('position', '<=', 10))
+                    ->query(fn (Builder $builder): Builder => $builder->where('position', '<=', 10))
                     ->label('Top 10'),
 
                 Filter::make('featured_snippet')
-                    ->query(fn (Builder $query): Builder => $query->where('featured_snippet', true))
+                    ->query(fn (Builder $builder): Builder => $builder->where('featured_snippet', true))
                     ->label('Has Featured Snippet'),
 
                 Filter::make('last_30_days')
-                    ->query(fn (Builder $query): Builder => $query->where('checked_at', '>=', now()->subDays(30)))
+                    ->query(fn (Builder $builder): Builder => $builder->where('checked_at', '>=', now()->subDays(30)))
                     ->label('Last 30 Days'),
             ])
             ->actions([

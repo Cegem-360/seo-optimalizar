@@ -12,7 +12,7 @@ class GeminiApiService extends BaseApiService
 
     private string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
 
-    protected function configureRequest(PendingRequest $request): void
+    protected function configureRequest(PendingRequest $pendingRequest): void
     {
         $apiKey = $this->getCredential('api_key');
 
@@ -20,7 +20,7 @@ class GeminiApiService extends BaseApiService
             throw new \Exception('Missing Google Gemini API key');
         }
 
-        $request->withHeaders([
+        $pendingRequest->withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ]);
@@ -44,7 +44,7 @@ class GeminiApiService extends BaseApiService
             $response = $client->get($this->baseUrl . '/models?key=' . $apiKey);
 
             return $response->getStatusCode() === 200;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }
@@ -99,7 +99,7 @@ class GeminiApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }
@@ -108,7 +108,7 @@ class GeminiApiService extends BaseApiService
     {
         $serpResults = $this->getSerpResultsForKeyword($keyword);
 
-        if (! $serpResults) {
+        if ($serpResults === []) {
             return null;
         }
 
@@ -129,7 +129,7 @@ class GeminiApiService extends BaseApiService
             $url = $latestRanking?->url ?? $this->project->url;
 
             // Lekérjük a többi versenytársat is
-            $competitors = $this->getCompetitorsForKeyword($keyword, $currentPosition);
+            $competitors = $this->getCompetitorsForKeyword($keyword);
 
             $prompt = $this->buildPositionAnalysisPrompt($keyword->keyword, $currentPosition, $url, $competitors);
 
@@ -168,7 +168,7 @@ class GeminiApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }
@@ -198,15 +198,19 @@ class GeminiApiService extends BaseApiService
         if (isset($serpResults['answer_box'])) {
             $features[] = 'featured_snippet';
         }
+
         if (isset($serpResults['people_also_ask'])) {
             $features[] = 'people_also_ask';
         }
+
         if (isset($serpResults['images_results'])) {
             $features[] = 'images';
         }
+
         if (isset($serpResults['local_results'])) {
             $features[] = 'local_pack';
         }
+
         if (isset($serpResults['shopping_results'])) {
             $features[] = 'shopping';
         }
@@ -222,8 +226,8 @@ class GeminiApiService extends BaseApiService
         $features = $serpData['features'] ?? [];
 
         $resultsText = '';
-        foreach ($organicResults as $result) {
-            $resultsText .= "Pozíció {$result['position']}: {$result['title']} - {$result['domain']}\n";
+        foreach ($organicResults as $organicResult) {
+            $resultsText .= sprintf('Pozíció %s: %s - %s%s', $organicResult['position'], $organicResult['title'], $organicResult['domain'], PHP_EOL);
         }
 
         return "Kérem elemezze a következő keresési eredményeket a '{$keyword}' kulcsszóra:\n\n" .
@@ -272,7 +276,7 @@ class GeminiApiService extends BaseApiService
         ];
     }
 
-    private function getCompetitorsForKeyword(Keyword $keyword, $currentPosition): array
+    private function getCompetitorsForKeyword(Keyword $keyword): array
     {
         // Versenytársak lekérése a ranking adatokból
         $competitors = [];
@@ -283,11 +287,11 @@ class GeminiApiService extends BaseApiService
             ->limit(30)
             ->get();
 
-        foreach ($allRankings as $index => $ranking) {
+        foreach ($allRankings as $allRanking) {
             $competitors[] = [
-                'position' => $ranking->position,
-                'url' => $ranking->url,
-                'domain' => parse_url($ranking->url, PHP_URL_HOST),
+                'position' => $allRanking->position,
+                'url' => $allRanking->url,
+                'domain' => parse_url((string) $allRanking->url, PHP_URL_HOST),
             ];
         }
 
@@ -315,14 +319,14 @@ class GeminiApiService extends BaseApiService
     {
         $competitorsList = '';
         foreach (array_slice($competitors, 0, 20) as $comp) {
-            $competitorsList .= "Pozíció {$comp['position']}: {$comp['domain']}\n";
+            $competitorsList .= sprintf('Pozíció %s: %s%s', $comp['position'], $comp['domain'], PHP_EOL);
         }
 
-        $positionText = is_numeric($position) ? "{$position}. helyen" : 'nincs rankingben';
+        $positionText = is_numeric($position) ? $position . '. helyen' : 'nincs rankingben';
 
         return "Elemezd a következő kulcsszó pozícióját és versenytársait!\n\n" .
                "Kulcsszó: '{$keyword}'\n" .
-               "Jelenlegi pozíció: {$positionText}\n" .
+               sprintf('Jelenlegi pozíció: %s%s', $positionText, PHP_EOL) .
                "URL: {$url}\n\n" .
                "Top 20 versenytárs:\n{$competitorsList}\n\n" .
                "Kérlek válaszolj a következő kérdésekre:\n" .
@@ -347,7 +351,7 @@ class GeminiApiService extends BaseApiService
                '```';
     }
 
-    private function parsePositionAnalysisResponse(string $response): ?array
+    private function parsePositionAnalysisResponse(string $response): array
     {
         // Először próbáljuk meg kinyerni a JSON-t
         $jsonString = $response;
@@ -369,18 +373,18 @@ class GeminiApiService extends BaseApiService
 
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
             // Ha a detailed_analysis tartalmaz JSON kódot, tisztítsuk meg
-            if (isset($decoded['detailed_analysis']) && str_contains($decoded['detailed_analysis'], '```')) {
-                $decoded['detailed_analysis'] = preg_replace('/```.*?```/s', '', $decoded['detailed_analysis']);
-                $decoded['detailed_analysis'] = trim($decoded['detailed_analysis']);
+            if (isset($decoded['detailed_analysis']) && str_contains((string) $decoded['detailed_analysis'], '```')) {
+                $decoded['detailed_analysis'] = preg_replace('/```.*?```/s', '', (string) $decoded['detailed_analysis']);
+                $decoded['detailed_analysis'] = trim((string) $decoded['detailed_analysis']);
             }
 
             // Biztosítsuk hogy minden szükséges mező megvan
-            $decoded['position_rating'] = $decoded['position_rating'] ?? 'ismeretlen';
-            $decoded['main_competitors'] = $decoded['main_competitors'] ?? [];
-            $decoded['competitor_advantages'] = $decoded['competitor_advantages'] ?? [];
-            $decoded['improvement_areas'] = $decoded['improvement_areas'] ?? [];
-            $decoded['quick_wins'] = $decoded['quick_wins'] ?? [];
-            $decoded['detailed_analysis'] = $decoded['detailed_analysis'] ?? 'Részletes elemzés nem elérhető.';
+            $decoded['position_rating'] ??= 'ismeretlen';
+            $decoded['main_competitors'] ??= [];
+            $decoded['competitor_advantages'] ??= [];
+            $decoded['improvement_areas'] ??= [];
+            $decoded['quick_wins'] ??= [];
+            $decoded['detailed_analysis'] ??= 'Részletes elemzés nem elérhető.';
 
             return $decoded;
         }
@@ -399,7 +403,7 @@ class GeminiApiService extends BaseApiService
         ];
     }
 
-    private function getSerpResultsForKeyword(Keyword $keyword): ?array
+    private function getSerpResultsForKeyword(Keyword $keyword): array
     {
         try {
             // Ranking adatok lekérése
@@ -450,7 +454,7 @@ class GeminiApiService extends BaseApiService
                     'location' => $keyword->geo_target ?: 'Hungary',
                 ],
             ];
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             // Fallback dummy data ha minden más meghibásodna
             return [
                 'organic_results' => [

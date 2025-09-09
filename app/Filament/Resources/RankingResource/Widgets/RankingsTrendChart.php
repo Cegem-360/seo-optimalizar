@@ -2,51 +2,47 @@
 
 namespace App\Filament\Resources\RankingResource\Widgets;
 
-use App\Models\Ranking;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 
 class RankingsTrendChart extends ChartWidget
 {
     protected ?string $heading = 'Rankings Performance Over Time';
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     public ?string $filter = '30';
-    
+
     protected function getData(): array
     {
         $project = Filament::getTenant();
         $days = (int) $this->filter;
-        
-        $data = [];
         $labels = [];
         $topThreeData = [];
         $topTenData = [];
         $avgPositionData = [];
-        
+
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $labels[] = $date->format('M d');
-            
-            $dayQuery = Ranking::whereHas('keyword', function ($query) use ($project) {
+
+            $dayQuery = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             })->whereBetween('checked_at', [
                 $date->copy()->startOfDay(),
-                $date->copy()->endOfDay()
+                $date->copy()->endOfDay(),
             ]);
-            
+
             $totalForDay = (clone $dayQuery)->count();
             $topThreeForDay = (clone $dayQuery)->topThree()->count();
             $topTenForDay = (clone $dayQuery)->topTen()->count();
             $avgPositionForDay = (clone $dayQuery)->avg('position');
-            
+
             $topThreeData[] = $totalForDay > 0 ? round(($topThreeForDay / $totalForDay) * 100, 1) : 0;
             $topTenData[] = $totalForDay > 0 ? round(($topTenForDay / $totalForDay) * 100, 1) : 0;
             $avgPositionData[] = $avgPositionForDay ? round($avgPositionForDay, 1) : 0;
         }
-        
+
         return [
             'datasets' => [
                 [
@@ -82,7 +78,7 @@ class RankingsTrendChart extends ChartWidget
     {
         return 'line';
     }
-    
+
     protected function getFilters(): ?array
     {
         return [
@@ -91,7 +87,7 @@ class RankingsTrendChart extends ChartWidget
             '90' => 'Last 90 days',
         ];
     }
-    
+
     protected function getOptions(): array
     {
         return [

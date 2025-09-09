@@ -2,26 +2,25 @@
 
 namespace App\Filament\Resources\RankingResource\Widgets;
 
-use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 
 class RankingsDistributionChart extends ChartWidget
 {
     protected ?string $heading = 'Position Distribution';
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?int $sort = 2;
-    
+
     protected function getData(): array
     {
         $project = Filament::getTenant();
-        
-        $baseQuery = Ranking::whereHas('keyword', function ($query) use ($project) {
+
+        $baseQuery = \App\Models\Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         })->recentlyChecked(30);
-        
+
         // Position ranges
         $ranges = [
             '1-3' => (clone $baseQuery)->whereBetween('position', [1, 3])->count(),
@@ -31,20 +30,20 @@ class RankingsDistributionChart extends ChartWidget
             '51-100' => (clone $baseQuery)->whereBetween('position', [51, 100])->count(),
             '100+' => (clone $baseQuery)->where('position', '>', 100)->count(),
         ];
-        
+
         // Priority distribution
-        $priorities = [
-            'High' => (clone $baseQuery)->whereHas('keyword', function ($query) {
+        [
+            'High' => (clone $baseQuery)->whereHas('keyword', function ($query): void {
                 $query->where('priority', 'high');
             })->count(),
-            'Medium' => (clone $baseQuery)->whereHas('keyword', function ($query) {
+            'Medium' => (clone $baseQuery)->whereHas('keyword', function ($query): void {
                 $query->where('priority', 'medium');
             })->count(),
-            'Low' => (clone $baseQuery)->whereHas('keyword', function ($query) {
+            'Low' => (clone $baseQuery)->whereHas('keyword', function ($query): void {
                 $query->where('priority', 'low');
             })->count(),
         ];
-        
+
         return [
             'datasets' => [
                 [
@@ -77,7 +76,7 @@ class RankingsDistributionChart extends ChartWidget
     {
         return 'doughnut';
     }
-    
+
     protected function getOptions(): array
     {
         return [
@@ -95,9 +94,9 @@ class RankingsDistributionChart extends ChartWidget
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                                 return label + ": " + value + " (" + percentage + "%)";
-                            }'
-                        ]
-                    ]
+                            }',
+                        ],
+                    ],
                 ],
             ],
             'responsive' => true,

@@ -42,7 +42,7 @@ class RecentRankingsTable extends TableWidget
 
                 BadgeColumn::make('change')
                     ->label('Change')
-                    ->getStateUsing(function (Ranking $ranking): ?string {
+                    ->getStateUsing(function (Ranking $ranking): string {
                         if (! $ranking->previous_position) {
                             return 'NEW';
                         }

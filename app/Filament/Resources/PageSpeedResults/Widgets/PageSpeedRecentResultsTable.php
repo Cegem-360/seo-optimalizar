@@ -4,7 +4,6 @@ namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
 use Filament\Facades\Filament;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -14,26 +13,25 @@ use Illuminate\Database\Eloquent\Builder;
 class PageSpeedRecentResultsTable extends TableWidget
 {
     protected static ?string $heading = 'Recent PageSpeed Results';
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?int $sort = 3;
-    
+
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => 
-                PageSpeedResult::query()
-                    ->forProject(Filament::getTenant()->id)
-                    ->orderBy('analyzed_at', 'desc')
-                    ->limit(10)
+            ->query(fn (): Builder => PageSpeedResult::query()
+                ->forProject(Filament::getTenant()->id)
+                ->orderBy('analyzed_at', 'desc')
+                ->limit(10)
             )
             ->columns([
                 TextColumn::make('analyzed_at')
                     ->label('Date')
                     ->dateTime('M d, Y H:i')
                     ->sortable(),
-                    
+
                 TextColumn::make('strategy')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => ucfirst($state))
@@ -42,7 +40,7 @@ class PageSpeedRecentResultsTable extends TableWidget
                         'desktop' => 'warning',
                         default => 'gray',
                     }),
-                    
+
                 TextColumn::make('performance_score')
                     ->label('Performance')
                     ->badge()
@@ -52,7 +50,7 @@ class PageSpeedRecentResultsTable extends TableWidget
                         $state >= 50 => 'warning',
                         default => 'danger',
                     }),
-                    
+
                 TextColumn::make('seo_score')
                     ->label('SEO')
                     ->badge()
@@ -62,7 +60,7 @@ class PageSpeedRecentResultsTable extends TableWidget
                         $state >= 50 => 'warning',
                         default => 'danger',
                     }),
-                    
+
                 TextColumn::make('accessibility_score')
                     ->label('Accessibility')
                     ->badge()
@@ -72,7 +70,7 @@ class PageSpeedRecentResultsTable extends TableWidget
                         $state >= 50 => 'warning',
                         default => 'danger',
                     }),
-                    
+
                 TextColumn::make('best_practices_score')
                     ->label('Best Practices')
                     ->badge()
@@ -82,7 +80,7 @@ class PageSpeedRecentResultsTable extends TableWidget
                         $state >= 50 => 'warning',
                         default => 'danger',
                     }),
-                    
+
                 TextColumn::make('lcp_display')
                     ->label('LCP')
                     ->badge()
@@ -91,7 +89,7 @@ class PageSpeedRecentResultsTable extends TableWidget
                         $record->lcp_score >= 0.5 => 'warning',
                         default => 'danger',
                     }),
-                    
+
                 TextColumn::make('fcp_display')
                     ->label('FCP')
                     ->badge()

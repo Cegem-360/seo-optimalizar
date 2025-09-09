@@ -14,30 +14,30 @@ use Illuminate\Support\ServiceProvider;
 class ApiServiceProvider extends ServiceProvider
 {
     /**
+     * Create a new service provider instance.
+     *
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     */
+    public function __construct($app)
+    {
+        parent::__construct($app);
+    }
+
+    /**
      * Register services.
      */
     public function register(): void
     {
         // Register API services as singletons within project context
-        $this->app->bind(GoogleSearchConsoleService::class, function ($app, $parameters) {
-            return new GoogleSearchConsoleService($parameters['project']);
-        });
+        $this->app->bind(GoogleSearchConsoleService::class, fn ($app, $parameters): \App\Services\Api\GoogleSearchConsoleService => new GoogleSearchConsoleService($parameters['project']));
 
-        $this->app->bind(GoogleAnalyticsService::class, function ($app, $parameters) {
-            return new GoogleAnalyticsService($parameters['project']);
-        });
+        $this->app->bind(GoogleAnalyticsService::class, fn ($app, $parameters): \App\Services\Api\GoogleAnalyticsService => new GoogleAnalyticsService($parameters['project']));
 
-        $this->app->bind(SerpApiService::class, function ($app, $parameters) {
-            return new SerpApiService($parameters['project']);
-        });
+        $this->app->bind(SerpApiService::class, fn ($app, $parameters): \App\Services\Api\SerpApiService => new SerpApiService($parameters['project']));
 
-        $this->app->bind(PageSpeedInsightsService::class, function ($app, $parameters) {
-            return new PageSpeedInsightsService($parameters['project']);
-        });
+        $this->app->bind(PageSpeedInsightsService::class, fn ($app, $parameters): \App\Services\Api\PageSpeedInsightsService => new PageSpeedInsightsService($parameters['project']));
 
-        $this->app->bind(ApiServiceManager::class, function ($app, $parameters) {
-            return new ApiServiceManager($parameters['project']);
-        });
+        $this->app->bind(ApiServiceManager::class, fn ($app, $parameters): \App\Services\Api\ApiServiceManager => new ApiServiceManager($parameters['project']));
     }
 
     /**
@@ -51,26 +51,23 @@ class ApiServiceProvider extends ServiceProvider
 
     private function configureHttpClient(): void
     {
-        $this->app->extend(HttpClientFactory::class, function (HttpClientFactory $factory) {
+        $this->app->extend(HttpClientFactory::class, fn (HttpClientFactory $httpClientFactory) =>
             // Set default timeout and retry configuration for API requests
-            return $factory->macro('apiRequest', function () use ($factory) {
-                return $factory->timeout(30)
-                    ->retry(3, 1000)
-                    ->withOptions([
-                        'verify' => true,
-                        'http_errors' => false, // Handle errors manually
-                    ])
-                    ->beforeSending(function ($request, $options) {
-                        // Log API requests in debug mode
-                        if (config('app.debug')) {
-                            Log::debug('API Request', [
-                                'url' => $request->url(),
-                                'method' => $request->method(),
-                                'headers' => $request->headers(),
-                            ]);
-                        }
-                    });
-            });
-        });
+            $httpClientFactory->macro('apiRequest', fn () => $httpClientFactory->timeout(30)
+                ->retry(3, 1000)
+                ->withOptions([
+                    'verify' => true,
+                    'http_errors' => false, // Handle errors manually
+                ])
+                ->beforeSending(function ($request, $options): void {
+                    // Log API requests in debug mode
+                    if ($this->repository->get('app.debug')) {
+                        Log::debug('API Request', [
+                            'url' => $request->url(),
+                            'method' => $request->method(),
+                            'headers' => $request->headers(),
+                        ]);
+                    }
+                })));
     }
 }

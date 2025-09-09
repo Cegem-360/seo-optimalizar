@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Keyword;
 use App\Services\Api\ApiServiceManager;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -54,7 +53,7 @@ class SerpAnalysis extends Page implements HasSchemas
                     ->options(function () {
                         $project = filament()->getTenant();
 
-                        if (! $project) {
+                        if (! $project instanceof \Illuminate\Database\Eloquent\Model) {
                             return [];
                         }
 
@@ -121,7 +120,7 @@ class SerpAnalysis extends Page implements HasSchemas
                 return;
             }
 
-            $keywords = Keyword::whereIn('id', $keywordIds)->get();
+            $keywords = \App\Models\Keyword::query()->whereIn('id', $keywordIds)->get();
 
             if ($keywords->isEmpty()) {
                 Notification::make()
@@ -147,7 +146,7 @@ class SerpAnalysis extends Page implements HasSchemas
 
                 $analysis = $gemini->analyzeKeywordWithPosition($keyword, $latestRanking);
 
-                if ($analysis) {
+                if ($analysis !== null && $analysis !== []) {
                     $this->analysisResults[] = [
                         'keyword' => $keyword->keyword,
                         'current_position' => $latestRanking?->position ?? null,
@@ -165,7 +164,7 @@ class SerpAnalysis extends Page implements HasSchemas
             $this->isLoading = false;
             $this->currentKeyword = null;
 
-            if (count($this->analysisResults) > 0) {
+            if ($this->analysisResults !== []) {
                 Notification::make()
                     ->title('Elemzés kész')
                     ->body(count($this->analysisResults) . ' kulcsszó elemzése elkészült!')
@@ -178,13 +177,13 @@ class SerpAnalysis extends Page implements HasSchemas
                     ->danger()
                     ->send();
             }
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             $this->isLoading = false;
             $this->currentKeyword = null;
 
             Notification::make()
                 ->title('Hiba történt')
-                ->body('Hiba az elemzés során: ' . $e->getMessage())
+                ->body('Hiba az elemzés során: ' . $exception->getMessage())
                 ->danger()
                 ->send();
         }

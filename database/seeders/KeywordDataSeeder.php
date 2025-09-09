@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Keyword;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class KeywordDataSeeder extends Seeder
@@ -14,7 +12,7 @@ class KeywordDataSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Updating keywords with sample search volume and difficulty data...');
-        
+
         // Realisztikus keresési volumenek és nehézségi szintek
         $sampleData = [
             // Magas volumen, könnyű
@@ -26,24 +24,24 @@ class KeywordDataSeeder extends Seeder
             // Nagyon alacsony volumen, változó nehézség
             ['min_volume' => 10, 'max_volume' => 100, 'min_difficulty' => 20, 'max_difficulty' => 70],
         ];
-        
-        Keyword::whereNull('search_volume')
+
+        \App\Models\Keyword::query()->whereNull('search_volume')
             ->orWhereNull('difficulty_score')
-            ->chunk(100, function ($keywords) use ($sampleData) {
+            ->chunk(100, function ($keywords) use ($sampleData): void {
                 foreach ($keywords as $keyword) {
                     // Véletlenszerűen választunk egy adatkategóriát
                     $data = $sampleData[array_rand($sampleData)];
-                    
+
                     $keyword->update([
-                        'search_volume' => rand($data['min_volume'], $data['max_volume']),
-                        'difficulty_score' => rand($data['min_difficulty'], $data['max_difficulty']),
+                        'search_volume' => random_int($data['min_volume'], $data['max_volume']),
+                        'difficulty_score' => random_int($data['min_difficulty'], $data['max_difficulty']),
                     ]);
                 }
-                
+
                 $this->command->info('Updated ' . $keywords->count() . ' keywords...');
             });
-        
-        $total = Keyword::whereNotNull('search_volume')->count();
-        $this->command->info("Successfully updated {$total} keywords with sample data!");
+
+        $total = \App\Models\Keyword::query()->whereNotNull('search_volume')->count();
+        $this->command->info(sprintf('Successfully updated %s keywords with sample data!', $total));
     }
 }

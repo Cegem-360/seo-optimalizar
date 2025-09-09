@@ -17,9 +17,9 @@ class GoogleAdsApiService extends BaseApiService
 {
     protected string $serviceName = 'google_ads';
 
-    private ?GoogleAdsClient $client = null;
+    private ?GoogleAdsClient $googleAdsClient = null;
 
-    protected function configureRequest(PendingRequest $request): void
+    protected function configureRequest(PendingRequest $pendingRequest): void
     {
         // Google Ads uses its own client, not HTTP requests
     }
@@ -29,16 +29,16 @@ class GoogleAdsApiService extends BaseApiService
         try {
             $client = $this->getClient();
 
-            return $client !== null;
-        } catch (\Exception $e) {
+            return $client instanceof \Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient;
+        } catch (\Exception) {
             return false;
         }
     }
 
     private function getClient(): ?GoogleAdsClient
     {
-        if ($this->client !== null) {
-            return $this->client;
+        if ($this->googleAdsClient instanceof \Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient) {
+            return $this->googleAdsClient;
         }
 
         try {
@@ -48,15 +48,15 @@ class GoogleAdsApiService extends BaseApiService
                 ->withRefreshToken($this->getCredential('refresh_token'))
                 ->build();
 
-            $this->client = (new GoogleAdsClientBuilder())
+            $this->googleAdsClient = (new GoogleAdsClientBuilder())
                 ->withOAuth2Credential($oAuth2Credential)
                 ->withDeveloperToken($this->getCredential('developer_token'))
                 ->build();
 
-            return $this->client;
-        } catch (\Exception $e) {
-            \Log::error('Google Ads API client error', [
-                'error' => $e->getMessage(),
+            return $this->googleAdsClient;
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error('Google Ads API client error', [
+                'error' => $exception->getMessage(),
             ]);
 
             return null;
@@ -67,7 +67,7 @@ class GoogleAdsApiService extends BaseApiService
     {
         try {
             $client = $this->getClient();
-            if (! $client) {
+            if (! $client instanceof \Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient) {
                 return null;
             }
 
@@ -79,24 +79,24 @@ class GoogleAdsApiService extends BaseApiService
             $keywordInfo->setText($keyword);
 
             // Create request
-            $request = new GenerateKeywordIdeasRequest();
-            $request->setCustomerId($customerId);
-            $request->setKeywordSeed(
+            $generateKeywordIdeasRequest = new GenerateKeywordIdeasRequest();
+            $generateKeywordIdeasRequest->setCustomerId($customerId);
+            $generateKeywordIdeasRequest->setKeywordSeed(
                 (new KeywordSeed())
                     ->setKeywords([$keywordInfo])
             );
-            $request->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
+            $generateKeywordIdeasRequest->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
 
             // Set geo targeting
             $geoTargetConstant = $this->getGeoTargetConstant($countryCode);
-            if ($geoTargetConstant) {
-                $request->setGeoTargetConstants([$geoTargetConstant]);
+            if ($geoTargetConstant !== null && $geoTargetConstant !== '' && $geoTargetConstant !== '0') {
+                $generateKeywordIdeasRequest->setGeoTargetConstants([$geoTargetConstant]);
             }
 
-            $response = $keywordPlanIdeaService->generateKeywordIdeas($request);
+            $response = $keywordPlanIdeaService->generateKeywordIdeas($generateKeywordIdeasRequest);
 
             foreach ($response as $idea) {
-                if (strtolower($idea->getText()) === strtolower($keyword)) {
+                if (strtolower((string) $idea->getText()) === strtolower($keyword)) {
                     $searchVolume = $idea->getKeywordIdeaMetrics()?->getAvgMonthlySearches();
                     $competition = $idea->getKeywordIdeaMetrics()?->getCompetition();
                     $lowTopPageBid = $idea->getKeywordIdeaMetrics()?->getLowTopOfPageBidMicros();
@@ -114,10 +114,10 @@ class GoogleAdsApiService extends BaseApiService
             }
 
             return null;
-        } catch (\Exception $e) {
-            \Log::error('Google Ads API error', [
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error('Google Ads API error', [
                 'keyword' => $keyword,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
 
             return null;
@@ -132,7 +132,7 @@ class GoogleAdsApiService extends BaseApiService
             $keywordText = $keyword instanceof Keyword ? $keyword->keyword : $keyword;
             $data = $this->getKeywordData($keywordText, $countryCode);
 
-            if ($data) {
+            if ($data !== null && $data !== []) {
                 $results[$keywordText] = $data;
             }
 
@@ -148,7 +148,7 @@ class GoogleAdsApiService extends BaseApiService
         $geoTarget = $keyword->geo_target ?? 'HU';
         $data = $this->getKeywordData($keyword->keyword, $this->getCountryCodeFromGeoTarget($geoTarget));
 
-        if (! $data) {
+        if ($data === null || $data === []) {
             return false;
         }
 
@@ -179,7 +179,7 @@ class GoogleAdsApiService extends BaseApiService
                 // Rate limiting
                 usleep(200000); // 0.2 seconds
             } catch (\Exception $e) {
-                \Log::warning('Failed to update keyword metrics', [
+                \Illuminate\Support\Facades\Log::warning('Failed to update keyword metrics', [
                     'keyword_id' => $keyword->id,
                     'keyword' => $keyword->keyword,
                     'error' => $e->getMessage(),
@@ -222,7 +222,7 @@ class GoogleAdsApiService extends BaseApiService
         return min(100, max(1, (int) round($difficultyScore)));
     }
 
-    private function getGeoTargetConstant(string $countryCode): ?string
+    private function getGeoTargetConstant(string $countryCode): string
     {
         $geoTargets = [
             'HU' => 'geoTargetConstants/2348', // Hungary

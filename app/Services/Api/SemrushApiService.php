@@ -9,17 +9,18 @@ use Illuminate\Support\Collection;
 class SemrushApiService extends BaseApiService
 {
     protected string $serviceName = 'semrush';
+
     private string $baseUrl = 'https://api.semrush.com';
 
-    protected function configureRequest(PendingRequest $request): void
+    protected function configureRequest(PendingRequest $pendingRequest): void
     {
         $apiKey = $this->getCredential('api_key');
-        
-        if (!$apiKey) {
+
+        if (! $apiKey) {
             throw new \Exception('Missing SEMrush API key');
         }
 
-        $request->withHeaders([
+        $pendingRequest->withHeaders([
             'Accept' => 'application/json',
         ]);
     }
@@ -34,9 +35,9 @@ class SemrushApiService extends BaseApiService
                 'database' => 'us',
                 'display_limit' => 1,
             ]);
-            
+
             return $response->successful();
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }
@@ -51,15 +52,25 @@ class SemrushApiService extends BaseApiService
                 'database' => $database,
                 'export_columns' => 'Ph,Nq,Cp,Co,Nr,Td',
             ]);
-            
-            $data = $this->handleResponse($response);
-            
+
+            // SEMrush returns CSV data, not JSON
+            $this->logResponse($response);
+            $this->markCredentialsAsUsed();
+
+            if (!$response->successful()) {
+                throw new \Exception(
+                    sprintf('API request failed for %s: %d - %s', $this->serviceName, $response->status(), $response->body())
+                );
+            }
+
+            $data = $response->body();
+
             if (!empty($data)) {
                 // Parse CSV-like response
                 $lines = explode("\n", trim($data));
                 if (count($lines) >= 2) {
-                    $values = str_getcsv($lines[1], ";");
-                    
+                    $values = str_getcsv($lines[1], ';');
+
                     return [
                         'keyword' => $values[0] ?? $keyword,
                         'search_volume' => (int) ($values[1] ?? 0),
@@ -70,13 +81,14 @@ class SemrushApiService extends BaseApiService
                     ];
                 }
             }
-            
+
             return null;
-        } catch (\Exception $e) {
-            \Log::error('SEMrush API error', [
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error('SEMrush API error', [
                 'keyword' => $keyword,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -84,35 +96,35 @@ class SemrushApiService extends BaseApiService
     public function bulkGetKeywordData(Collection $keywords, string $database = 'us'): array
     {
         $results = [];
-        
+
         foreach ($keywords as $keyword) {
             $keywordText = $keyword instanceof Keyword ? $keyword->keyword : $keyword;
             $data = $this->getKeywordData($keywordText, $database);
-            
-            if ($data) {
+
+            if ($data !== null && $data !== []) {
                 $results[$keywordText] = $data;
             }
-            
+
             // Rate limiting - SEMrush allows 1 request per second for free accounts
             sleep(1);
         }
-        
+
         return $results;
     }
 
     public function updateKeywordMetrics(Keyword $keyword, string $database = 'us'): bool
     {
         $data = $this->getKeywordData($keyword->keyword, $this->getDatabaseFromGeoTarget($keyword->geo_target));
-        
-        if (!$data) {
+
+        if ($data === null || $data === []) {
             return false;
         }
-        
+
         $keyword->update([
             'search_volume' => $data['search_volume'],
             'difficulty_score' => $data['difficulty'],
         ]);
-        
+
         return true;
     }
 
@@ -123,26 +135,26 @@ class SemrushApiService extends BaseApiService
             ->orWhereNull('difficulty_score')
             ->limit($batchSize)
             ->get();
-            
+
         $updated = 0;
-        
+
         foreach ($keywords as $keyword) {
             try {
                 if ($this->updateKeywordMetrics($keyword)) {
                     $updated++;
                 }
-                
+
                 // Rate limiting
                 sleep(1);
             } catch (\Exception $e) {
-                \Log::warning('Failed to update keyword metrics', [
+                \Illuminate\Support\Facades\Log::warning('Failed to update keyword metrics', [
                     'keyword_id' => $keyword->id,
                     'keyword' => $keyword->keyword,
                     'error' => $e->getMessage(),
                 ]);
             }
         }
-        
+
         return $updated;
     }
 
@@ -150,22 +162,22 @@ class SemrushApiService extends BaseApiService
     {
         // Simple difficulty calculation based on competition and result count
         $difficultyScore = 0;
-        
+
         // Competition score (0-1) contributes 60% to difficulty
         $difficultyScore += $competition * 60;
-        
+
         // Result count contributes 40% (normalized)
         if ($results > 0) {
             $normalizedResults = min($results / 1000000, 1); // Normalize to 0-1
             $difficultyScore += $normalizedResults * 40;
         }
-        
+
         return min(100, max(1, (int) round($difficultyScore)));
     }
 
     private function getDatabaseFromGeoTarget(string $geoTarget): string
     {
-        return match(strtolower($geoTarget)) {
+        return match (strtolower($geoTarget)) {
             'hu', 'hungary' => 'hu',
             'us', 'usa' => 'us',
             'uk', 'gb' => 'uk',

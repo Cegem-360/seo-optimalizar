@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class() extends Migration
 {
     /**
      * Run the migrations.
@@ -20,10 +20,10 @@ return new class extends Migration
         if (Schema::getConnection()->getDriverName() === 'sqlite') {
             // Backup existing data
             $existingData = DB::table('api_credentials')->get();
-            
+
             // Drop the existing table
             Schema::dropIfExists('api_credentials');
-            
+
             // Recreate the table with updated enum values
             Schema::create('api_credentials', function (Blueprint $table) {
                 $table->id();
@@ -35,7 +35,7 @@ return new class extends Migration
                     'google_ads',
                     'gemini',
                     'serpapi',
-                    'mobile_friendly_test'
+                    'mobile_friendly_test',
                 ]);
                 $table->text('credentials'); // Encrypted JSON
                 $table->boolean('is_active')->default(true);
@@ -45,7 +45,7 @@ return new class extends Migration
                 $table->unique(['project_id', 'service']);
                 $table->index(['project_id', 'is_active']);
             });
-            
+
             // Restore existing data
             foreach ($existingData as $record) {
                 DB::table('api_credentials')->insert((array) $record);
@@ -64,10 +64,10 @@ return new class extends Migration
         if (Schema::getConnection()->getDriverName() === 'sqlite') {
             // Backup existing data
             $existingData = DB::table('api_credentials')->get();
-            
+
             // Drop the existing table
             Schema::dropIfExists('api_credentials');
-            
+
             // Recreate the table with original enum values
             Schema::create('api_credentials', function (Blueprint $table) {
                 $table->id();
@@ -77,7 +77,7 @@ return new class extends Migration
                     'google_analytics',
                     'google_pagespeed_insights',
                     'serpapi',
-                    'mobile_friendly_test'
+                    'mobile_friendly_test',
                 ]);
                 $table->text('credentials'); // Encrypted JSON
                 $table->boolean('is_active')->default(true);
@@ -87,10 +87,10 @@ return new class extends Migration
                 $table->unique(['project_id', 'service']);
                 $table->index(['project_id', 'is_active']);
             });
-            
+
             // Restore existing data (excluding new services)
             foreach ($existingData as $record) {
-                if (!in_array($record->service, ['google_ads', 'gemini'])) {
+                if (! in_array($record->service, ['google_ads', 'gemini'])) {
                     DB::table('api_credentials')->insert((array) $record);
                 }
             }

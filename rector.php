@@ -20,6 +20,7 @@ return RectorConfig::configure()
         __DIR__ . '/storage',
         __DIR__ . '/vendor',
         __DIR__ . '/node_modules',
+        __DIR__ . '/database/migrations',
         DisallowedEmptyRuleFixerRector::class,
     ])
     ->withSets([
