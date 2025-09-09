@@ -3,20 +3,20 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
-use Google\Ads\GoogleAds\Lib\V17\GoogleAdsClient;
-use Google\Ads\GoogleAds\Lib\V17\GoogleAdsClientBuilder;
 use Google\Ads\GoogleAds\Lib\OAuth2TokenBuilder;
-use Google\Ads\GoogleAds\V17\Services\GoogleAdsRow;
-use Google\Ads\GoogleAds\V17\Services\KeywordPlanIdeaServiceClient;
-use Google\Ads\GoogleAds\V17\Services\GenerateKeywordIdeasRequest;
-use Google\Ads\GoogleAds\V17\Common\KeywordInfo;
-use Google\Ads\GoogleAds\V17\Enums\KeywordPlanNetworkEnum\KeywordPlanNetwork;
+use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient;
+use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClientBuilder;
+use Google\Ads\GoogleAds\V21\Common\KeywordInfo;
+use Google\Ads\GoogleAds\V21\Enums\KeywordPlanNetworkEnum\KeywordPlanNetwork;
+use Google\Ads\GoogleAds\V21\Services\GenerateKeywordIdeasRequest;
+use Google\Ads\GoogleAds\V21\Services\KeywordSeed;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 
 class GoogleAdsApiService extends BaseApiService
 {
     protected string $serviceName = 'google_ads';
+
     private ?GoogleAdsClient $client = null;
 
     protected function configureRequest(PendingRequest $request): void
@@ -28,6 +28,7 @@ class GoogleAdsApiService extends BaseApiService
     {
         try {
             $client = $this->getClient();
+
             return $client !== null;
         } catch (\Exception $e) {
             return false;
@@ -57,6 +58,7 @@ class GoogleAdsApiService extends BaseApiService
             \Log::error('Google Ads API client error', [
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -65,7 +67,7 @@ class GoogleAdsApiService extends BaseApiService
     {
         try {
             $client = $this->getClient();
-            if (!$client) {
+            if (! $client) {
                 return null;
             }
 
@@ -80,11 +82,11 @@ class GoogleAdsApiService extends BaseApiService
             $request = new GenerateKeywordIdeasRequest();
             $request->setCustomerId($customerId);
             $request->setKeywordSeed(
-                (new \Google\Ads\GoogleAds\V17\Services\KeywordSeed())
+                (new KeywordSeed())
                     ->setKeywords([$keywordInfo])
             );
             $request->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
-            
+
             // Set geo targeting
             $geoTargetConstant = $this->getGeoTargetConstant($countryCode);
             if ($geoTargetConstant) {
@@ -117,6 +119,7 @@ class GoogleAdsApiService extends BaseApiService
                 'keyword' => $keyword,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -124,19 +127,19 @@ class GoogleAdsApiService extends BaseApiService
     public function bulkGetKeywordData(Collection $keywords, string $countryCode = 'HU'): array
     {
         $results = [];
-        
+
         foreach ($keywords as $keyword) {
             $keywordText = $keyword instanceof Keyword ? $keyword->keyword : $keyword;
             $data = $this->getKeywordData($keywordText, $countryCode);
-            
+
             if ($data) {
                 $results[$keywordText] = $data;
             }
-            
+
             // Rate limiting - be respectful to the API
             usleep(100000); // 0.1 seconds
         }
-        
+
         return $results;
     }
 
@@ -144,16 +147,16 @@ class GoogleAdsApiService extends BaseApiService
     {
         $geoTarget = $keyword->geo_target ?? 'HU';
         $data = $this->getKeywordData($keyword->keyword, $this->getCountryCodeFromGeoTarget($geoTarget));
-        
-        if (!$data) {
+
+        if (! $data) {
             return false;
         }
-        
+
         $keyword->update([
             'search_volume' => $data['search_volume'],
             'difficulty_score' => $data['difficulty'],
         ]);
-        
+
         return true;
     }
 
@@ -164,15 +167,15 @@ class GoogleAdsApiService extends BaseApiService
             ->orWhereNull('difficulty_score')
             ->limit($batchSize)
             ->get();
-            
+
         $updated = 0;
-        
+
         foreach ($keywords as $keyword) {
             try {
                 if ($this->updateKeywordMetrics($keyword)) {
                     $updated++;
                 }
-                
+
                 // Rate limiting
                 usleep(200000); // 0.2 seconds
             } catch (\Exception $e) {
@@ -183,15 +186,15 @@ class GoogleAdsApiService extends BaseApiService
                 ]);
             }
         }
-        
+
         return $updated;
     }
 
     private function mapCompetition(?int $competition): float
     {
-        return match($competition) {
+        return match ($competition) {
             1 => 0.1, // LOW
-            2 => 0.5, // MEDIUM  
+            2 => 0.5, // MEDIUM
             3 => 0.9, // HIGH
             default => 0.0,
         };
@@ -200,22 +203,22 @@ class GoogleAdsApiService extends BaseApiService
     private function calculateDifficulty(?int $competition, int $searchVolume): int
     {
         $difficultyScore = 0;
-        
+
         // Competition contributes 70% to difficulty
-        $competitionScore = match($competition) {
+        $competitionScore = match ($competition) {
             1 => 20,  // LOW
             2 => 50,  // MEDIUM
             3 => 80,  // HIGH
             default => 10,
         };
         $difficultyScore += $competitionScore * 0.7;
-        
+
         // Search volume contributes 30% (higher volume = higher difficulty)
         if ($searchVolume > 0) {
             $volumeScore = min($searchVolume / 1000, 100); // Normalize
             $difficultyScore += $volumeScore * 0.3;
         }
-        
+
         return min(100, max(1, (int) round($difficultyScore)));
     }
 
@@ -234,7 +237,7 @@ class GoogleAdsApiService extends BaseApiService
 
     private function getCountryCodeFromGeoTarget(string $geoTarget): string
     {
-        return match(strtolower($geoTarget)) {
+        return match (strtolower($geoTarget)) {
             'hu', 'hungary', 'magyarország' => 'HU',
             'us', 'usa', 'united states' => 'US',
             'uk', 'gb', 'united kingdom' => 'UK',
