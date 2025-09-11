@@ -2,33 +2,23 @@
 
 namespace App\Filament\Resources\ApiCredentials;
 
-use App\Enums\NavigationGroups;
 use App\Filament\Resources\ApiCredentials\Pages\CreateApiCredential;
 use App\Filament\Resources\ApiCredentials\Pages\EditApiCredential;
 use App\Filament\Resources\ApiCredentials\Pages\ListApiCredentials;
 use App\Filament\Resources\ApiCredentials\Schemas\ApiCredentialForm;
 use App\Filament\Resources\ApiCredentials\Tables\ApiCredentialsTable;
 use App\Models\ApiCredential;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use UnitEnum;
 
 class ApiCredentialResource extends Resource
 {
     protected static ?string $model = ApiCredential::class;
 
-    /*   protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey; */
-
-    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Settings;
-
-    protected static ?string $navigationLabel = 'API Credentials';
-
-    protected static ?string $modelLabel = 'API Credential';
-
-    protected static ?string $pluralModelLabel = 'API Credentials';
-
-    protected static ?int $navigationSort = 90;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $tenantOwnershipRelationshipName = 'project';
 
@@ -56,24 +46,5 @@ class ApiCredentialResource extends Resource
             'create' => CreateApiCredential::route('/create'),
             'edit' => EditApiCredential::route('/{record}/edit'),
         ];
-    }
-
-    public static function canCreate(): bool
-    {
-        return true;
-    }
-
-    public static function getNavigationBadge(): ?string
-    {
-        $count = static::getModel()::where('is_active', true)->count();
-
-        return $count > 0 ? (string) $count : null;
-    }
-
-    public static function getNavigationBadgeColor(): ?string
-    {
-        $count = static::getNavigationBadge();
-
-        return $count > 0 ? 'success' : 'warning';
     }
 }

@@ -51,6 +51,11 @@ class Keyword extends Model
         'language',
         'search_volume',
         'difficulty_score',
+        'competition_index',
+        'low_top_of_page_bid',
+        'high_top_of_page_bid',
+        'monthly_search_volumes',
+        'historical_metrics_updated_at',
         'intent_type',
         'notes',
     ];
@@ -60,6 +65,11 @@ class Keyword extends Model
         return [
             'search_volume' => 'integer',
             'difficulty_score' => 'integer',
+            'competition_index' => 'integer',
+            'low_top_of_page_bid' => 'decimal:2',
+            'high_top_of_page_bid' => 'decimal:2',
+            'monthly_search_volumes' => 'json',
+            'historical_metrics_updated_at' => 'datetime',
             'priority' => 'string',
             'intent_type' => 'string',
         ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GoogleAdsOAuthController;
 use App\Models\ApiCredential;
 use App\Models\Project;
 use Illuminate\Contracts\View\Factory;
@@ -103,3 +104,9 @@ Route::get('/auth/google/callback', function (Request $request) {
 
     return redirect('/admin')->with('error', 'Failed to get refresh token');
 })->name('auth.google.callback');
+
+// Google Ads OAuth routes
+Route::get('/admin/google-ads/oauth/start', [GoogleAdsOAuthController::class, 'start'])
+    ->name('google-ads.oauth.start');
+Route::get('/admin/google-ads/oauth/callback', [GoogleAdsOAuthController::class, 'callback'])
+    ->name('google-ads.oauth.callback');

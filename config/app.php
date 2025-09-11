@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Herd Share URL
+    |--------------------------------------------------------------------------
+    |
+    | When using Laravel Herd's share functionality for OAuth callbacks,
+    | you can set the share URL here to be used for redirect URIs.
+    |
+    */
+
+    'herd_share_url' => env('HERD_SHARE_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

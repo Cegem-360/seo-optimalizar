@@ -76,6 +76,26 @@ class KeywordForm
                                     ->minValue(1)
                                     ->maxValue(100)
                                     ->placeholder('Keyword difficulty (1-100)'),
+
+                                TextInput::make('competition_index')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->placeholder('Competition index (0-100)')
+                                    ->helperText('Detailed competition score from Google Ads'),
+                            ]),
+
+                        Grid::make(2)
+                            ->components([
+                                TextInput::make('low_top_of_page_bid')
+                                    ->numeric()
+                                    ->step(0.01)
+                                    ->placeholder('Low bid estimate'),
+
+                                TextInput::make('high_top_of_page_bid')
+                                    ->numeric()
+                                    ->step(0.01)
+                                    ->placeholder('High bid estimate'),
                             ]),
 
                         Textarea::make('notes')

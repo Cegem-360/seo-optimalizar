@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Tenancy\RegisterProject;
 use App\Filament\Widgets\CompetitorComparisonWidget;
+use App\Filament\Widgets\GoogleAnalytics4StatsWidget;
+use App\Filament\Widgets\GoogleAnalytics4Widget;
 use App\Filament\Widgets\KeywordPerformanceWidget;
 use App\Filament\Widgets\RankingTrendsChart;
 use App\Filament\Widgets\RecentRankingsTable;
@@ -50,7 +52,9 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 SeoStatsWidget::class,
+                GoogleAnalytics4StatsWidget::class,
                 TrafficOverviewWidget::class,
+                GoogleAnalytics4Widget::class,
                 CompetitorComparisonWidget::class,
                 RankingTrendsChart::class,
                 KeywordPerformanceWidget::class,

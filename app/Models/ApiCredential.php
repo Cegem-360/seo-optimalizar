@@ -38,6 +38,7 @@ class ApiCredential extends Model
         'project_id',
         'service',
         'credentials',
+        'service_account_file',
         'is_active',
         'last_used_at',
     ];
@@ -71,5 +72,41 @@ class ApiCredential extends Model
     public function markAsUsed(): void
     {
         $this->update(['last_used_at' => now()]);
+    }
+
+    public function getServiceAccountJsonAttribute(): ?array
+    {
+        if ($this->service_account_file) {
+            $path = storage_path('app/service-accounts/' . $this->service_account_file);
+            if (file_exists($path)) {
+                return json_decode(file_get_contents($path), true);
+            }
+        }
+
+        return null;
+    }
+
+    public function storeServiceAccountFile(string $fileContent): string
+    {
+        $filename = 'project_' . $this->project_id . '_' . $this->service . '_' . time() . '.json';
+        $directory = storage_path('app/service-accounts');
+
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        file_put_contents($directory . '/' . $filename, $fileContent);
+
+        return $filename;
+    }
+
+    public function deleteServiceAccountFile(): void
+    {
+        if ($this->service_account_file) {
+            $path = storage_path('app/service-accounts/' . $this->service_account_file);
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
     }
 }

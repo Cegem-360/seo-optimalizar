@@ -14,14 +14,14 @@ class UpdateKeywordMetrics extends Command
      *
      * @var string
      */
-    protected $signature = 'seo:update-keywords {project?} {--batch-size=20} {--service=google_ads}';
+    protected $signature = 'seo:update-keywords {project?} {--batch-size=20} {--service=google_ads} {--historical}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Update keyword search volume and difficulty data from Google Ads Keyword Planner API';
+    protected $description = 'Update keyword search volume and difficulty data from Google Ads Keyword Planner API (use --historical for detailed metrics)';
 
     /**
      * Execute the console command.
@@ -31,6 +31,7 @@ class UpdateKeywordMetrics extends Command
         $projectId = $this->argument('project');
         $batchSize = (int) $this->option('batch-size');
         $service = $this->option('service');
+        $useHistorical = $this->option('historical');
 
         if ($projectId) {
             $projects = [Project::query()->findOrFail($projectId)];
@@ -38,6 +39,14 @@ class UpdateKeywordMetrics extends Command
         } else {
             $projects = Project::all();
             $this->info('Updating keywords for all projects');
+        }
+
+        if ($useHistorical) {
+            $this->warn('Using historical metrics - this provides more detailed data but uses more API credits.');
+            if (! $this->confirm('Do you want to continue with historical metrics?')) {
+                $this->info('Switching to regular keyword ideas API.');
+                $useHistorical = false;
+            }
         }
 
         $totalUpdated = 0;
@@ -50,9 +59,17 @@ class UpdateKeywordMetrics extends Command
 
                 if ($service === 'google_ads' && $manager->hasService('google_ads')) {
                     $googleAds = $manager->getGoogleAds();
-                    $updated = $googleAds->updateProjectKeywords($batchSize);
 
-                    $this->info(sprintf('Updated %d keywords from Google Ads for %s', $updated, $project->name));
+                    if ($useHistorical) {
+                        // Use smaller batch size for historical metrics
+                        $historicalBatchSize = min($batchSize, 5);
+                        $updated = $googleAds->updateProjectKeywordsWithHistoricalMetrics($historicalBatchSize);
+                        $this->info(sprintf('Updated %d keywords with historical metrics for %s', $updated, $project->name));
+                    } else {
+                        $updated = $googleAds->updateProjectKeywords($batchSize);
+                        $this->info(sprintf('Updated %d keywords from Google Ads for %s', $updated, $project->name));
+                    }
+
                     $totalUpdated += $updated;
                 } else {
                     $this->warn('Google Ads service not configured for project: ' . $project->name);

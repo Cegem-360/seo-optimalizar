@@ -8,6 +8,7 @@ use Google\Ads\GoogleAds\Lib\OAuth2TokenBuilder;
 use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClient;
 use Google\Ads\GoogleAds\Lib\V21\GoogleAdsClientBuilder;
 use Google\Ads\GoogleAds\V21\Enums\KeywordPlanNetworkEnum\KeywordPlanNetwork;
+use Google\Ads\GoogleAds\V21\Services\GenerateKeywordHistoricalMetricsRequest;
 use Google\Ads\GoogleAds\V21\Services\GenerateKeywordIdeasRequest;
 use Google\Ads\GoogleAds\V21\Services\KeywordSeed;
 use Illuminate\Http\Client\PendingRequest;
@@ -244,5 +245,147 @@ class GoogleAdsApiService extends BaseApiService
             'global' => 'US',
             default => 'HU',
         };
+    }
+
+    public function getHistoricalMetrics(string $keyword, string $countryCode = 'HU'): ?array
+    {
+        try {
+            $client = $this->getClient();
+            if (! $client instanceof GoogleAdsClient) {
+                return null;
+            }
+
+            $keywordPlanIdeaService = $client->getKeywordPlanIdeaServiceClient();
+            $customerId = $this->getCredential('customer_id');
+
+            // Create request
+            $generateHistoricalMetricsRequest = new GenerateKeywordHistoricalMetricsRequest();
+            $generateHistoricalMetricsRequest->setCustomerId($customerId);
+            $generateHistoricalMetricsRequest->setKeywords([$keyword]);
+            $generateHistoricalMetricsRequest->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
+
+            // Set geo targeting
+            $geoTargetConstant = $this->getGeoTargetConstant($countryCode);
+            if ($geoTargetConstant !== '' && $geoTargetConstant !== '0') {
+                $generateHistoricalMetricsRequest->setGeoTargetConstants([$geoTargetConstant]);
+            }
+
+            $response = $keywordPlanIdeaService->generateKeywordHistoricalMetrics($generateHistoricalMetricsRequest);
+
+            foreach ($response as $result) {
+                if (strtolower((string) $result->getText()) === strtolower($keyword)) {
+                    $metrics = $result->getKeywordMetrics();
+                    if ($metrics === null) {
+                        continue;
+                    }
+
+                    $monthlySearchVolumes = [];
+                    foreach ($metrics->getMonthlySearchVolumes() as $monthlyVolume) {
+                        $monthlySearchVolumes[] = [
+                            'year' => $monthlyVolume->getYear(),
+                            'month' => $monthlyVolume->getMonth(),
+                            'monthly_searches' => $monthlyVolume->getMonthlySearches(),
+                        ];
+                    }
+
+                    return [
+                        'keyword' => $keyword,
+                        'avg_monthly_searches' => $metrics->getAvgMonthlySearches(),
+                        'competition' => $this->mapCompetition($metrics->getCompetition()),
+                        'competition_index' => $metrics->getCompetitionIndex(),
+                        'low_top_of_page_bid_micros' => $metrics->getLowTopOfPageBidMicros(),
+                        'high_top_of_page_bid_micros' => $metrics->getHighTopOfPageBidMicros(),
+                        'low_top_of_page_bid' => $metrics->getLowTopOfPageBidMicros() ? $metrics->getLowTopOfPageBidMicros() / 1000000 : 0,
+                        'high_top_of_page_bid' => $metrics->getHighTopOfPageBidMicros() ? $metrics->getHighTopOfPageBidMicros() / 1000000 : 0,
+                        'monthly_search_volumes' => $monthlySearchVolumes,
+                    ];
+                }
+            }
+
+            return null;
+        } catch (Exception $exception) {
+            Log::error('Google Ads Historical Metrics API error', [
+                'keyword' => $keyword,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    public function updateKeywordHistoricalMetrics(Keyword $keyword, string $countryCode = 'HU'): bool
+    {
+        $geoTarget = $keyword->geo_target ?? 'HU';
+        $data = $this->getHistoricalMetrics($keyword->keyword, $this->getCountryCodeFromGeoTarget($geoTarget));
+
+        if ($data === null || $data === []) {
+            return false;
+        }
+
+        $keyword->update([
+            'search_volume' => $data['avg_monthly_searches'],
+            'competition_index' => $data['competition_index'],
+            'low_top_of_page_bid' => $data['low_top_of_page_bid'],
+            'high_top_of_page_bid' => $data['high_top_of_page_bid'],
+            'monthly_search_volumes' => $data['monthly_search_volumes'],
+            'historical_metrics_updated_at' => now(),
+            'difficulty_score' => $this->calculateDifficultyFromIndex($data['competition_index'], $data['avg_monthly_searches']),
+        ]);
+
+        return true;
+    }
+
+    public function updateProjectKeywordsWithHistoricalMetrics(int $batchSize = 10): int
+    {
+        $keywords = $this->project->keywords()
+            ->where(function ($query): void {
+                $query->whereNull('historical_metrics_updated_at')
+                    ->orWhere('historical_metrics_updated_at', '<', now()->subDays(7));
+            })
+            ->limit($batchSize)
+            ->get();
+
+        $updated = 0;
+
+        /** @var Keyword $keyword */
+        foreach ($keywords as $keyword) {
+            try {
+                if ($this->updateKeywordHistoricalMetrics($keyword)) {
+                    $updated++;
+                }
+
+                // Rate limiting - be more conservative with historical metrics
+                usleep(500000); // 0.5 seconds
+            } catch (Exception $e) {
+                Log::warning('Failed to update keyword historical metrics', [
+                    'keyword_id' => $keyword->id,
+                    'keyword' => $keyword->keyword,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $updated;
+    }
+
+    private function calculateDifficultyFromIndex(?int $competitionIndex, int $searchVolume): int
+    {
+        if ($competitionIndex === null) {
+            return $this->calculateDifficulty(null, $searchVolume);
+        }
+
+        // Competition index is 0-100, we can use it more directly
+        $difficultyScore = 0;
+
+        // Competition index contributes 70% to difficulty
+        $difficultyScore += $competitionIndex * 0.7;
+
+        // Search volume contributes 30% (higher volume = higher difficulty)
+        if ($searchVolume > 0) {
+            $volumeScore = min($searchVolume / 1000, 100); // Normalize
+            $difficultyScore += $volumeScore * 0.3;
+        }
+
+        return min(100, max(1, (int) round($difficultyScore)));
     }
 }
