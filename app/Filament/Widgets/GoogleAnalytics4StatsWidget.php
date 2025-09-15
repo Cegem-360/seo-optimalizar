@@ -119,11 +119,12 @@ class GoogleAnalytics4StatsWidget extends BaseStatsOverviewWidget
     private function formatChange(float $change): string
     {
         $formatted = number_format(abs($change), 1);
-
         if ($change > 0) {
-            return "+{$formatted}%";
-        } elseif ($change < 0) {
-            return "-{$formatted}%";
+            return sprintf('+%s%%', $formatted);
+        }
+
+        if ($change < 0) {
+            return sprintf('-%s%%', $formatted);
         } else {
             return '0%';
         }

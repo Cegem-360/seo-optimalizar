@@ -4,17 +4,19 @@ namespace App\Filament\Resources\ApiCredentials\Pages;
 
 use App\Filament\Resources\ApiCredentials\ApiCredentialResource;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\FilesystemManager;
 
 class CreateApiCredential extends CreateRecord
 {
     protected static string $resource = ApiCredentialResource::class;
 
+    public function __construct(private readonly FilesystemManager $filesystemManager) {}
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Handle service account file upload
         if (isset($data['service_account_json_upload'])) {
-            $tempPath = Storage::disk('local')->path($data['service_account_json_upload']);
+            $tempPath = $this->filesystemManager->disk('local')->path($data['service_account_json_upload']);
 
             if (file_exists($tempPath)) {
                 $content = file_get_contents($tempPath);
@@ -36,7 +38,7 @@ class CreateApiCredential extends CreateRecord
                     $data['service_account_file'] = $filename;
 
                     // Clean up temp file
-                    Storage::disk('local')->delete($data['service_account_json_upload']);
+                    $this->filesystemManager->disk('local')->delete($data['service_account_json_upload']);
                 }
             }
 

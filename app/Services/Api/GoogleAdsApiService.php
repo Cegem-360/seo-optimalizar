@@ -259,20 +259,20 @@ class GoogleAdsApiService extends BaseApiService
             $customerId = $this->getCredential('customer_id');
 
             // Create request
-            $generateHistoricalMetricsRequest = new GenerateKeywordHistoricalMetricsRequest();
-            $generateHistoricalMetricsRequest->setCustomerId($customerId);
-            $generateHistoricalMetricsRequest->setKeywords([$keyword]);
-            $generateHistoricalMetricsRequest->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
+            $generateKeywordHistoricalMetricsRequest = new GenerateKeywordHistoricalMetricsRequest();
+            $generateKeywordHistoricalMetricsRequest->setCustomerId($customerId);
+            $generateKeywordHistoricalMetricsRequest->setKeywords([$keyword]);
+            $generateKeywordHistoricalMetricsRequest->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
 
             // Set geo targeting
             $geoTargetConstant = $this->getGeoTargetConstant($countryCode);
             if ($geoTargetConstant !== '' && $geoTargetConstant !== '0') {
-                $generateHistoricalMetricsRequest->setGeoTargetConstants([$geoTargetConstant]);
+                $generateKeywordHistoricalMetricsRequest->setGeoTargetConstants([$geoTargetConstant]);
             }
 
-            $response = $keywordPlanIdeaService->generateKeywordHistoricalMetrics($generateHistoricalMetricsRequest);
+            $response = $keywordPlanIdeaService->generateKeywordHistoricalMetrics($generateKeywordHistoricalMetricsRequest);
 
-            foreach ($response as $result) {
+            foreach ($response->getResults() as $result) {
                 if (strtolower((string) $result->getText()) === strtolower($keyword)) {
                     $metrics = $result->getKeywordMetrics();
                     if ($metrics === null) {
@@ -280,11 +280,11 @@ class GoogleAdsApiService extends BaseApiService
                     }
 
                     $monthlySearchVolumes = [];
-                    foreach ($metrics->getMonthlySearchVolumes() as $monthlyVolume) {
+                    foreach ($metrics->getMonthlySearchVolumes() as $monthlySearchVolume) {
                         $monthlySearchVolumes[] = [
-                            'year' => $monthlyVolume->getYear(),
-                            'month' => $monthlyVolume->getMonth(),
-                            'monthly_searches' => $monthlyVolume->getMonthlySearches(),
+                            'year' => $monthlySearchVolume->getYear(),
+                            'month' => $monthlySearchVolume->getMonth(),
+                            'monthly_searches' => $monthlySearchVolume->getMonthlySearches(),
                         ];
                     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\CompetitorRankingFactory;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,20 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @property-read Competitor|null $competitor
- * @property-read Keyword|null $keyword
- * @property-read int|null $position_change
- *
- * @method static CompetitorRankingFactory factory($count = null, $state = [])
- * @method static Builder<static>|CompetitorRanking newModelQuery()
- * @method static Builder<static>|CompetitorRanking newQuery()
- * @method static Builder<static>|CompetitorRanking query()
- * @method static Builder<static>|CompetitorRanking recentlyChecked(int $days = 7)
- * @method static Builder<static>|CompetitorRanking topTen()
- *
- * @mixin Model
- */
 class CompetitorRanking extends Model
 {
     use HasFactory;

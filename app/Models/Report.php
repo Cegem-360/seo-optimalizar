@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Database\Factories\ReportFactory;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,24 +9,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
-/**
- * @property-read string $formatted_period
- * @property-read Project|null $project
- * @property Carbon|null $period_start
- * @property Carbon|null $period_end
- *
- * @method static Builder<static>|Report byType(string $type)
- * @method static Builder<static>|Report completed()
- * @method static ReportFactory factory($count = null, $state = [])
- * @method static Builder<static>|Report newModelQuery()
- * @method static Builder<static>|Report newQuery()
- * @method static Builder<static>|Report pending()
- * @method static Builder<static>|Report query()
- * @method static Builder<static>|Report recent(int $days = 30)
- *
- * @mixin Model
- */
 class Report extends Model
 {
     use HasFactory;
@@ -101,7 +83,7 @@ class Report extends Model
                 return 'N/A';
             }
 
-            return $this->period_start->format('M d') . ' - ' . $this->period_end->format('M d, Y');
+            return Carbon::parse($this->period_start)->format('M d') . ' - ' . \Carbon\Carbon::parse($this->period_end)->format('M d, Y');
         });
     }
 }

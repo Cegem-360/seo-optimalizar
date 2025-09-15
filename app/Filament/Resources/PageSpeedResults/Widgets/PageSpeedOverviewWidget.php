@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
 use App\Models\Project;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -40,7 +41,7 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
 
         return [
             Stat::make('Latest Performance Score', $latestResult ? $latestResult->performance_score . '/100' : 'No data')
-                ->description($latestResult && $latestResult->analyzed_at ? 'Last scan: ' . $latestResult->analyzed_at->diffForHumans() : null)
+                ->description($latestResult && $latestResult->analyzed_at ? 'Last scan: ' . Carbon::parse($latestResult->analyzed_at)->diffForHumans() : null)
                 ->color($this->getScoreColor($latestResult?->performance_score))
                 ->icon($this->getScoreIcon($latestResult?->performance_score)),
 

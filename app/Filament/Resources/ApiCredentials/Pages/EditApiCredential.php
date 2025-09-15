@@ -7,11 +7,14 @@ use App\Models\ApiCredential;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Support\Facades\App;
 
 class EditApiCredential extends EditRecord
 {
     protected static string $resource = ApiCredentialResource::class;
+
+    public function __construct(private readonly FilesystemManager $filesystemManager) {}
 
     protected function getHeaderActions(): array
     {
@@ -20,13 +23,14 @@ class EditApiCredential extends EditRecord
                 ->label('Generate Google Ads Refresh Token')
                 ->icon('heroicon-o-key')
                 ->color('info')
-                ->visible(fn () => $this->getRecord() instanceof ApiCredential && $this->getRecord()->service === 'google_ads')
+                ->visible(fn (): bool => $this->getRecord() instanceof ApiCredential && $this->getRecord()->service === 'google_ads')
                 ->url(function () {
-                    $record = $this->getRecord();
-                    if (! $record instanceof ApiCredential) {
+                    $model = $this->getRecord();
+                    if (! $model instanceof ApiCredential) {
                         return;
                     }
-                    $credentials = $record->credentials;
+
+                    $credentials = $model->credentials;
                     $clientId = $credentials['client_id'] ?? null;
                     $clientSecret = $credentials['client_secret'] ?? null;
 
@@ -34,14 +38,14 @@ class EditApiCredential extends EditRecord
                         return;
                     }
 
-                    return app('url')->route('google-ads.oauth.start', [
+                    return App::make('url')->route('google-ads.oauth.start', [
                         'client_id' => $clientId,
                         'client_secret' => $clientSecret,
                     ]);
                 })
                 ->openUrlInNewTab(),
             DeleteAction::make()
-                ->before(function ($record) {
+                ->before(function ($record): void {
                     // Delete the service account file when deleting the record
                     if ($record instanceof ApiCredential) {
                         $record->deleteServiceAccountFile();
@@ -57,6 +61,7 @@ class EditApiCredential extends EditRecord
             if (isset($data['credentials']['property_url'])) {
                 $data['property_url'] = $data['credentials']['property_url'];
             }
+
             if (isset($data['credentials']['property_id'])) {
                 $data['property_id'] = $data['credentials']['property_id'];
             }
@@ -69,7 +74,7 @@ class EditApiCredential extends EditRecord
     {
         // Handle service account file upload
         if (isset($data['service_account_json_upload']) && $data['service_account_json_upload']) {
-            $tempPath = Storage::disk('local')->path($data['service_account_json_upload']);
+            $tempPath = $this->filesystemManager->disk('local')->path($data['service_account_json_upload']);
 
             if (file_exists($tempPath)) {
                 $content = file_get_contents($tempPath);
@@ -97,7 +102,7 @@ class EditApiCredential extends EditRecord
                     $data['service_account_file'] = $filename;
 
                     // Clean up temp file
-                    Storage::disk('local')->delete($data['service_account_json_upload']);
+                    $this->filesystemManager->disk('local')->delete($data['service_account_json_upload']);
                 }
             }
 

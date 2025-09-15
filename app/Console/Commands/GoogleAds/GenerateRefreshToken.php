@@ -3,6 +3,7 @@
 namespace App\Console\Commands\GoogleAds;
 
 use Illuminate\Console\Command;
+use Illuminate\Session\SessionManager;
 
 class GenerateRefreshToken extends Command
 {
@@ -12,6 +13,14 @@ class GenerateRefreshToken extends Command
                             {--redirect-uri= : Custom redirect URI (use ngrok URL or localhost)}';
 
     protected $description = 'Generate OAuth2 refresh token for Google Ads API';
+
+    /**
+     * Create a new console command instance.
+     */
+    public function __construct(private readonly SessionManager $sessionManager)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -68,13 +77,13 @@ class GenerateRefreshToken extends Command
         if ($redirectUri !== 'urn:ietf:wg:oauth:2.0:oob') {
             $state = bin2hex(random_bytes(16));
             $params['state'] = $state;
-            
-            session([
+
+            $this->sessionManager->put([
                 'google_ads_oauth_client_id' => $clientId,
                 'google_ads_oauth_client_secret' => $clientSecret,
                 'google_ads_oauth_state' => $state,
             ]);
-            
+
             $this->info('✅ OAuth credentials and state stored in session');
         }
 
@@ -104,11 +113,11 @@ class GenerateRefreshToken extends Command
             $this->info('Step 3: You will be redirected to the callback URL');
             $this->info('Step 4: Check the callback page for your refresh token');
             $this->newLine();
-            
+
             $this->warn('💡 This process will use web callback. The refresh token will be displayed on the callback page.');
             $this->info('Press Ctrl+C to cancel or Enter to continue...');
             $this->ask('Press Enter when you have completed the OAuth flow and got your refresh token');
-            
+
             return self::SUCCESS;
         }
 
@@ -171,11 +180,10 @@ class GenerateRefreshToken extends Command
             $this->warn('⚠️  Keep the refresh token secure! It provides access to your Google Ads account.');
 
             return self::SUCCESS;
-        } else {
-            $this->error('No refresh token in response!');
-            $this->error('Response: ' . $response);
-
-            return self::FAILURE;
         }
+        $this->error('No refresh token in response!');
+        $this->error('Response: ' . $response);
+
+        return self::FAILURE;
     }
 }

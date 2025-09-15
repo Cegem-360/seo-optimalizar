@@ -2,16 +2,21 @@
 
 namespace App\Services\Api;
 
+use App\Models\ApiCredential;
 use Carbon\Carbon;
 use Exception;
 use Google\Analytics\Data\V1beta\Client\BetaAnalyticsDataClient;
 use Google\Analytics\Data\V1beta\DateRange;
 use Google\Analytics\Data\V1beta\Dimension;
 use Google\Analytics\Data\V1beta\Filter;
+use Google\Analytics\Data\V1beta\Filter\StringFilter;
+use Google\Analytics\Data\V1beta\Filter\StringFilter\MatchType;
 use Google\Analytics\Data\V1beta\FilterExpression;
 use Google\Analytics\Data\V1beta\Metric;
 use Google\Analytics\Data\V1beta\OrderBy;
+use Google\Analytics\Data\V1beta\OrderBy\MetricOrderBy;
 use Google\Analytics\Data\V1beta\RunReportRequest;
+use Google\Analytics\Data\V1beta\RunReportResponse;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
@@ -21,7 +26,7 @@ class GoogleAnalytics4Service extends BaseApiService
 {
     protected string $serviceName = 'google_analytics_4';
 
-    private ?BetaAnalyticsDataClient $client = null;
+    private ?BetaAnalyticsDataClient $betaAnalyticsDataClient = null;
 
     protected function configureRequest(PendingRequest $pendingRequest): void
     {
@@ -34,7 +39,7 @@ class GoogleAnalytics4Service extends BaseApiService
             $client = $this->getClient();
             $propertyId = $this->getCredential('property_id');
 
-            if (! $client || ! $propertyId) {
+            if (! $client instanceof BetaAnalyticsDataClient || ! $propertyId) {
                 return false;
             }
 
@@ -50,12 +55,12 @@ class GoogleAnalytics4Service extends BaseApiService
                 ->setMetrics([new Metric(['name' => 'sessions'])])
                 ->setLimit(1);
 
-            $response = $client->runReport($request);
+            $client->runReport($request);
 
-            return $response !== null;
-        } catch (Exception $e) {
+            return true;
+        } catch (Exception $exception) {
             Log::error('GA4 test connection failed', [
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
 
             return false;
@@ -64,15 +69,15 @@ class GoogleAnalytics4Service extends BaseApiService
 
     private function getClient(): ?BetaAnalyticsDataClient
     {
-        if ($this->client instanceof BetaAnalyticsDataClient) {
-            return $this->client;
+        if ($this->betaAnalyticsDataClient instanceof BetaAnalyticsDataClient) {
+            return $this->betaAnalyticsDataClient;
         }
 
         try {
             // First, try to get credentials from the stored service account file
             $credentials = null;
 
-            if ($this->credentials && $this->credentials->service_account_file) {
+            if ($this->credentials instanceof ApiCredential && $this->credentials->service_account_file) {
                 // Use the stored service account file
                 $credentials = $this->credentials->service_account_json;
             }
@@ -96,11 +101,11 @@ class GoogleAnalytics4Service extends BaseApiService
                 $credentials
             );
 
-            $this->client = new BetaAnalyticsDataClient([
+            $this->betaAnalyticsDataClient = new BetaAnalyticsDataClient([
                 'credentials' => $serviceAccountCredentials,
             ]);
 
-            return $this->client;
+            return $this->betaAnalyticsDataClient;
         } catch (Exception $exception) {
             Log::error('GA4 client error', [
                 'error' => $exception->getMessage(),
@@ -119,7 +124,7 @@ class GoogleAnalytics4Service extends BaseApiService
             $client = $this->getClient();
             $propertyId = $this->getCredential('property_id');
 
-            if (! $client || ! $propertyId) {
+            if (! $client instanceof BetaAnalyticsDataClient || ! $propertyId) {
                 return new Collection();
             }
 
@@ -146,8 +151,8 @@ class GoogleAnalytics4Service extends BaseApiService
                     new FilterExpression([
                         'filter' => new Filter([
                             'field_name' => 'sessionDefaultChannelGroup',
-                            'string_filter' => new Filter\StringFilter([
-                                'match_type' => Filter\StringFilter\MatchType::EXACT,
+                            'string_filter' => new StringFilter([
+                                'match_type' => MatchType::EXACT,
                                 'value' => 'Organic Search',
                             ]),
                         ]),
@@ -177,7 +182,7 @@ class GoogleAnalytics4Service extends BaseApiService
             $client = $this->getClient();
             $propertyId = $this->getCredential('property_id');
 
-            if (! $client || ! $propertyId) {
+            if (! $client instanceof BetaAnalyticsDataClient || ! $propertyId) {
                 return new Collection();
             }
 
@@ -203,8 +208,8 @@ class GoogleAnalytics4Service extends BaseApiService
                     new FilterExpression([
                         'filter' => new Filter([
                             'field_name' => 'sessionDefaultChannelGroup',
-                            'string_filter' => new Filter\StringFilter([
-                                'match_type' => Filter\StringFilter\MatchType::EXACT,
+                            'string_filter' => new StringFilter([
+                                'match_type' => MatchType::EXACT,
                                 'value' => 'Organic Search',
                             ]),
                         ]),
@@ -212,7 +217,7 @@ class GoogleAnalytics4Service extends BaseApiService
                 )
                 ->setOrderBys([
                     new OrderBy([
-                        'metric' => new OrderBy\MetricOrderBy(['metric_name' => 'sessions']),
+                        'metric' => new MetricOrderBy(['metric_name' => 'sessions']),
                         'desc' => true,
                     ]),
                 ])
@@ -241,7 +246,7 @@ class GoogleAnalytics4Service extends BaseApiService
             $client = $this->getClient();
             $propertyId = $this->getCredential('property_id');
 
-            if (! $client || ! $propertyId) {
+            if (! $client instanceof BetaAnalyticsDataClient || ! $propertyId) {
                 return new Collection();
             }
 
@@ -288,7 +293,7 @@ class GoogleAnalytics4Service extends BaseApiService
             $client = $this->getClient();
             $propertyId = $this->getCredential('property_id');
 
-            if (! $client || ! $propertyId) {
+            if (! $client instanceof BetaAnalyticsDataClient || ! $propertyId) {
                 return new Collection();
             }
 
@@ -311,7 +316,7 @@ class GoogleAnalytics4Service extends BaseApiService
                 ])
                 ->setOrderBys([
                     new OrderBy([
-                        'metric' => new OrderBy\MetricOrderBy(['metric_name' => 'sessions']),
+                        'metric' => new MetricOrderBy(['metric_name' => 'sessions']),
                         'desc' => true,
                     ]),
                 ]);
@@ -330,28 +335,28 @@ class GoogleAnalytics4Service extends BaseApiService
         }
     }
 
-    private function processGA4Data($response): Collection
+    private function processGA4Data(RunReportResponse $runReportResponse): Collection
     {
         $processedData = [];
 
-        foreach ($response->getRows() as $row) {
+        foreach ($runReportResponse->getRows() as $row) {
             $rowData = [];
 
             // Add dimensions
             foreach ($row->getDimensionValues() as $index => $dimensionValue) {
-                $dimensionName = $response->getDimensionHeaders()[$index]->getName();
+                $dimensionName = $runReportResponse->getDimensionHeaders()[$index]->getName();
                 $rowData[$dimensionName] = $dimensionValue->getValue();
             }
 
             // Add metrics
             foreach ($row->getMetricValues() as $index => $metricValue) {
-                $metricName = $response->getMetricHeaders()[$index]->getName();
+                $metricName = $runReportResponse->getMetricHeaders()[$index]->getName();
                 $value = $metricValue->getValue();
 
                 // Convert specific metrics
-                if (in_array($metricName, ['bounceRate'])) {
+                if ($metricName == 'bounceRate') {
                     $rowData[$metricName] = round(floatval($value) * 100, 2); // Convert to percentage
-                } elseif (in_array($metricName, ['averageSessionDuration'])) {
+                } elseif ($metricName == 'averageSessionDuration') {
                     $rowData[$metricName] = round(floatval($value), 2);
                 } else {
                     $rowData[$metricName] = intval($value);

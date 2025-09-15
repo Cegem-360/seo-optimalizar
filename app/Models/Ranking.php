@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\RankingFactory;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,23 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @property-read Keyword|null $keyword
- * @property-read int|null $position_change
- * @property-read string $position_trend
- *
- * @method static Builder<static>|Ranking declined()
- * @method static RankingFactory factory($count = null, $state = [])
- * @method static Builder<static>|Ranking improved()
- * @method static Builder<static>|Ranking newModelQuery()
- * @method static Builder<static>|Ranking newQuery()
- * @method static Builder<static>|Ranking query()
- * @method static Builder<static>|Ranking recentlyChecked(int $days = 7)
- * @method static Builder<static>|Ranking topTen()
- * @method static Builder<static>|Ranking topThree()
- *
- * @mixin Model
- */
 class Ranking extends Model
 {
     use HasFactory;

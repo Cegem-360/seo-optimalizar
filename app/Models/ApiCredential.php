@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\ApiCredentialFactory;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,16 +75,17 @@ class ApiCredential extends Model
         $this->update(['last_used_at' => now()]);
     }
 
-    public function getServiceAccountJsonAttribute(): ?array
+    protected function serviceAccountJson(): Attribute
     {
-        if ($this->service_account_file) {
-            $path = storage_path('app/service-accounts/' . $this->service_account_file);
-            if (file_exists($path)) {
-                return json_decode(file_get_contents($path), true);
+        return Attribute::make(get: function () {
+            if ($this->service_account_file) {
+                $path = storage_path('app/service-accounts/' . $this->service_account_file);
+                if (file_exists($path)) {
+                    return json_decode(file_get_contents($path), true);
+                }
             }
-        }
 
-        return null;
+        });
     }
 
     public function storeServiceAccountFile(string $fileContent): string

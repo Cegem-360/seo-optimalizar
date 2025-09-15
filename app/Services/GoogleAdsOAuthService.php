@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use Exception;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GoogleAdsOAuthService
 {
@@ -15,11 +16,13 @@ class GoogleAdsOAuthService
 
     private const SCOPE = 'https://www.googleapis.com/auth/adwords';
 
+    public function __construct(private readonly Repository $repository) {}
+
     public function generateAuthUrl(string $clientId, string $redirectUri, Request $request): string
     {
         $state = bin2hex(random_bytes(16));
         // Store in cache instead of session to avoid domain issues
-        Cache::put("google_ads_oauth_state_{$state}", $state, now()->addMinutes(10));
+        $this->repository->put('google_ads_oauth_state_' . $state, $state, now()->addMinutes(10));
         $request->session()->put('google_ads_oauth_state', $state);
 
         $params = [
@@ -33,12 +36,12 @@ class GoogleAdsOAuthService
         ];
 
         $url = self::AUTH_URL . '?' . http_build_query($params);
-        
+
         // Debug log
-        \Log::info('Generated OAuth URL', [
+        Log::info('Generated OAuth URL', [
             'url' => $url,
             'state' => $state,
-            'params' => $params
+            'params' => $params,
         ]);
 
         return $url;
@@ -70,15 +73,16 @@ class GoogleAdsOAuthService
     public function validateState(string $state, Request $request): bool
     {
         // Check cache first (primary method)
-        $cacheKey = "google_ads_oauth_state_{$state}";
-        $cachedState = Cache::get($cacheKey);
-        
+        $cacheKey = 'google_ads_oauth_state_' . $state;
+        $cachedState = $this->repository->get($cacheKey);
+
         if ($cachedState && $cachedState === $state) {
-            Cache::forget($cacheKey);
+            $this->repository->forget($cacheKey);
             $request->session()->forget('google_ads_oauth_state');
+
             return true;
         }
-        
+
         // Fallback to session (if cache fails)
         $sessionState = $request->session()->get('google_ads_oauth_state');
         $request->session()->forget('google_ads_oauth_state');

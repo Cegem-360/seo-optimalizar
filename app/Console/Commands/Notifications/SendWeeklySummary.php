@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Notifications;
 
+use App\Models\Keyword;
 use App\Models\Project;
 use App\Models\Ranking;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Routing\UrlGenerator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class SendWeeklySummary extends Command
@@ -86,6 +88,7 @@ class SendWeeklySummary extends Command
         $totalKeywords = $keywords->count();
 
         // Get latest rankings for each keyword
+        /** @var Collection<int, Ranking> $latestRankings */
         $latestRankings = Ranking::query()->whereHas('keyword', function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         })
@@ -104,21 +107,28 @@ class SendWeeklySummary extends Command
         $improvements = [];
         $declines = [];
         $opportunities = [];
-
         foreach ($latestRankings as $latestRanking) {
+            // Skip if keyword relation is not available
+            if ($latestRanking->keyword === null) {
+                continue;
+            }
+
+            /** @var Keyword $keyword */
+            $keyword = $latestRanking->keyword;
+
             if ($latestRanking->previous_position && $latestRanking->position !== $latestRanking->previous_position) {
                 $change = $latestRanking->previous_position - $latestRanking->position;
 
                 if ($change > 0) {
                     $improvements[] = [
-                        'keyword' => $latestRanking->keyword->keyword,
+                        'keyword' => $keyword->keyword,
                         'current_position' => $latestRanking->position,
                         'previous_position' => $latestRanking->previous_position,
                         'change' => $change,
                     ];
                 } elseif ($change < 0) {
                     $declines[] = [
-                        'keyword' => $latestRanking->keyword->keyword,
+                        'keyword' => $keyword->keyword,
                         'current_position' => $latestRanking->position,
                         'previous_position' => $latestRanking->previous_position,
                         'change' => $change,
@@ -129,7 +139,7 @@ class SendWeeklySummary extends Command
             // Find optimization opportunities (positions 11-15)
             if ($latestRanking->position >= 11 && $latestRanking->position <= 15) {
                 $opportunities[] = [
-                    'keyword' => $latestRanking->keyword->keyword,
+                    'keyword' => $keyword->keyword,
                     'position' => $latestRanking->position,
                 ];
             }

@@ -168,6 +168,7 @@ class GoogleSearchConsoleService
             ]);
 
             // Check for significant changes and send notifications
+            $ranking->loadMissing(['keyword.project']);
             $this->checkForSignificantChanges($ranking);
 
             $importedCount++;
@@ -275,10 +276,24 @@ class GoogleSearchConsoleService
     private function sendNotification(Ranking $ranking, string $changeType): void
     {
         try {
-            $project = $ranking->keyword->project;
+            $ranking->loadMissing(['keyword.project']);
+
+            if (! $ranking->keyword) {
+                return;
+            }
+
+            /** @var \App\Models\Keyword $keyword */
+            $keyword = $ranking->keyword;
+
+            /** @var \App\Models\Project|null $project */
+            $project = $keyword->project;
+
+            if (! $project) {
+                return;
+            }
 
             // Get all users who have access to this project
-            $users = $project->users()->get();
+            $users = $project->users;
 
             /** @var User $user */
             foreach ($users as $user) {
@@ -301,13 +316,6 @@ class GoogleSearchConsoleService
                     $user->notify($notification);
                 }
             }
-
-            /*  Log::info('Ranking notification sent', [
-                 'keyword' => $ranking->keyword->keyword,
-                 'change_type' => $changeType,
-                 'position' => $ranking->position,
-                 'previous_position' => $ranking->previous_position,
-             ]); */
         } catch (Exception $exception) {
             Log::error('Failed to send ranking notification: ' . $exception->getMessage());
         }

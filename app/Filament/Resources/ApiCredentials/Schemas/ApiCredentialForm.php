@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
 
 class ApiCredentialForm
 {
@@ -63,11 +64,11 @@ class ApiCredentialForm
                             ->helperText('Upload the service account JSON file from Google Cloud Console')
                             ->required()
                             ->columnSpanFull()
-                            ->visible(fn ($get) => in_array($get('service'), [
+                            ->visible(fn ($get): bool => in_array($get('service'), [
                                 'google_search_console',
                                 'google_analytics_4',
                             ]))
-                            ->afterStateUpdated(function ($state, $record, $set) {
+                            ->afterStateUpdated(function ($state, $record, $set): void {
                                 if ($state) {
                                     $tempPath = Storage::disk('local')->path($state);
                                     if (file_exists($tempPath)) {
@@ -75,20 +76,16 @@ class ApiCredentialForm
 
                                         // Validate JSON
                                         $jsonData = json_decode($content, true);
-                                        if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account') {
-                                            if ($record instanceof ApiCredential) {
-                                                // Store the file
-                                                $filename = $record->storeServiceAccountFile($content);
-                                                $record->update(['service_account_file' => $filename]);
-
-                                                // Clean up temp file
-                                                Storage::disk('local')->delete($state);
-
-                                                // Update credentials with parsed data
-                                                $credentials = $record->credentials ?? [];
-                                                $credentials['service_account_json'] = $jsonData;
-                                                $set('credentials', $credentials);
-                                            }
+                                        if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account' && $record instanceof ApiCredential) {
+                                            // Store the file
+                                            $filename = $record->storeServiceAccountFile($content);
+                                            $record->update(['service_account_file' => $filename]);
+                                            // Clean up temp file
+                                            Storage::disk('local')->delete($state);
+                                            // Update credentials with parsed data
+                                            $credentials = $record->credentials ?? [];
+                                            $credentials['service_account_json'] = $jsonData;
+                                            $set('credentials', $credentials);
                                         }
                                     }
                                 }
@@ -98,8 +95,8 @@ class ApiCredentialForm
                             ->label('Property URL')
                             ->placeholder('https://example.com or sc-domain:example.com')
                             ->required()
-                            ->visible(fn ($get) => $get('service') === 'google_search_console')
-                            ->afterStateUpdated(function ($state, $get, $set) {
+                            ->visible(fn ($get): bool => $get('service') === 'google_search_console')
+                            ->afterStateUpdated(function ($state, $get, $set): void {
                                 if ($state) {
                                     $credentials = $get('credentials') ?? [];
                                     $credentials['property_url'] = $state;
@@ -112,8 +109,8 @@ class ApiCredentialForm
                             ->label('GA4 Property ID')
                             ->placeholder('123456789')
                             ->required()
-                            ->visible(fn ($get) => $get('service') === 'google_analytics_4')
-                            ->afterStateUpdated(function ($state, $get, $set) {
+                            ->visible(fn ($get): bool => $get('service') === 'google_analytics_4')
+                            ->afterStateUpdated(function ($state, $get, $set): void {
                                 if ($state) {
                                     $credentials = $get('credentials') ?? [];
                                     $credentials['property_id'] = $state;
@@ -125,7 +122,7 @@ class ApiCredentialForm
                         // Google Ads OAuth helper section
                         Placeholder::make('google_ads_oauth_helper')
                             ->label('OAuth2 Setup Required')
-                            ->content(fn () => new \Illuminate\Support\HtmlString('
+                            ->content(fn (): HtmlString => new HtmlString('
                                 <div class="p-4 border rounded-lg bg-blue-50 border-blue-200">
                                     <h3 class="font-semibold text-blue-900 mb-2">🔐 Google Ads OAuth2 Authentication</h3>
                                     <p class="text-sm text-blue-800 mb-3">Google Ads requires OAuth2 authentication. Follow these steps:</p>
@@ -166,7 +163,7 @@ class ApiCredentialForm
                                 </div>
                             '))
                             ->columnSpanFull()
-                            ->visible(fn ($get) => $get('service') === 'google_ads'),
+                            ->visible(fn ($get): bool => $get('service') === 'google_ads'),
 
                         KeyValue::make('credentials')
                             ->label('API Credentials')
@@ -187,14 +184,14 @@ class ApiCredentialForm
                             ->reorderable(false)
                             ->required()
                             ->columnSpanFull()
-                            ->visible(fn ($get) => ! in_array($get('service'), [
+                            ->visible(fn ($get): bool => ! in_array($get('service'), [
                                 'google_search_console',
                                 'google_analytics_4',
                             ])),
 
                         Hidden::make('credentials')
                             ->default([])
-                            ->visible(fn ($get) => in_array($get('service'), [
+                            ->visible(fn ($get): bool => in_array($get('service'), [
                                 'google_search_console',
                                 'google_analytics_4',
                             ])),

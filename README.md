@@ -1,61 +1,79 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SEO Optimalizar
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 application using Filament v4, Livewire v3, Tailwind CSS v4, and Pest v4.
 
-## About Laravel
+- PHP 8.4.12
+- laravel/framework v12
+- filament/filament v4
+- livewire/livewire v3
+- tailwindcss v4
+- pestphp/pest v4
+- laravel/pint v1
+- rector/rector v2
+- laravel/sail v1
+- Served locally via Laravel Herd
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Quick start
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Prerequisites:
+- PHP 8.4+, Composer 2+
+- Node 20+ and npm
+- A database (MySQL/MariaDB/Postgres or SQLite)
+- Laravel Herd (recommended) or Docker with Sail
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Install:
+- git clone <repo> && cd seo-optimalizar
+- composer install
+- cp .env.example .env
+- php artisan key:generate
+- Configure DB in .env
+- php artisan migrate --seed (optional seeders)
+- npm ci
+- npm run dev (for HMR) or npm run build
 
-## Learning Laravel
+Open the site:
+- Using Herd: open your local domain seo-optimalizar.test
+- If assets don’t load, run npm run dev or npm run build
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Sail (optional, Docker):
+- php -d detect_unicode=0 artisan sail:install
+- ./vendor/bin/sail up -d
+- Use ./vendor/bin/sail <command> for PHP/Artisan/NPM
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Testing
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- php artisan test
+- Filter a test: php artisan test --filter=SomeFeature
+- Browser tests (Pest v4) should live in tests/Browser
 
-## Laravel Sponsors
+## Code style and refactoring
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Format: vendor/bin/pint --dirty
+- Automated refactors: vendor/bin/rector process
 
-### Premium Partners
+## Common tasks
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Fresh DB: php artisan migrate:fresh --seed
+- Storage symlink: php artisan storage:link
+- Vite manifest error: run npm run dev or npm run build
+
+## Notes for this stack
+
+- Laravel 12 streamlined structure: configure middleware/routes in bootstrap/app.php (no Console Kernel).
+- Prefer Eloquent relationships, form requests for validation, and named routes.
+- Filament v4 and Livewire v3 are installed; follow existing Resource/Panel conventions.
+- Tailwind v4: CSS should import with @import "tailwindcss"; (no corePlugins flag).
+
+## Troubleshooting
+
+- UI not updating: ensure npm run dev is running or rebuild assets.
+- 419/CSRF or auth issues in Livewire: verify sessions and app key set.
+- Slow queries: add eager loading and indexes where appropriate.
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Match existing conventions.
+- Reuse components before creating new ones.
+- Run Pint and relevant tests before committing.
+- Avoid dependency changes without approval.
+- Ask if you need additional factories/seeders or tests created.

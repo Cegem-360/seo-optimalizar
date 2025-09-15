@@ -2,27 +2,12 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @property-read float|null $overall_score
- * @property-read string $performance_grade
- * @property-read Project|null $project
- * @property Carbon|null $analyzed_at
- *
- * @method static Builder<static>|PageSpeedResult forProject(int $projectId)
- * @method static Builder<static>|PageSpeedResult newModelQuery()
- * @method static Builder<static>|PageSpeedResult newQuery()
- * @method static Builder<static>|PageSpeedResult query()
- * @method static Builder<static>|PageSpeedResult recent(int $days = 30)
- * @method static Builder<static>|PageSpeedResult strategy(string $strategy)
- *
- * @mixin Model
- */
 class PageSpeedResult extends Model
 {
     protected $fillable = [
@@ -77,19 +62,22 @@ class PageSpeedResult extends Model
         });
     }
 
-    protected function scopeForProject($query, int $projectId)
+    #[Scope]
+    protected function forProject(Builder $builder, int $projectId): void
     {
-        return $query->where('project_id', $projectId);
+        $builder->where('project_id', $projectId);
     }
 
-    protected function scopeStrategy($query, string $strategy)
+    #[Scope]
+    protected function strategy(Builder $builder, string $strategy): void
     {
-        return $query->where('strategy', $strategy);
+        $builder->where('strategy', $strategy);
     }
 
-    protected function scopeRecent($query, int $days = 30)
+    #[Scope]
+    protected function recent(Builder $builder, int $days = 30): void
     {
-        return $query->where('analyzed_at', '>=', now()->subDays($days));
+        $builder->where('analyzed_at', '>=', now()->subDays($days));
     }
 
     protected function casts(): array

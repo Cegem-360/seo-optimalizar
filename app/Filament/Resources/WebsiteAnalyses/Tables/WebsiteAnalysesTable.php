@@ -1,0 +1,284 @@
+<?php
+
+namespace App\Filament\Resources\WebsiteAnalyses\Tables;
+
+use App\Models\Project;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class WebsiteAnalysesTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('project.name')
+                    ->label('Projekt')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('url')
+                    ->label('URL')
+                    ->searchable()
+                    ->limit(50)
+                    ->tooltip(fn ($record) => $record->url),
+
+                TextColumn::make('analysis_type')
+                    ->label('Típus')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'seo' => 'primary',
+                        'ux' => 'info',
+                        'content' => 'success',
+                        'technical' => 'warning',
+                        'competitor' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'seo' => 'SEO',
+                        'ux' => 'UX',
+                        'content' => 'Tartalom',
+                        'technical' => 'Technikai',
+                        'competitor' => 'Versenytárs',
+                        default => $state,
+                    }),
+
+                TextColumn::make('ai_provider')
+                    ->label('AI')
+                    ->badge()
+                    ->color('gray'),
+
+                TextColumn::make('overall_score')
+                    ->label('Pontszám')
+                    ->numeric()
+                    ->sortable()
+                    ->suffix('/100')
+                    ->color(fn (?int $state): string => match (true) {
+                        $state >= 80 => 'success',
+                        $state >= 50 => 'warning',
+                        $state > 0 => 'danger',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('status')
+                    ->label('Státusz')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'completed' => 'success',
+                        'processing' => 'info',
+                        'pending' => 'warning',
+                        'failed' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'completed' => 'Kész',
+                        'processing' => 'Feldolgozás',
+                        'pending' => 'Várakozik',
+                        'failed' => 'Sikertelen',
+                        default => $state,
+                    }),
+
+                TextColumn::make('analyzed_at')
+                    ->label('Elemezve')
+                    ->dateTime('Y.m.d H:i')
+                    ->sortable(),
+
+                TextColumn::make('created_at')
+                    ->label('Létrehozva')
+                    ->dateTime('Y.m.d H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                SelectFilter::make('project_id')
+                    ->label('Projekt')
+                    ->relationship('project', 'name')
+                    ->searchable(),
+
+                SelectFilter::make('analysis_type')
+                    ->label('Típus')
+                    ->options([
+                        'seo' => 'SEO elemzés',
+                        'ux' => 'UX elemzés',
+                        'content' => 'Tartalom elemzés',
+                        'technical' => 'Technikai elemzés',
+                        'competitor' => 'Versenytárs elemzés',
+                    ]),
+
+                SelectFilter::make('status')
+                    ->label('Státusz')
+                    ->options([
+                        'pending' => 'Várakozik',
+                        'processing' => 'Feldolgozás alatt',
+                        'completed' => 'Kész',
+                        'failed' => 'Sikertelen',
+                    ]),
+
+                SelectFilter::make('ai_provider')
+                    ->label('AI szolgáltató')
+                    ->options([
+                        'openai' => 'OpenAI',
+                        'claude' => 'Claude',
+                        'gemini' => 'Google Gemini',
+                        'custom' => 'Egyéb',
+                    ]),
+            ])
+            ->recordActions([
+                EditAction::make(),
+                Action::make('analyze')
+                    ->label('Új elemzés')
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->status !== 'processing')
+                    ->schema([
+                        Select::make('analysis_type')
+                            ->label('Elemzés típusa')
+                            ->options([
+                                'seo' => 'SEO elemzés',
+                                'ux' => 'UX elemzés',
+                                'content' => 'Tartalom elemzés',
+                                'technical' => 'Technikai elemzés',
+                                'competitor' => 'Versenytárs elemzés',
+                            ])
+                            ->required(),
+
+                        TextInput::make('url')
+                            ->label('Weboldal URL')
+                            ->url()
+                            ->required()
+                            ->placeholder('https://example.com'),
+
+                        Select::make('ai_provider')
+                            ->label('AI szolgáltató')
+                            ->options([
+                                'openai' => 'OpenAI (GPT)',
+                                'claude' => 'Anthropic Claude',
+                                'demo' => 'Demo (teszt válasz)',
+                            ])
+                            ->default('demo')
+                            ->required(),
+                    ])
+                    ->action(function ($data, $record) {
+                        $service = app(\App\Services\WebsiteAnalysisService::class);
+
+                        try {
+                            $project = Filament::getTenant();
+
+                            if (! $project instanceof Project) {
+                                return;
+                            }
+                            $analysis = $service->createAnalysis([
+                                'project_id' => $project->id,
+                                'url' => $data['url'],
+                                'analysis_type' => $data['analysis_type'],
+                                'ai_provider' => $data['ai_provider'],
+                                'ai_model' => $data['ai_provider'] === 'openai' ? 'gpt-4' : ($data['ai_provider'] === 'claude' ? 'claude-3-opus' : 'demo'),
+                            ]);
+
+                            // Demo válasz feldolgozása
+                            if ($data['ai_provider'] === 'demo') {
+                                $demoResponse = $service->getDemoResponse($data['analysis_type']);
+                                $service->processAiResponse($analysis, $demoResponse);
+                            }
+
+                            Notification::make()
+                                ->title('Elemzés elindítva')
+                                ->body('A weboldal elemzés sikeresen elindult.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Hiba')
+                                ->body('Az elemzés indítása sikertelen: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+            ])
+            ->headerActions([
+                Action::make('new_analysis')
+                    ->label('Új elemzés')
+                    ->icon('heroicon-o-plus')
+                    ->color('primary')
+                    ->schema([
+                        TextInput::make('url')
+                            ->label('Weboldal URL')
+                            ->url()
+                            ->required()
+                            ->placeholder('https://example.com'),
+
+                        Select::make('analysis_type')
+                            ->label('Elemzés típusa')
+                            ->options([
+                                'seo' => 'SEO elemzés',
+                                'ux' => 'UX elemzés',
+                                'content' => 'Tartalom elemzés',
+                                'technical' => 'Technikai elemzés',
+                                'competitor' => 'Versenytárs elemzés',
+                            ])
+                            ->required(),
+
+                        Select::make('ai_provider')
+                            ->label('AI szolgáltató')
+                            ->options([
+                                'demo' => 'Demo (teszt válasz)',
+                                'openai' => 'OpenAI (GPT)',
+                                'claude' => 'Anthropic Claude',
+                            ])
+                            ->default('demo')
+                            ->required(),
+                    ])
+                    ->action(function ($data) {
+                        $service = app(\App\Services\WebsiteAnalysisService::class);
+
+                        try {
+                            $project = Filament::getTenant();
+
+                            if (! $project instanceof Project) {
+                                return;
+                            }
+                            $analysis = $service->createAnalysis([
+                                'project_id' => $project->id,
+                                'url' => $data['url'],
+                                'analysis_type' => $data['analysis_type'],
+                                'ai_provider' => $data['ai_provider'],
+                                'ai_model' => $data['ai_provider'] === 'openai' ? 'gpt-4' : ($data['ai_provider'] === 'claude' ? 'claude-3-opus' : 'demo'),
+                            ]);
+
+                            // Demo válasz feldolgozása
+                            if ($data['ai_provider'] === 'demo') {
+                                $demoResponse = $service->getDemoResponse($data['analysis_type']);
+                                $service->processAiResponse($analysis, $demoResponse);
+                            }
+
+                            Notification::make()
+                                ->title('Elemzés elkészült')
+                                ->body('A weboldal elemzés sikeresen elkészült.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Hiba')
+                                ->body('Az elemzés indítása sikertelen: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('created_at', 'desc');
+    }
+}
