@@ -61,11 +61,13 @@ class GoogleAdsApiService extends BaseApiService
                 'service_name' => $this->serviceName,
             ]);
 
-            if (!$clientId || !$clientSecret || !$refreshToken) {
+            if (!$clientId || !$clientSecret || !$refreshToken || !$developerToken || !$customerId) {
                 throw new Exception('Google Ads credentials are incomplete. Missing: ' .
                     (!$clientId ? 'client_id ' : '') .
                     (!$clientSecret ? 'client_secret ' : '') .
-                    (!$refreshToken ? 'refresh_token' : '')
+                    (!$refreshToken ? 'refresh_token ' : '') .
+                    (!$developerToken ? 'developer_token ' : '') .
+                    (!$customerId ? 'customer_id' : '')
                 );
             }
 
