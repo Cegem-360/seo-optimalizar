@@ -7,14 +7,13 @@ use App\Models\ApiCredential;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Storage;
 
 class EditApiCredential extends EditRecord
 {
     protected static string $resource = ApiCredentialResource::class;
 
-    public function __construct(private readonly FilesystemManager $filesystemManager) {}
 
     protected function getHeaderActions(): array
     {
@@ -74,7 +73,7 @@ class EditApiCredential extends EditRecord
     {
         // Handle service account file upload
         if (isset($data['service_account_json_upload']) && $data['service_account_json_upload']) {
-            $tempPath = $this->filesystemManager->disk('local')->path($data['service_account_json_upload']);
+            $tempPath = Storage::disk('local')->path($data['service_account_json_upload']);
 
             if (file_exists($tempPath)) {
                 $content = file_get_contents($tempPath);
@@ -102,7 +101,7 @@ class EditApiCredential extends EditRecord
                     $data['service_account_file'] = $filename;
 
                     // Clean up temp file
-                    $this->filesystemManager->disk('local')->delete($data['service_account_json_upload']);
+                    Storage::disk('local')->delete($data['service_account_json_upload']);
                 }
             }
 

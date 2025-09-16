@@ -8,10 +8,10 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -120,9 +120,9 @@ class ApiCredentialForm
                             ->columnSpanFull(),
 
                         // Google Ads OAuth helper section
-                        Placeholder::make('google_ads_oauth_helper')
+                        TextEntry::make('google_ads_oauth_helper')
                             ->label('OAuth2 Setup Required')
-                            ->content(fn (): HtmlString => new HtmlString('
+                            ->state(fn (): HtmlString => new HtmlString('
                                 <div class="p-4 border rounded-lg bg-blue-50 border-blue-200">
                                     <h3 class="font-semibold text-blue-900 mb-2">🔐 Google Ads OAuth2 Authentication</h3>
                                     <p class="text-sm text-blue-800 mb-3">Google Ads requires OAuth2 authentication. Follow these steps:</p>
