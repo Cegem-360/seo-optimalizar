@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GoogleSearchConsoleService extends BaseApiService
 {
@@ -30,9 +31,21 @@ class GoogleSearchConsoleService extends BaseApiService
 
     private function refreshAccessToken(): void
     {
+        Log::info('Google Search Console - Refreshing access token', [
+            'project_id' => $this->project->id,
+            'service' => $this->serviceName
+        ]);
+
         $refreshToken = $this->getCredential('refresh_token');
         $clientId = $this->getCredential('client_id');
         $clientSecret = $this->getCredential('client_secret');
+
+        Log::debug('Google Search Console - Credentials check', [
+            'project_id' => $this->project->id,
+            'has_refresh_token' => !empty($refreshToken),
+            'has_client_id' => !empty($clientId),
+            'has_client_secret' => !empty($clientSecret)
+        ]);
 
         if (! $refreshToken || ! $clientId || ! $clientSecret) {
             throw new Exception('Missing Google Search Console credentials');
@@ -45,21 +58,64 @@ class GoogleSearchConsoleService extends BaseApiService
             'client_secret' => $clientSecret,
         ]);
 
+        Log::debug('Google Search Console - Token refresh response', [
+            'project_id' => $this->project->id,
+            'status' => $response->status(),
+            'successful' => $response->successful()
+        ]);
+
         if (! $response->successful()) {
+            Log::error('Google Search Console - Failed to refresh access token', [
+                'project_id' => $this->project->id,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
             throw new Exception('Failed to refresh Google Search Console access token');
         }
 
         $data = $response->json();
         $this->accessToken = $data['access_token'];
+
+        Log::info('Google Search Console - Access token refreshed successfully', [
+            'project_id' => $this->project->id,
+            'token_length' => strlen($this->accessToken)
+        ]);
     }
 
     public function testConnection(): bool
     {
+        Log::info('Google Search Console - Testing connection', [
+            'project_id' => $this->project->id,
+            'service' => $this->serviceName
+        ]);
+
         try {
             $response = $this->makeRequest()->get($this->baseUrl . '/sites');
 
-            return $response->successful();
-        } catch (Exception) {
+            Log::debug('Google Search Console - Connection test response', [
+                'project_id' => $this->project->id,
+                'status' => $response->status(),
+                'successful' => $response->successful()
+            ]);
+
+            if ($response->successful()) {
+                Log::info('Google Search Console - Connection test successful', [
+                    'project_id' => $this->project->id
+                ]);
+                return true;
+            } else {
+                Log::warning('Google Search Console - Connection test failed', [
+                    'project_id' => $this->project->id,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return false;
+            }
+        } catch (Exception $e) {
+            Log::error('Google Search Console - Connection test error', [
+                'project_id' => $this->project->id,
+                'error' => $e->getMessage()
+            ]);
             return false;
         }
     }
@@ -135,25 +191,68 @@ class GoogleSearchConsoleService extends BaseApiService
 
     public function syncKeywordRankings(): int
     {
+        Log::info('Google Search Console - Starting keyword ranking sync', [
+            'project_id' => $this->project->id
+        ]);
+
         /** @var \Illuminate\Database\Eloquent\Collection<int, Keyword> $keywords */
         $keywords = $this->project->keywords()->get();
         $synced = 0;
 
-        foreach ($keywords->chunk(50) as $keywordChunk) {
-            $searchAnalytics = $this->getKeywordData($keywordChunk);
+        Log::info('Google Search Console - Found keywords to sync', [
+            'project_id' => $this->project->id,
+            'keyword_count' => $keywords->count()
+        ]);
 
-            foreach ($keywordChunk as $keyword) {
-                $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
+        foreach ($keywords->chunk(50) as $chunkIndex => $keywordChunk) {
+            Log::debug('Google Search Console - Processing keyword chunk', [
+                'project_id' => $this->project->id,
+                'chunk' => $chunkIndex + 1,
+                'chunk_size' => $keywordChunk->count()
+            ]);
 
-                if ($analytics) {
-                    $this->createOrUpdateRanking($keyword, $analytics);
-                    $synced++;
+            try {
+                $searchAnalytics = $this->getKeywordData($keywordChunk);
+
+                Log::debug('Google Search Console - Retrieved analytics data', [
+                    'project_id' => $this->project->id,
+                    'chunk' => $chunkIndex + 1,
+                    'analytics_count' => $searchAnalytics->count()
+                ]);
+
+                foreach ($keywordChunk as $keyword) {
+                    $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
+
+                    if ($analytics) {
+                        $this->createOrUpdateRanking($keyword, $analytics);
+                        $synced++;
+
+                        Log::debug('Google Search Console - Updated keyword ranking', [
+                            'project_id' => $this->project->id,
+                            'keyword' => $keyword->keyword,
+                            'position' => $analytics['position'] ?? null,
+                            'clicks' => $analytics['clicks'] ?? 0,
+                            'impressions' => $analytics['impressions'] ?? 0
+                        ]);
+                    }
                 }
+            } catch (Exception $e) {
+                Log::error('Google Search Console - Error processing keyword chunk', [
+                    'project_id' => $this->project->id,
+                    'chunk' => $chunkIndex + 1,
+                    'error' => $e->getMessage()
+                ]);
             }
 
             // Rate limiting - pause between chunks
             usleep(500000); // 500ms
         }
+
+        Log::info('Google Search Console - Keyword ranking sync completed', [
+            'project_id' => $this->project->id,
+            'synced_count' => $synced,
+            'total_keywords' => $keywords->count()
+        ]);
 
         return $synced;
     }
