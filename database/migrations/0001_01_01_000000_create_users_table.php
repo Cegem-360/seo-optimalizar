@@ -21,6 +21,9 @@ return new class() extends Migration
             $blueprint->unsignedBigInteger('latest_project_id')->nullable();
             $blueprint->timestamps();
         });
+        Schema::table('users', function (Blueprint $blueprint) {
+            $blueprint->foreign('latest_project_id')->references('id')->on('projects')->nullOnDelete();
+        });
 
         Schema::create('password_reset_tokens', function (Blueprint $blueprint): void {
             $blueprint->string('email')->primary();
