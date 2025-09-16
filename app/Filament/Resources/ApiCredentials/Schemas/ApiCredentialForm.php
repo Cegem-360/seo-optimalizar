@@ -56,9 +56,13 @@ class ApiCredentialForm
                                     ->helperText('Enable or disable this API integration'),
                             ]),
 
-                        // Display current service account file (read-only)
-                        TextInput::make('current_service_account_file')
-                            ->label('Current Service Account File')
+
+                        FileUpload::make('service_account_json_upload')
+                            ->label('Service Account JSON File')
+                            ->acceptedFileTypes(['application/json', 'text/json', 'text/plain'])
+                            ->disk('local')
+                            ->directory('service-accounts')
+                            ->helperText('Upload the service account JSON file from Google Cloud Console')
                             ->default(function ($record): ?string {
                                 if (!$record instanceof ApiCredential) {
                                     return null;
@@ -66,29 +70,11 @@ class ApiCredentialForm
 
                                 $filename = $record->service_account_file;
                                 if ($filename && Storage::disk('local')->exists('service-accounts/' . $filename)) {
-                                    $serviceAccount = $record->getCredential('service_account_json');
-                                    $email = $serviceAccount['client_email'] ?? 'Unknown';
-                                    return "✅ Uploaded: {$filename} (Service Account: {$email})";
+                                    return 'service-accounts/' . $filename;
                                 }
 
-                                return 'No service account file uploaded';
+                                return null;
                             })
-                            ->disabled()
-                            ->visible(function ($get, $record): bool {
-                                if (!in_array($get('service'), ['google_search_console', 'google_analytics_4'])) {
-                                    return false;
-                                }
-
-                                return $record instanceof ApiCredential;
-                            })
-                            ->columnSpanFull(),
-
-                        FileUpload::make('service_account_json_upload')
-                            ->label('Upload New Service Account JSON File')
-                            ->acceptedFileTypes(['application/json', 'text/json', 'text/plain'])
-                            ->disk('local')
-                            ->directory('temp-service-accounts')
-                            ->helperText('Upload the service account JSON file from Google Cloud Console')
                             ->required(function ($record): bool {
                                 // Only required if no existing file
                                 if (!$record instanceof ApiCredential) {
@@ -112,14 +98,14 @@ class ApiCredentialForm
                                         // Validate JSON
                                         $jsonData = json_decode($content, true);
                                         if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account' && $record instanceof ApiCredential) {
-                                            // Store the file
+                                            // Store the file (or update existing)
                                             $filename = $record->storeServiceAccountFile($content);
                                             $record->update(['service_account_file' => $filename]);
-                                            // Clean up temp file
-                                            Storage::disk('local')->delete($state);
+
                                             // Update credentials with parsed data
                                             $credentials = $record->credentials ?? [];
                                             $credentials['service_account_json'] = $jsonData;
+                                            $record->update(['credentials' => $credentials]);
                                             $set('credentials', $credentials);
                                         }
                                     }
