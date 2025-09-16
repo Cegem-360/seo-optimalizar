@@ -63,6 +63,12 @@ class ApiCredentialForm
                             ->disk('local')
                             ->directory('service-accounts')
                             ->helperText('Upload the service account JSON file from Google Cloud Console')
+                            ->getUploadedFileNameForStorageUsing(function ($file, $record): string {
+                                // Generate predictable filename based on project and service
+                                $projectId = $record instanceof ApiCredential ? $record->project_id : 'unknown';
+                                $service = $record instanceof ApiCredential ? $record->service : 'unknown';
+                                return "project_{$projectId}_{$service}_service_account.json";
+                            })
                             ->default(function ($record): ?string {
                                 if (!$record instanceof ApiCredential) {
                                     return null;
