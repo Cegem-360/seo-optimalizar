@@ -14,6 +14,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
@@ -58,20 +59,6 @@ class ApiCredentialForm
 
                         TextInput::make('current_service_account')
                             ->label('Current Service Account File')
-                            ->default(function ($record): ?string {
-                                if (!$record instanceof ApiCredential) {
-                                    return null;
-                                }
-
-                                $filename = $record->service_account_file;
-                                if ($filename && Storage::disk('local')->exists('service-accounts/' . $filename)) {
-                                    $serviceAccount = $record->getCredential('service_account_json');
-                                    $email = $serviceAccount['client_email'] ?? 'Unknown';
-                                    return "✅ {$filename} (Service Account: {$email})";
-                                }
-
-                                return 'No service account file uploaded yet';
-                            })
                             ->disabled()
                             ->visible(fn ($get): bool => in_array($get('service'), [
                                 'google_search_console',
@@ -80,57 +67,21 @@ class ApiCredentialForm
                             ->columnSpanFull()
                             ->helperText('This shows the currently uploaded service account file'),
 
-                        FileUpload::make('service_account_json_upload')
+                        FileUpload::make('service_account_file')
                             ->label('Service Account JSON File')
                             ->acceptedFileTypes(['application/json', 'text/json', 'text/plain'])
                             ->disk('local')
                             ->directory('service-accounts')
                             ->helperText('Upload the service account JSON file from Google Cloud Console')
-                            ->required(function ($record): bool {
-                                // Only required if no existing file
-                                if (!$record instanceof ApiCredential) {
-                                    return true;
-                                }
-
-                                return !$record->service_account_file ||
-                                       !Storage::disk('local')->exists('service-accounts/' . $record->service_account_file);
+                            ->required(function (ApiCredential $record): bool {
+                                return ! $record->service_account_file ||
+                                       ! Storage::disk('local')->exists('service-accounts/' . $record->service_account_file);
                             })
                             ->columnSpanFull()
-                            ->visible(fn ($get): bool => in_array($get('service'), [
+                            ->visible(fn (Get $get): bool => in_array($get('service'), [
                                 'google_search_console',
                                 'google_analytics_4',
-                            ]))
-                            ->afterStateUpdated(function ($state, $record, $set): void {
-                                if ($state && $record instanceof ApiCredential) {
-                                    $uploadedPath = Storage::disk('local')->path($state);
-                                    if (file_exists($uploadedPath)) {
-                                        $content = file_get_contents($uploadedPath);
-
-                                        // Validate JSON
-                                        $jsonData = json_decode($content, true);
-                                        if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account') {
-
-                                            // Store the file using model method (handles deletion and consistent naming)
-                                            $filename = $record->storeServiceAccountFile($content);
-
-                                            // Update record
-                                            $credentials = $record->credentials ?? [];
-                                            $credentials['service_account_json'] = $jsonData;
-
-                                            $record->update([
-                                                'service_account_file' => $filename,
-                                                'credentials' => $credentials
-                                            ]);
-
-                                            $set('credentials', $credentials);
-
-                                            // Clean up the uploaded temp file
-                                            Storage::disk('local')->delete($state);
-                                        }
-                                    }
-                                }
-                            }),
-
+                            ])),
                         TextInput::make('property_url')
                             ->label('Property URL')
                             ->placeholder('https://example.com or sc-domain:example.com')
