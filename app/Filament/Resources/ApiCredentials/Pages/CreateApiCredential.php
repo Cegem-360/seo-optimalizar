@@ -25,8 +25,8 @@ class CreateApiCredential extends CreateRecord
                     // Store service account JSON in credentials
                     $data['credentials']['service_account_json'] = $jsonData;
 
-                    // Store the file
-                    $filename = 'project_' . $data['project_id'] . '_' . $data['service'] . '_' . time() . '.json';
+                    // Store the file with consistent naming
+                    $filename = 'project_' . $data['project_id'] . '_' . $data['service'] . '_service_account.json';
                     $directory = storage_path('app/service-accounts');
 
                     if (! is_dir($directory)) {

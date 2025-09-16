@@ -90,7 +90,10 @@ class ApiCredential extends Model
 
     public function storeServiceAccountFile(string $fileContent): string
     {
-        $filename = 'project_' . $this->project_id . '_' . $this->service . '_' . time() . '.json';
+        // Delete old file first
+        $this->deleteServiceAccountFile();
+
+        $filename = 'project_' . $this->project_id . '_' . $this->service . '_service_account.json';
         $directory = storage_path('app/service-accounts');
 
         if (! is_dir($directory)) {

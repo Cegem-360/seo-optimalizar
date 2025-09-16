@@ -99,28 +99,22 @@ class ApiCredentialForm
                                         $jsonData = json_decode($content, true);
                                         if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account') {
 
-                                            // Delete old service account file if exists
-                                            if ($record->service_account_file) {
-                                                Storage::disk('local')->delete('service-accounts/' . $record->service_account_file);
-                                            }
-
-                                            // Create consistent filename
-                                            $newFilename = "project_{$record->project_id}_{$record->service}_service_account.json";
-                                            $targetPath = 'service-accounts/' . $newFilename;
-
-                                            // Move the uploaded file to the target location with the new name
-                                            Storage::disk('local')->move($state, $targetPath);
+                                            // Store the file using model method (handles deletion and consistent naming)
+                                            $filename = $record->storeServiceAccountFile($content);
 
                                             // Update record
                                             $credentials = $record->credentials ?? [];
                                             $credentials['service_account_json'] = $jsonData;
 
                                             $record->update([
-                                                'service_account_file' => $newFilename,
+                                                'service_account_file' => $filename,
                                                 'credentials' => $credentials
                                             ]);
 
                                             $set('credentials', $credentials);
+
+                                            // Clean up the uploaded temp file
+                                            Storage::disk('local')->delete($state);
                                         }
                                     }
                                 }
