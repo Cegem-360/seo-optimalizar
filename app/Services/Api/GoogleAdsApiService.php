@@ -44,15 +44,40 @@ class GoogleAdsApiService extends BaseApiService
         }
 
         try {
+            $clientId = $this->getCredential('client_id');
+            $clientSecret = $this->getCredential('client_secret');
+            $refreshToken = $this->getCredential('refresh_token');
+            $developerToken = $this->getCredential('developer_token');
+            $customerId = $this->getCredential('customer_id');
+
+            Log::debug('Google Ads credentials check', [
+                'project_id' => $this->project->id,
+                'client_id' => $clientId ? 'SET (' . substr($clientId, 0, 10) . '...)' : 'EMPTY/NULL',
+                'client_secret' => $clientSecret ? 'SET (' . substr($clientSecret, 0, 10) . '...)' : 'EMPTY/NULL',
+                'refresh_token' => $refreshToken ? 'SET (' . substr($refreshToken, 0, 10) . '...)' : 'EMPTY/NULL',
+                'developer_token' => $developerToken ? 'SET (' . substr($developerToken, 0, 10) . '...)' : 'EMPTY/NULL',
+                'customer_id' => $customerId ? 'SET (' . $customerId . ')' : 'EMPTY/NULL',
+                'credentials_object' => $this->credentials ? 'EXISTS' : 'NULL',
+                'service_name' => $this->serviceName,
+            ]);
+
+            if (!$clientId || !$clientSecret || !$refreshToken) {
+                throw new Exception('Google Ads credentials are incomplete. Missing: ' .
+                    (!$clientId ? 'client_id ' : '') .
+                    (!$clientSecret ? 'client_secret ' : '') .
+                    (!$refreshToken ? 'refresh_token' : '')
+                );
+            }
+
             $oAuth2Credential = (new OAuth2TokenBuilder())
-                ->withClientId($this->getCredential('client_id'))
-                ->withClientSecret($this->getCredential('client_secret'))
-                ->withRefreshToken($this->getCredential('refresh_token'))
+                ->withClientId($clientId)
+                ->withClientSecret($clientSecret)
+                ->withRefreshToken($refreshToken)
                 ->build();
 
             $this->googleAdsClient = (new GoogleAdsClientBuilder())
                 ->withOAuth2Credential($oAuth2Credential)
-                ->withDeveloperToken($this->getCredential('developer_token'))
+                ->withDeveloperToken($developerToken)
                 ->build();
 
             return $this->googleAdsClient;
