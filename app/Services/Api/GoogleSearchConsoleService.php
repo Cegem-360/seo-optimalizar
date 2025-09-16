@@ -21,12 +21,66 @@ class GoogleSearchConsoleService extends BaseApiService
 
     protected function configureRequest(PendingRequest $pendingRequest): void
     {
+        // This method is overridden - we use direct cURL calls instead
+    }
+
+    private function makeApiRequest(string $method, string $url, array $data = []): array
+    {
         if ($this->accessToken === null || $this->accessToken === '' || $this->accessToken === '0') {
             $this->refreshAccessToken();
         }
 
-        $pendingRequest->withToken($this->accessToken)
-            ->accept('application/json');
+        $curl = curl_init();
+
+        $headers = [
+            'Authorization: Bearer ' . $this->accessToken,
+            'Accept: application/json',
+            'Content-Type: application/json',
+        ];
+
+        $curlOptions = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+        ];
+
+        if ($method === 'POST') {
+            $curlOptions[CURLOPT_POST] = true;
+            if (!empty($data)) {
+                $curlOptions[CURLOPT_POSTFIELDS] = json_encode($data);
+            }
+        }
+
+        curl_setopt_array($curl, $curlOptions);
+
+        $response_body = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+
+        if ($error) {
+            throw new Exception('cURL error: ' . $error);
+        }
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            Log::error('Google Search Console - API request failed', [
+                'project_id' => $this->project->id,
+                'method' => $method,
+                'url' => $url,
+                'status' => $httpCode,
+                'body' => $response_body
+            ]);
+            throw new Exception('API request failed. HTTP ' . $httpCode . ': ' . $response_body);
+        }
+
+        $data = json_decode($response_body, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Invalid JSON response: ' . json_last_error_msg());
+        }
+
+        return $data;
     }
 
     private function refreshAccessToken(): void
@@ -51,29 +105,66 @@ class GoogleSearchConsoleService extends BaseApiService
             throw new Exception('Missing Google Search Console credentials');
         }
 
-        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+        // Use cURL directly to avoid facade dependency issues
+        $postData = http_build_query([
             'grant_type' => 'refresh_token',
             'refresh_token' => $refreshToken,
             'client_id' => $clientId,
             'client_secret' => $clientSecret,
         ]);
 
-        Log::debug('Google Search Console - Token refresh response', [
-            'project_id' => $this->project->id,
-            'status' => $response->status(),
-            'successful' => $response->successful()
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://oauth2.googleapis.com/token',
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Content-Length: ' . strlen($postData),
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
         ]);
 
-        if (! $response->successful()) {
-            Log::error('Google Search Console - Failed to refresh access token', [
+        $response_body = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+
+        if ($error) {
+            Log::error('Google Search Console - cURL error during token refresh', [
                 'project_id' => $this->project->id,
-                'status' => $response->status(),
-                'body' => $response->body()
+                'error' => $error
             ]);
-            throw new Exception('Failed to refresh Google Search Console access token');
+            throw new Exception('cURL error: ' . $error);
         }
 
-        $data = $response->json();
+        Log::debug('Google Search Console - Token refresh response', [
+            'project_id' => $this->project->id,
+            'status' => $httpCode,
+            'successful' => $httpCode === 200
+        ]);
+
+        if ($httpCode !== 200) {
+            Log::error('Google Search Console - Failed to refresh access token', [
+                'project_id' => $this->project->id,
+                'status' => $httpCode,
+                'body' => $response_body
+            ]);
+            throw new Exception('Failed to refresh Google Search Console access token. HTTP ' . $httpCode . ': ' . $response_body);
+        }
+
+        $data = json_decode($response_body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Google Search Console - Invalid JSON response', [
+                'project_id' => $this->project->id,
+                'json_error' => json_last_error_msg(),
+                'response_body' => $response_body
+            ]);
+            throw new Exception('Invalid JSON response: ' . json_last_error_msg());
+        }
         $this->accessToken = $data['access_token'];
 
         Log::info('Google Search Console - Access token refreshed successfully', [
@@ -90,27 +181,14 @@ class GoogleSearchConsoleService extends BaseApiService
         ]);
 
         try {
-            $response = $this->makeRequest()->get($this->baseUrl . '/sites');
+            $data = $this->makeApiRequest('GET', $this->baseUrl . '/sites');
 
-            Log::debug('Google Search Console - Connection test response', [
+            Log::info('Google Search Console - Connection test successful', [
                 'project_id' => $this->project->id,
-                'status' => $response->status(),
-                'successful' => $response->successful()
+                'sites_count' => count($data['siteEntry'] ?? [])
             ]);
+            return true;
 
-            if ($response->successful()) {
-                Log::info('Google Search Console - Connection test successful', [
-                    'project_id' => $this->project->id
-                ]);
-                return true;
-            } else {
-                Log::warning('Google Search Console - Connection test failed', [
-                    'project_id' => $this->project->id,
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-                return false;
-            }
         } catch (Exception $e) {
             Log::error('Google Search Console - Connection test error', [
                 'project_id' => $this->project->id,
@@ -122,9 +200,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
     public function getSites(): Collection
     {
-        $response = $this->makeRequest()->get($this->baseUrl . '/sites');
-        $data = $this->handleResponse($response);
-
+        $data = $this->makeApiRequest('GET', $this->baseUrl . '/sites');
         return new Collection($data['siteEntry'] ?? []);
     }
 
@@ -143,10 +219,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'startRow' => 0,
         ];
 
-        $response = $this->makeRequest()
-            ->post($this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
-
-        $data = $this->handleResponse($response);
+        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
 
         return new Collection($data['rows'] ?? []);
     }
@@ -181,10 +254,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'rowLimit' => 1000,
         ];
 
-        $response = $this->makeRequest()
-            ->post($this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
-
-        $data = $this->handleResponse($response);
+        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
 
         return new Collection($data['rows'] ?? []);
     }
