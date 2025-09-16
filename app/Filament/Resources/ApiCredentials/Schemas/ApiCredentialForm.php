@@ -57,9 +57,9 @@ class ApiCredentialForm
                             ]),
 
                         // Display current service account file (read-only)
-                        TextEntry::make('current_service_account_file')
+                        TextInput::make('current_service_account_file')
                             ->label('Current Service Account File')
-                            ->state(function ($record): ?string {
+                            ->default(function ($record): ?string {
                                 if (!$record instanceof ApiCredential) {
                                     return null;
                                 }
@@ -71,22 +71,17 @@ class ApiCredentialForm
                                     return "✅ Uploaded: {$filename} (Service Account: {$email})";
                                 }
 
-                                return null;
+                                return 'No service account file uploaded';
                             })
+                            ->disabled()
                             ->visible(function ($get, $record): bool {
                                 if (!in_array($get('service'), ['google_search_console', 'google_analytics_4'])) {
                                     return false;
                                 }
 
-                                if (!$record instanceof ApiCredential) {
-                                    return false;
-                                }
-
-                                return $record->service_account_file &&
-                                       Storage::disk('local')->exists('service-accounts/' . $record->service_account_file);
+                                return $record instanceof ApiCredential;
                             })
-                            ->columnSpanFull()
-                            ->color('success'),
+                            ->columnSpanFull(),
 
                         FileUpload::make('service_account_json_upload')
                             ->label('Upload New Service Account JSON File')
