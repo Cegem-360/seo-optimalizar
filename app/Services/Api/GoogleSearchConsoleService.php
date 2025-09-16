@@ -85,32 +85,53 @@ class GoogleSearchConsoleService extends BaseApiService
 
     private function refreshAccessToken(): void
     {
-        Log::info('Google Search Console - Refreshing access token', [
+        Log::info('Google Search Console - Getting service account access token', [
             'project_id' => $this->project->id,
             'service' => $this->serviceName
         ]);
 
-        $refreshToken = $this->getCredential('refresh_token');
-        $clientId = $this->getCredential('client_id');
-        $clientSecret = $this->getCredential('client_secret');
+        $serviceAccountJson = $this->getCredential('service_account_json');
 
-        Log::debug('Google Search Console - Credentials check', [
+        Log::debug('Google Search Console - Service account check', [
             'project_id' => $this->project->id,
-            'has_refresh_token' => !empty($refreshToken),
-            'has_client_id' => !empty($clientId),
-            'has_client_secret' => !empty($clientSecret)
+            'has_service_account' => !empty($serviceAccountJson),
+            'service_account_email' => $serviceAccountJson['client_email'] ?? 'MISSING'
         ]);
 
-        if (! $refreshToken || ! $clientId || ! $clientSecret) {
-            throw new Exception('Missing Google Search Console credentials');
+        if (!$serviceAccountJson || empty($serviceAccountJson['private_key']) || empty($serviceAccountJson['client_email'])) {
+            throw new Exception('Missing Google Search Console service account credentials');
         }
 
-        // Use cURL directly to avoid facade dependency issues
+        // Create JWT token for Service Account authentication
+        $now = time();
+        $expiry = $now + 3600; // 1 hour
+
+        $header = rtrim(strtr(base64_encode(json_encode([
+            'alg' => 'RS256',
+            'typ' => 'JWT'
+        ])), '+/', '-_'), '=');
+
+        $payload = rtrim(strtr(base64_encode(json_encode([
+            'iss' => $serviceAccountJson['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/webmasters.readonly',
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'exp' => $expiry,
+            'iat' => $now
+        ])), '+/', '-_'), '=');
+
+        $signature_input = $header . '.' . $payload;
+
+        // Sign with private key
+        $private_key = $serviceAccountJson['private_key'];
+        openssl_sign($signature_input, $signature, $private_key, OPENSSL_ALGO_SHA256);
+        $signature = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+
+        $jwt = $signature_input . '.' . $signature;
+
+        // Exchange JWT for access token
         $postData = http_build_query([
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'client_id' => $clientId,
-            'client_secret' => $clientSecret,
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
         ]);
 
         $curl = curl_init();
@@ -167,9 +188,10 @@ class GoogleSearchConsoleService extends BaseApiService
         }
         $this->accessToken = $data['access_token'];
 
-        Log::info('Google Search Console - Access token refreshed successfully', [
+        Log::info('Google Search Console - Service account access token obtained successfully', [
             'project_id' => $this->project->id,
-            'token_length' => strlen($this->accessToken)
+            'token_length' => strlen($this->accessToken),
+            'service_account_email' => $serviceAccountJson['client_email']
         ]);
     }
 
