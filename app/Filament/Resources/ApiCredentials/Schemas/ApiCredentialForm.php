@@ -63,12 +63,6 @@ class ApiCredentialForm
                             ->disk('local')
                             ->directory('service-accounts')
                             ->helperText('Upload the service account JSON file from Google Cloud Console')
-                            ->getUploadedFileNameForStorageUsing(function ($file, $record): string {
-                                // Generate predictable filename based on project and service
-                                $projectId = $record instanceof ApiCredential ? $record->project_id : 'unknown';
-                                $service = $record instanceof ApiCredential ? $record->service : 'unknown';
-                                return "project_{$projectId}_{$service}_service_account.json";
-                            })
                             ->default(function ($record): ?string {
                                 if (!$record instanceof ApiCredential) {
                                     return null;
@@ -96,22 +90,36 @@ class ApiCredentialForm
                                 'google_analytics_4',
                             ]))
                             ->afterStateUpdated(function ($state, $record, $set): void {
-                                if ($state) {
-                                    $tempPath = Storage::disk('local')->path($state);
-                                    if (file_exists($tempPath)) {
-                                        $content = file_get_contents($tempPath);
+                                if ($state && $record instanceof ApiCredential) {
+                                    $uploadedPath = Storage::disk('local')->path($state);
+                                    if (file_exists($uploadedPath)) {
+                                        $content = file_get_contents($uploadedPath);
 
                                         // Validate JSON
                                         $jsonData = json_decode($content, true);
-                                        if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account' && $record instanceof ApiCredential) {
-                                            // Store the file (or update existing)
-                                            $filename = $record->storeServiceAccountFile($content);
-                                            $record->update(['service_account_file' => $filename]);
+                                        if (json_last_error() === JSON_ERROR_NONE && isset($jsonData['type']) && $jsonData['type'] === 'service_account') {
 
-                                            // Update credentials with parsed data
+                                            // Delete old service account file if exists
+                                            if ($record->service_account_file) {
+                                                Storage::disk('local')->delete('service-accounts/' . $record->service_account_file);
+                                            }
+
+                                            // Create consistent filename
+                                            $newFilename = "project_{$record->project_id}_{$record->service}_service_account.json";
+                                            $targetPath = 'service-accounts/' . $newFilename;
+
+                                            // Move the uploaded file to the target location with the new name
+                                            Storage::disk('local')->move($state, $targetPath);
+
+                                            // Update record
                                             $credentials = $record->credentials ?? [];
                                             $credentials['service_account_json'] = $jsonData;
-                                            $record->update(['credentials' => $credentials]);
+
+                                            $record->update([
+                                                'service_account_file' => $newFilename,
+                                                'credentials' => $credentials
+                                            ]);
+
                                             $set('credentials', $credentials);
                                         }
                                     }
