@@ -125,41 +125,55 @@ class ApiCredentialForm
                             ->state(fn (): HtmlString => new HtmlString('
                                 <div class="p-4 border rounded-lg bg-blue-50 border-blue-200">
                                     <h3 class="font-semibold text-blue-900 mb-2">🔐 Google Ads OAuth2 Authentication</h3>
-                                    <p class="text-sm text-blue-800 mb-3">Google Ads requires OAuth2 authentication. Follow these steps:</p>
-                                    
-                                    <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                                        <h4 class="font-semibold text-yellow-900 text-sm mb-2">⚠️ Development Setup Required</h4>
-                                        <p class="text-xs text-yellow-800 mb-2">Google OAuth doesn\'t accept .test domains. Choose one option:</p>
-                                        
+                                    <p class="text-sm text-blue-800 mb-3">Google Ads requires OAuth2 authentication. Follow these steps for production setup:</p>
+
+                                    <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                                        <h4 class="font-semibold text-green-900 text-sm mb-2">✅ Production Domain Setup</h4>
+                                        <p class="text-xs text-green-800 mb-2">For production domains (like .com, .hu, etc.), use your actual domain:</p>
+
                                         <div class="space-y-2 text-xs">
-                                            <div>
-                                                <strong>Option 1 (Recommended):</strong> Use ngrok
-                                                <div class="bg-yellow-100 p-2 rounded mt-1 font-mono">
-                                                    ngrok http https://seo-optimalizar.test
-                                                </div>
-                                                <p class="text-yellow-700 mt-1">Then use the ngrok HTTPS URL as redirect URI</p>
+                                            <div class="bg-green-100 p-2 rounded font-mono">
+                                                https://yourdomain.com/admin/google-ads/oauth/callback
                                             </div>
-                                            
-                                            <div>
-                                                <strong>Option 2:</strong> Use localhost
-                                                <div class="bg-yellow-100 p-2 rounded mt-1 font-mono">
-                                                    php artisan serve --port=8000
-                                                </div>
-                                                <p class="text-yellow-700 mt-1">Then use: <code>http://localhost:8000/admin/google-ads/oauth/callback</code></p>
-                                            </div>
+                                            <p class="text-green-700">Replace "yourdomain.com" with your actual domain name</p>
                                         </div>
                                     </div>
-                                    
-                                    <ol class="text-sm text-blue-800 list-decimal list-inside space-y-1 mb-3">
-                                        <li>Create OAuth2 Client in <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="underline">Google Cloud Console</a></li>
-                                        <li>Add redirect URI from one of the options above</li>
-                                        <li>Run the command below to generate refresh token</li>
-                                        <li>Add the required credentials below</li>
+
+                                    <ol class="text-sm text-blue-800 list-decimal list-inside space-y-2 mb-4">
+                                        <li><strong>Google Cloud Console beállítása:</strong>
+                                            <ul class="list-disc list-inside ml-4 mt-1 text-xs space-y-1">
+                                                <li>Lépj be a <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="underline text-blue-600">Google Cloud Console</a>-ba</li>
+                                                <li>Válassz ki vagy hozz létre egy projektet</li>
+                                                <li>Engedélyezd a Google Ads API-t a "APIs & Services > Library" menüben</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>OAuth2 Client létrehozása:</strong>
+                                            <ul class="list-disc list-inside ml-4 mt-1 text-xs space-y-1">
+                                                <li>Menj a "Credentials" fülre</li>
+                                                <li>Kattints "Create Credentials" > "OAuth client ID"</li>
+                                                <li>Válaszd a "Web application" típust</li>
+                                                <li>Add hozzá a redirect URI-t: <code class="bg-gray-100 px-1 rounded">https://yourdomain.com/admin/google-ads/oauth/callback</code></li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Refresh token generálása:</strong>
+                                            <ul class="list-disc list-inside ml-4 mt-1 text-xs space-y-1">
+                                                <li>Add meg a Client ID és Client Secret mezőket alább</li>
+                                                <li>Mentsd el a credential-öket</li>
+                                                <li>Kattints a "Generate Google Ads Refresh Token" gombra a felső menüben</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Véglegesítés:</strong>
+                                            <ul class="list-disc list-inside ml-4 mt-1 text-xs space-y-1">
+                                                <li>Az OAuth folyamat után kapott refresh_token-t add meg alább</li>
+                                                <li>Add meg a Google Ads Customer ID-t (10 jegyű szám kötőjelek nélkül)</li>
+                                            </ul>
+                                        </li>
                                     </ol>
-                                    <div class="bg-blue-100 p-2 rounded font-mono text-xs mb-3">
-                                        php artisan google-ads:generate-refresh-token
+
+                                    <div class="bg-amber-50 border border-amber-200 rounded p-3 text-xs">
+                                        <strong class="text-amber-800">💡 Fejlesztési környezethez:</strong>
+                                        <p class="text-amber-700 mt-1">Ha .test domainen fejlesztesz, használd az ngrok-ot: <code class="bg-amber-100 px-1 rounded">ngrok http https://seo-optimalizar.test</code></p>
                                     </div>
-                                    <p class="text-xs text-blue-700">💡 The command will guide you through the OAuth process and generate the refresh_token.</p>
                                 </div>
                             '))
                             ->columnSpanFull()
