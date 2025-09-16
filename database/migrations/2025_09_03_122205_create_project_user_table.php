@@ -21,11 +21,6 @@ return new class() extends Migration
 
             $blueprint->unique(['project_id', 'user_id']);
         });
-
-        // Add foreign key constraint for latest_project_id after projects table exists
-        Schema::table('users', function (Blueprint $blueprint) {
-            $blueprint->foreign('latest_project_id')->references('id')->on('projects')->nullOnDelete();
-        });
     }
 
     /**
@@ -33,11 +28,6 @@ return new class() extends Migration
      */
     public function down(): void
     {
-        // Remove foreign key constraint first
-        Schema::table('users', function (Blueprint $blueprint) {
-            $blueprint->dropForeign(['latest_project_id']);
-        });
-
         Schema::dropIfExists('project_user');
     }
 };
