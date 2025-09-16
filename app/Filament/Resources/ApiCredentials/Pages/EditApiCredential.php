@@ -127,13 +127,27 @@ class EditApiCredential extends EditRecord
                     'credentials_keys' => array_keys($data['credentials']),
                 ]);
 
+                // Automatically save the refresh token to database
+                $record = $this->getRecord();
+                if ($record instanceof \App\Models\ApiCredential) {
+                    $currentCredentials = $record->credentials ?? [];
+                    $currentCredentials['refresh_token'] = $sessionRefreshToken;
+
+                    $record->update(['credentials' => $currentCredentials]);
+
+                    \Illuminate\Support\Facades\Log::info('Google Ads refresh token automatically saved to database', [
+                        'record_id' => $record->id,
+                        'credentials_keys' => array_keys($currentCredentials),
+                    ]);
+                }
+
                 // Clear the session token to prevent reuse
                 session()->forget('google_ads_refresh_token');
 
                 // Show success notification
                 \Filament\Notifications\Notification::make()
                     ->title('Google Ads OAuth Successful')
-                    ->body('Refresh token has been automatically added to your credentials. Please save the form.')
+                    ->body('Refresh token has been automatically added and saved to your credentials.')
                     ->success()
                     ->persistent()
                     ->send();
