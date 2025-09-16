@@ -121,12 +121,6 @@ class PageSpeedMonitor extends Command
                 }
             }
 
-            /*             Log::info('PageSpeed monitoring completed', [
-                            'project_id' => $project->id,
-                            'project_name' => $project->name,
-                            'strategies' => $analyzed,
-                        ]); */
-
             return ['success' => true, 'analyzed' => $analyzed];
         } catch (Exception $exception) {
             $error = sprintf('Error analyzing %s: ', $project->name) . $exception->getMessage();

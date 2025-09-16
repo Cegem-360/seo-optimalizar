@@ -56,13 +56,53 @@ class ApiCredentialForm
                                     ->helperText('Enable or disable this API integration'),
                             ]),
 
+                        // Display current service account file (read-only)
+                        TextEntry::make('current_service_account_file')
+                            ->label('Current Service Account File')
+                            ->state(function ($record): ?string {
+                                if (!$record instanceof ApiCredential) {
+                                    return null;
+                                }
+
+                                $filename = $record->service_account_file;
+                                if ($filename && Storage::disk('local')->exists('service-accounts/' . $filename)) {
+                                    $serviceAccount = $record->getCredential('service_account_json');
+                                    $email = $serviceAccount['client_email'] ?? 'Unknown';
+                                    return "✅ Uploaded: {$filename} (Service Account: {$email})";
+                                }
+
+                                return null;
+                            })
+                            ->visible(function ($get, $record): bool {
+                                if (!in_array($get('service'), ['google_search_console', 'google_analytics_4'])) {
+                                    return false;
+                                }
+
+                                if (!$record instanceof ApiCredential) {
+                                    return false;
+                                }
+
+                                return $record->service_account_file &&
+                                       Storage::disk('local')->exists('service-accounts/' . $record->service_account_file);
+                            })
+                            ->columnSpanFull()
+                            ->color('success'),
+
                         FileUpload::make('service_account_json_upload')
-                            ->label('Service Account JSON File')
+                            ->label('Upload New Service Account JSON File')
                             ->acceptedFileTypes(['application/json', 'text/json', 'text/plain'])
                             ->disk('local')
                             ->directory('temp-service-accounts')
                             ->helperText('Upload the service account JSON file from Google Cloud Console')
-                            ->required()
+                            ->required(function ($record): bool {
+                                // Only required if no existing file
+                                if (!$record instanceof ApiCredential) {
+                                    return true;
+                                }
+
+                                return !$record->service_account_file ||
+                                       !Storage::disk('local')->exists('service-accounts/' . $record->service_account_file);
+                            })
                             ->columnSpanFull()
                             ->visible(fn ($get): bool => in_array($get('service'), [
                                 'google_search_console',

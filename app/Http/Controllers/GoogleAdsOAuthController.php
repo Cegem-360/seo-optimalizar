@@ -91,13 +91,6 @@ class GoogleAdsOAuthController extends Controller
             $redirectUri = rtrim((string) $baseUrl, '/') . '/admin/google-ads/oauth/callback';
         }
 
-        // Debug: Log the redirect URI being used
-        Log::info('OAuth start - Redirect URI', [
-            'app_url' => Config::get('app.url'),
-            'share_url' => $shareUrl,
-            'redirect_uri' => $redirectUri,
-        ]);
-
         $authUrl = $googleAdsOAuthService->generateAuthUrl($clientId, $redirectUri, $request);
 
         // Debug: check if state is in URL
@@ -112,14 +105,6 @@ class GoogleAdsOAuthController extends Controller
     public function callback(Request $request, GoogleAdsOAuthService $googleAdsOAuthService)
     {
         try {
-            // Debug: log all incoming parameters
-            Log::info('OAuth callback received', [
-                'all_params' => $request->all(),
-                'state_param' => $request->get('state'),
-                'code_param' => $request->get('code'),
-                'error_param' => $request->get('error'),
-            ]);
-
             // Check for errors
             if ($request->has('error')) {
                 return $this->renderOAuthResult([
@@ -183,7 +168,6 @@ class GoogleAdsOAuthController extends Controller
                 'refreshToken' => $tokens['refresh_token'],
                 'message' => 'Successfully generated refresh token! You can now close this window and return to the form.',
             ]);
-
         } catch (Exception $e) {
             // Log the full error for debugging
             Log::error('OAuth callback error', [
@@ -200,8 +184,8 @@ class GoogleAdsOAuthController extends Controller
                 'debug' => [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => substr($e->getTraceAsString(), 0, 1000) // Limit trace length
-                ]
+                    'trace' => substr($e->getTraceAsString(), 0, 1000), // Limit trace length
+                ],
             ]);
         }
     }

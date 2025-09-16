@@ -5,7 +5,6 @@ namespace App\Services;
 use Exception;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class GoogleAdsOAuthService
 {
@@ -35,13 +34,6 @@ class GoogleAdsOAuthService
         ];
 
         $url = self::AUTH_URL . '?' . http_build_query($params);
-
-        // Debug log
-        Log::info('Generated OAuth URL', [
-            'url' => $url,
-            'state' => $state,
-            'params' => $params,
-        ]);
 
         return $url;
     }

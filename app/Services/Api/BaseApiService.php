@@ -8,7 +8,6 @@ use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 abstract class BaseApiService
 {
@@ -50,43 +49,13 @@ abstract class BaseApiService
             ])
             ->beforeSending(function (PendingRequest $pendingRequest): void {
                 $this->configureRequest($pendingRequest);
-                $this->logRequest($pendingRequest);
             });
     }
 
     abstract protected function configureRequest(PendingRequest $pendingRequest): void;
 
-    protected function logRequest(PendingRequest $pendingRequest): void
-    {
-        /* Log::info("API Request to {$this->serviceName}", [
-            'project_id' => $this->project->id,
-            'service' => $this->serviceName,
-            'url' => $request->getBaseUri(),
-        ]); */
-    }
-
-    protected function logResponse(Response $response): void
-    {
-        /* Log::info("API Response from {$this->serviceName}", [
-            'project_id' => $this->project->id,
-            'service' => $this->serviceName,
-            'status' => $response->status(),
-            'success' => $response->successful(),
-        ]); */
-
-        if (! $response->successful()) {
-            Log::warning('API Error from ' . $this->serviceName, [
-                'project_id' => $this->project->id,
-                'service' => $this->serviceName,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-        }
-    }
-
     protected function handleResponse(Response $response): array
     {
-        $this->logResponse($response);
         $this->markCredentialsAsUsed();
 
         if (! $response->successful()) {
