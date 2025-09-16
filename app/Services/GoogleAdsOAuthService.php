@@ -5,7 +5,6 @@ namespace App\Services;
 use Exception;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GoogleAdsOAuthService
@@ -49,7 +48,8 @@ class GoogleAdsOAuthService
 
     public function exchangeCodeForToken(string $code, string $clientId, string $clientSecret, string $redirectUri): array
     {
-        $response = Http::asForm()->post(self::TOKEN_URL, [
+        // Use cURL directly to avoid facade dependency issues
+        $postData = http_build_query([
             'code' => $code,
             'client_id' => $clientId,
             'client_secret' => $clientSecret,
@@ -57,14 +57,41 @@ class GoogleAdsOAuthService
             'grant_type' => 'authorization_code',
         ]);
 
-        if (! $response->successful()) {
-            throw new Exception('Failed to exchange code for token: ' . $response->body());
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => self::TOKEN_URL,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Content-Length: ' . strlen($postData),
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+
+        if ($error) {
+            throw new Exception('cURL error: ' . $error);
         }
 
-        $data = $response->json();
+        if ($httpCode !== 200) {
+            throw new Exception('Failed to exchange code for token. HTTP ' . $httpCode . ': ' . $response);
+        }
+
+        $data = json_decode($response, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Invalid JSON response: ' . json_last_error_msg());
+        }
 
         if (! isset($data['refresh_token'])) {
-            throw new Exception('No refresh token in response');
+            throw new Exception('No refresh token in response: ' . json_encode($data));
         }
 
         return $data;
