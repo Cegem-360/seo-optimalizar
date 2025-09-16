@@ -56,6 +56,15 @@ class CreateApiCredential extends CreateRecord
             unset($data['property_id']);
         }
 
+        // Handle Google Ads refresh token from session
+        if ($data['service'] === 'google_ads') {
+            $sessionRefreshToken = session()->get('google_ads_refresh_token');
+            if ($sessionRefreshToken) {
+                $data['credentials']['refresh_token'] = $sessionRefreshToken;
+                session()->forget('google_ads_refresh_token');
+            }
+        }
+
         return $data;
     }
 }

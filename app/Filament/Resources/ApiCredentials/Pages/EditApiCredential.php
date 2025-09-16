@@ -105,6 +105,29 @@ class EditApiCredential extends EditRecord
             }
         }
 
+        // Check for Google Ads refresh token in session (after OAuth)
+        if ($data['service'] === 'google_ads') {
+            $sessionRefreshToken = session()->get('google_ads_refresh_token');
+            if ($sessionRefreshToken) {
+                // Update credentials with the new refresh token
+                if (!isset($data['credentials'])) {
+                    $data['credentials'] = [];
+                }
+                $data['credentials']['refresh_token'] = $sessionRefreshToken;
+
+                // Clear the session token to prevent reuse
+                session()->forget('google_ads_refresh_token');
+
+                // Show success notification
+                \Filament\Notifications\Notification::make()
+                    ->title('Google Ads OAuth Successful')
+                    ->body('Refresh token has been automatically added to your credentials. Please save the form.')
+                    ->success()
+                    ->persistent()
+                    ->send();
+            }
+        }
+
         return $data;
     }
 
@@ -157,6 +180,15 @@ class EditApiCredential extends EditRecord
         if (isset($data['property_id']) && $data['service'] === 'google_analytics_4') {
             $data['credentials']['property_id'] = $data['property_id'];
             unset($data['property_id']);
+        }
+
+        // Handle Google Ads refresh token from session (backup check during save)
+        if ($data['service'] === 'google_ads') {
+            $sessionRefreshToken = session()->get('google_ads_refresh_token');
+            if ($sessionRefreshToken) {
+                $data['credentials']['refresh_token'] = $sessionRefreshToken;
+                session()->forget('google_ads_refresh_token');
+            }
         }
 
         return $data;
