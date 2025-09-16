@@ -108,12 +108,24 @@ class EditApiCredential extends EditRecord
         // Check for Google Ads refresh token in session (after OAuth)
         if ($data['service'] === 'google_ads') {
             $sessionRefreshToken = session()->get('google_ads_refresh_token');
+
+            \Illuminate\Support\Facades\Log::debug('Google Ads OAuth token check in mutateFormDataBeforeFill', [
+                'service' => $data['service'],
+                'session_token' => $sessionRefreshToken ? 'EXISTS (' . substr($sessionRefreshToken, 0, 10) . '...)' : 'NOT_FOUND',
+                'credentials_before' => isset($data['credentials']) ? array_keys($data['credentials']) : 'NOT_SET',
+            ]);
+
             if ($sessionRefreshToken) {
                 // Update credentials with the new refresh token
                 if (!isset($data['credentials'])) {
                     $data['credentials'] = [];
                 }
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
+
+                \Illuminate\Support\Facades\Log::info('Google Ads refresh token added to credentials', [
+                    'token_length' => strlen($sessionRefreshToken),
+                    'credentials_keys' => array_keys($data['credentials']),
+                ]);
 
                 // Clear the session token to prevent reuse
                 session()->forget('google_ads_refresh_token');
@@ -185,9 +197,21 @@ class EditApiCredential extends EditRecord
         // Handle Google Ads refresh token from session (backup check during save)
         if ($data['service'] === 'google_ads') {
             $sessionRefreshToken = session()->get('google_ads_refresh_token');
+
+            \Illuminate\Support\Facades\Log::debug('Google Ads OAuth token check in mutateFormDataBeforeSave', [
+                'service' => $data['service'],
+                'session_token' => $sessionRefreshToken ? 'EXISTS (' . substr($sessionRefreshToken, 0, 10) . '...)' : 'NOT_FOUND',
+                'credentials_before' => isset($data['credentials']) ? array_keys($data['credentials']) : 'NOT_SET',
+            ]);
+
             if ($sessionRefreshToken) {
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
                 session()->forget('google_ads_refresh_token');
+
+                \Illuminate\Support\Facades\Log::info('Google Ads refresh token added during save', [
+                    'token_length' => strlen($sessionRefreshToken),
+                    'credentials_keys' => array_keys($data['credentials']),
+                ]);
             }
         }
 
