@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +15,8 @@ return new class() extends Migration
     {
         Schema::create('notification_preferences', function (Blueprint $blueprint): void {
             $blueprint->id();
-            $blueprint->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $blueprint->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $blueprint->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $blueprint->foreignIdFor(Project::class)->constrained()->cascadeOnDelete();
 
             // Email notification preferences
             $blueprint->boolean('email_ranking_changes')->default(true);

@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Competitor;
+use App\Models\Keyword;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +15,8 @@ return new class() extends Migration
     {
         Schema::create('competitor_rankings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('competitor_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('keyword_id')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Competitor::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Keyword::class)->constrained()->cascadeOnDelete();
             $table->integer('position')->nullable();
             $table->integer('previous_position')->nullable();
             $table->string('url')->nullable();

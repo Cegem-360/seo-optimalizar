@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Keyword;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,7 @@ return new class() extends Migration
     {
         Schema::create('rankings', function (Blueprint $blueprint): void {
             $blueprint->id();
-            $blueprint->foreignId('keyword_id')->constrained()->cascadeOnDelete();
+            $blueprint->foreignIdFor(Keyword::class)->constrained()->cascadeOnDelete();
             $blueprint->integer('position')->nullable();
             $blueprint->integer('previous_position')->nullable();
             $blueprint->string('url')->nullable();
