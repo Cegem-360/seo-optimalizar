@@ -6,7 +6,7 @@ use App\Models\Project;
 use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Facades\DB;
 
 class CompetitorComparisonWidget extends ChartWidget
 {
@@ -16,7 +16,6 @@ class CompetitorComparisonWidget extends ChartWidget
 
     protected int|string|array $columnSpan = 1;
 
-    public function __construct(private readonly DatabaseManager $databaseManager) {}
 
     protected function getType(): string
     {
@@ -52,7 +51,7 @@ class CompetitorComparisonWidget extends ChartWidget
                 $query->where('project_id', $tenant->id);
             })
             ->whereIn('rankings.id', function ($query) use ($tenant): void {
-                $query->select($this->databaseManager->raw('MAX(rankings.id)'))
+                $query->select(DB::raw('MAX(rankings.id)'))
                     ->from('rankings')
                     ->join('keywords', 'rankings.keyword_id', '=', 'keywords.id')
                     ->where('keywords.project_id', $tenant->id)
