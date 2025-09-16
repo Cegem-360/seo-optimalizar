@@ -4,15 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Services\GoogleAdsOAuthService;
 use Exception;
-use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
 
 class GoogleAdsOAuthController extends Controller
 {
-    public function __construct(private readonly Redirector $redirector, private readonly Repository $repository, private readonly Factory $factory) {}
 
     public function start(Request $request, GoogleAdsOAuthService $googleAdsOAuthService)
     {
@@ -21,7 +19,7 @@ class GoogleAdsOAuthController extends Controller
         $clientSecret = $request->get('client_secret') ?? $request->session()->get('google_ads_oauth_client_secret');
 
         if (! $clientId || ! $clientSecret) {
-            return $this->redirector->to('/admin/api-credentials')->with('error',
+            return redirect('/admin/api-credentials')->with('error',
                 'Google Ads client credentials are required to start OAuth process'
             );
         }
@@ -33,19 +31,19 @@ class GoogleAdsOAuthController extends Controller
         ]);
 
         // Generate OAuth URL - prioritize HERD_SHARE_URL if set
-        $shareUrl = $this->repository->get('app.herd_share_url');
+        $shareUrl = Config::get('app.herd_share_url');
         if ($shareUrl) {
             // Use the share URL if configured
             $redirectUri = rtrim((string) $shareUrl, '/') . '/admin/google-ads/oauth/callback';
         } else {
             // Fall back to the regular app URL
-            $baseUrl = $this->repository->get('app.url');
+            $baseUrl = Config::get('app.url');
             $redirectUri = rtrim((string) $baseUrl, '/') . '/admin/google-ads/oauth/callback';
         }
 
         // Debug: Log the redirect URI being used
         Log::info('OAuth start - Redirect URI', [
-            'app_url' => $this->repository->get('app.url'),
+            'app_url' => Config::get('app.url'),
             'share_url' => $shareUrl,
             'redirect_uri' => $redirectUri,
         ]);
@@ -58,7 +56,7 @@ class GoogleAdsOAuthController extends Controller
         }
 
         // Redirect to Google OAuth
-        return $this->redirector->to($authUrl);
+        return redirect($authUrl);
     }
 
     public function callback(Request $request, GoogleAdsOAuthService $googleAdsOAuthService)
@@ -72,7 +70,7 @@ class GoogleAdsOAuthController extends Controller
         ]);
         // Check for errors
         if ($request->has('error')) {
-            return $this->factory->make('google-ads-oauth-result', [
+            return View::make('google-ads-oauth-result', [
                 'success' => false,
                 'error' => $request->get('error_description', 'OAuth authorization was denied'),
             ]);
@@ -83,7 +81,7 @@ class GoogleAdsOAuthController extends Controller
         $savedState = $request->session()->get('google_ads_oauth_state');
 
         if (! $request->has('state') || ! $googleAdsOAuthService->validateState($receivedState, $request)) {
-            return $this->factory->make('google-ads-oauth-result', [
+            return View::make('google-ads-oauth-result', [
                 'success' => false,
                 'error' => sprintf('Invalid state parameter. Received: %s, Saved: %s. Please try again.', $receivedState, $savedState),
             ]);
@@ -92,7 +90,7 @@ class GoogleAdsOAuthController extends Controller
         // Get the authorization code
         $code = $request->get('code');
         if (! $code) {
-            return $this->factory->make('google-ads-oauth-result', [
+            return View::make('google-ads-oauth-result', [
                 'success' => false,
                 'error' => 'No authorization code received',
             ]);
@@ -108,13 +106,13 @@ class GoogleAdsOAuthController extends Controller
             }
 
             // Exchange code for tokens - use same redirect URI logic
-            $shareUrl = $this->repository->get('app.herd_share_url');
+            $shareUrl = Config::get('app.herd_share_url');
             if ($shareUrl) {
                 // Use the share URL if configured
                 $redirectUri = rtrim((string) $shareUrl, '/') . '/admin/google-ads/oauth/callback';
             } else {
                 // Fall back to the regular app URL
-                $baseUrl = $this->repository->get('app.url');
+                $baseUrl = Config::get('app.url');
                 $redirectUri = rtrim((string) $baseUrl, '/') . '/admin/google-ads/oauth/callback';
             }
 
@@ -129,13 +127,13 @@ class GoogleAdsOAuthController extends Controller
             // Clean up
             $request->session()->forget(['google_ads_oauth_client_id', 'google_ads_oauth_client_secret']);
 
-            return $this->factory->make('google-ads-oauth-result', [
+            return View::make('google-ads-oauth-result', [
                 'success' => true,
                 'refreshToken' => $tokens['refresh_token'],
                 'message' => 'Successfully generated refresh token! You can now close this window and return to the form.',
             ]);
         } catch (Exception $exception) {
-            return $this->factory->make('google-ads-oauth-result', [
+            return View::make('google-ads-oauth-result', [
                 'success' => false,
                 'error' => $exception->getMessage(),
             ]);

@@ -21,12 +21,51 @@ class EditApiCredential extends EditRecord
             Action::make('google_ads_oauth')
                 ->label('Generate Google Ads Refresh Token')
                 ->icon('heroicon-o-key')
-                ->color('info')
-                ->visible(fn (): bool => $this->getRecord() instanceof ApiCredential && $this->getRecord()->service === 'google_ads')
+                ->color('success')
+                ->visible(function (): bool {
+                    $record = $this->getRecord();
+                    if (! $record instanceof ApiCredential || $record->service !== 'google_ads') {
+                        return false;
+                    }
+
+                    $credentials = $record->credentials ?? [];
+                    $clientId = $credentials['client_id'] ?? null;
+                    $clientSecret = $credentials['client_secret'] ?? null;
+
+                    return !empty($clientId) && !empty($clientSecret);
+                })
+                ->disabled(function (): bool {
+                    $record = $this->getRecord();
+                    if (! $record instanceof ApiCredential) {
+                        return true;
+                    }
+
+                    $credentials = $record->credentials ?? [];
+                    $clientId = $credentials['client_id'] ?? null;
+                    $clientSecret = $credentials['client_secret'] ?? null;
+
+                    return empty($clientId) || empty($clientSecret);
+                })
+                ->tooltip(function (): ?string {
+                    $record = $this->getRecord();
+                    if (! $record instanceof ApiCredential) {
+                        return null;
+                    }
+
+                    $credentials = $record->credentials ?? [];
+                    $clientId = $credentials['client_id'] ?? null;
+                    $clientSecret = $credentials['client_secret'] ?? null;
+
+                    if (empty($clientId) || empty($clientSecret)) {
+                        return 'Először add meg a client_id és client_secret mezőket, majd mentsd el!';
+                    }
+
+                    return 'Kattints ide a Google Ads OAuth folyamat indításához';
+                })
                 ->url(function () {
                     $model = $this->getRecord();
                     if (! $model instanceof ApiCredential) {
-                        return;
+                        return null;
                     }
 
                     $credentials = $model->credentials;
@@ -34,10 +73,10 @@ class EditApiCredential extends EditRecord
                     $clientSecret = $credentials['client_secret'] ?? null;
 
                     if (! $clientId || ! $clientSecret) {
-                        return;
+                        return null;
                     }
 
-                    return App::make('url')->route('google-ads.oauth.start', [
+                    return route('google-ads.oauth.start', [
                         'client_id' => $clientId,
                         'client_secret' => $clientSecret,
                     ]);

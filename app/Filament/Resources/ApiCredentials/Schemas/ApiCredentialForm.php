@@ -183,15 +183,77 @@ class ApiCredentialForm
                             ->label('API Credentials')
                             ->keyLabel('Credential Key')
                             ->valueLabel('Credential Value')
-                            ->helperText(function ($get): string {
+                            ->helperText(function ($get): HtmlString {
+                                $service = $get('service');
+
+                                return new HtmlString(match ($service) {
+                                    'google_ads' => '
+                                        <div class="space-y-2 text-sm">
+                                            <p><strong>Szükséges mezők:</strong></p>
+                                            <ul class="list-disc ml-4 space-y-1">
+                                                <li><code class="bg-gray-100 px-1 rounded">client_id</code> - OAuth2 Client ID (Google Cloud Console)</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">client_secret</code> - OAuth2 Client Secret (Google Cloud Console)</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">developer_token</code> - Google Ads API fejlesztői token (<a href="https://developers.google.com/google-ads/api/docs/first-call/dev-token" target="_blank" class="text-blue-600 underline">kérelmezd itt</a>)</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">customer_id</code> - Google Ads ügyfél ID (10 jegyű szám kötőjelek nélkül, pl: 1234567890)</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">refresh_token</code> - OAuth refresh token (generálódik automatikusan)</li>
+                                            </ul>
+                                            <p class="text-blue-600"><strong>💡 Tipp:</strong> Mentsd el először a client_id és client_secret mezőket, majd használd a felső "Generate Google Ads Refresh Token" gombot!</p>
+                                        </div>
+                                    ',
+                                    'gemini' => '
+                                        <div class="space-y-2 text-sm">
+                                            <p><strong>Szükséges mezők:</strong></p>
+                                            <ul class="list-disc ml-4">
+                                                <li><code class="bg-gray-100 px-1 rounded">api_key</code> - API kulcs (<a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline">szerezd be itt</a>)</li>
+                                            </ul>
+                                        </div>
+                                    ',
+                                    'google_analytics' => '
+                                        <div class="space-y-2 text-sm">
+                                            <p><strong>Szükséges mezők:</strong></p>
+                                            <ul class="list-disc ml-4 space-y-1">
+                                                <li><code class="bg-gray-100 px-1 rounded">client_id</code> - OAuth2 Client ID</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">client_secret</code> - OAuth2 Client Secret</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">refresh_token</code> - OAuth refresh token</li>
+                                                <li><code class="bg-gray-100 px-1 rounded">property_id</code> - Google Analytics property ID</li>
+                                            </ul>
+                                        </div>
+                                    ',
+                                    'google_pagespeed_insights' => '
+                                        <div class="space-y-2 text-sm">
+                                            <p><strong>Szükséges mezők:</strong></p>
+                                            <ul class="list-disc ml-4">
+                                                <li><code class="bg-gray-100 px-1 rounded">api_key</code> - API kulcs (Google Cloud Console-ban engedélyezd a PageSpeed Insights API-t)</li>
+                                            </ul>
+                                        </div>
+                                    ',
+                                    default => 'Add meg az API credentialeket kulcs-érték párok formájában.'
+                                });
+                            })
+                            ->default(function ($get): array {
                                 $service = $get('service');
 
                                 return match ($service) {
-                                    'google_ads' => 'Click "Generate Refresh Token" button above to authenticate with Google Ads. Required: developer_token (from Google Ads API Center), customer_id (10 digits without dashes)',
-                                    'gemini' => 'Enter: api_key (Get from Google AI Studio)',
-                                    'google_analytics' => 'Enter: client_id, client_secret, refresh_token, property_id',
-                                    'google_pagespeed_insights' => 'Enter: api_key (Enable PageSpeed Insights API in Google Cloud Console)',
-                                    default => 'Enter the API credentials as key-value pairs.'
+                                    'google_ads' => [
+                                        'client_id' => '',
+                                        'client_secret' => '',
+                                        'developer_token' => '',
+                                        'customer_id' => '',
+                                        'refresh_token' => '',
+                                    ],
+                                    'gemini' => [
+                                        'api_key' => '',
+                                    ],
+                                    'google_analytics' => [
+                                        'client_id' => '',
+                                        'client_secret' => '',
+                                        'refresh_token' => '',
+                                        'property_id' => '',
+                                    ],
+                                    'google_pagespeed_insights' => [
+                                        'api_key' => '',
+                                    ],
+                                    default => []
                                 };
                             })
                             ->addActionLabel('Add Credential')
