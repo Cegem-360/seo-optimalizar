@@ -57,16 +57,6 @@ class ApiCredentialForm
                                     ->helperText('Enable or disable this API integration'),
                             ]),
 
-                        TextInput::make('current_service_account')
-                            ->label('Current Service Account File')
-                            ->disabled()
-                            ->visible(fn ($get): bool => in_array($get('service'), [
-                                'google_search_console',
-                                'google_analytics_4',
-                            ]))
-                            ->columnSpanFull()
-                            ->helperText('This shows the currently uploaded service account file'),
-
                         FileUpload::make('service_account_file')
                             ->label('Service Account JSON File')
                             ->acceptedFileTypes(['application/json', 'text/json', 'text/plain'])
@@ -77,6 +67,7 @@ class ApiCredentialForm
                                 return ! $record->service_account_file ||
                                        ! Storage::disk('local')->exists('service-accounts/' . $record->service_account_file);
                             })
+                            ->preserveFilenames()
                             ->columnSpanFull()
                             ->visible(fn (Get $get): bool => in_array($get('service'), [
                                 'google_search_console',
