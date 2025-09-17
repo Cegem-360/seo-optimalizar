@@ -7,19 +7,26 @@ use App\Models\PageSpeedAnalysis;
 use App\Models\Project;
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Log;
 
 class PageSpeedService
 {
-    private string $apiKey;
+    private readonly string $apiKey;
 
-    private Client $client;
+    private readonly Client $client;
 
     private string $baseUrl = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
 
-    public function __construct(?string $apiKey = null)
+    public function __construct(?string $apiKey = null, ?Repository $repository = null)
     {
-        $this->apiKey = $apiKey ?? config('services.google.pagespeed_api_key', '');
+        if ($apiKey !== null) {
+            $this->apiKey = $apiKey;
+        } elseif ($repository !== null) {
+            $this->apiKey = $repository->get('services.google.pagespeed_api_key', '');
+        } else {
+            $this->apiKey = config('services.google.pagespeed_api_key', '');
+        }
         $this->client = new Client();
     }
 
@@ -48,10 +55,10 @@ class PageSpeedService
             $data = json_decode($response->getBody()->getContents(), true);
 
             return $this->savePageSpeedAnalysis($data, $url, $strategy, $project, $keyword);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('PageSpeed analysis failed', [
                 'url' => $url,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
 
             return null;
@@ -77,7 +84,7 @@ class PageSpeedService
         // Images analysis
         $imageAnalysis = $this->extractImageAnalysis($audits);
 
-        return PageSpeedAnalysis::create([
+        return PageSpeedAnalysis::query()->create([
             'project_id' => $project?->id,
             'keyword_id' => $keyword?->id,
             'tested_url' => $url,
@@ -170,14 +177,14 @@ class PageSpeedService
             'efficient-animated-content',
         ];
 
-        foreach ($opportunityAudits as $auditKey) {
-            if (isset($audits[$auditKey]) && $audits[$auditKey]['score'] < 0.9) {
+        foreach ($opportunityAudits as $opportunityAudit) {
+            if (isset($audits[$opportunityAudit]) && $audits[$opportunityAudit]['score'] < 0.9) {
                 $opportunities[] = [
-                    'id' => $auditKey,
-                    'title' => $audits[$auditKey]['title'] ?? '',
-                    'description' => $audits[$auditKey]['description'] ?? '',
-                    'savings_ms' => $audits[$auditKey]['numericValue'] ?? 0,
-                    'savings_bytes' => $audits[$auditKey]['wastedBytes'] ?? 0,
+                    'id' => $opportunityAudit,
+                    'title' => $audits[$opportunityAudit]['title'] ?? '',
+                    'description' => $audits[$opportunityAudit]['description'] ?? '',
+                    'savings_ms' => $audits[$opportunityAudit]['numericValue'] ?? 0,
+                    'savings_bytes' => $audits[$opportunityAudit]['wastedBytes'] ?? 0,
                 ];
             }
         }
@@ -198,13 +205,13 @@ class PageSpeedService
             'unsized-images',
         ];
 
-        foreach ($diagnosticAudits as $auditKey) {
-            if (isset($audits[$auditKey]) && $audits[$auditKey]['score'] < 1) {
+        foreach ($diagnosticAudits as $diagnosticAudit) {
+            if (isset($audits[$diagnosticAudit]) && $audits[$diagnosticAudit]['score'] < 1) {
                 $diagnostics[] = [
-                    'id' => $auditKey,
-                    'title' => $audits[$auditKey]['title'] ?? '',
-                    'description' => $audits[$auditKey]['description'] ?? '',
-                    'displayValue' => $audits[$auditKey]['displayValue'] ?? '',
+                    'id' => $diagnosticAudit,
+                    'title' => $audits[$diagnosticAudit]['title'] ?? '',
+                    'description' => $audits[$diagnosticAudit]['description'] ?? '',
+                    'displayValue' => $audits[$diagnosticAudit]['displayValue'] ?? '',
                 ];
             }
         }

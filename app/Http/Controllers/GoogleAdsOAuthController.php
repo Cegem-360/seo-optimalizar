@@ -4,18 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Services\GoogleAdsOAuthService;
 use Exception;
+use Illuminate\Config\Repository;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\View;
 
 class GoogleAdsOAuthController extends Controller
 {
-    private function renderOAuthResult(array $data): \Illuminate\Http\Response
+    public function __construct(private readonly Repository $repository, private readonly ResponseFactory $responseFactory, private readonly Redirector $redirector) {}
+
+    private function renderOAuthResult(array $data): Response
     {
         try {
-            return response()->view('google-ads-oauth-result', $data);
-        } catch (Exception $e) {
+            return $this->responseFactory->view('google-ads-oauth-result', $data);
+        } catch (Exception) {
             // Fallback to basic HTML if view system fails
             $html = '<!DOCTYPE html>
 <html>
@@ -38,6 +42,7 @@ class GoogleAdsOAuthController extends Controller
                 if (isset($data['refreshToken'])) {
                     $html .= '<p><strong>Refresh Token:</strong> ' . htmlspecialchars($data['refreshToken']) . '</p>';
                 }
+
                 $html .= '</div>';
             } else {
                 $html .= '<div class="error">
@@ -51,6 +56,7 @@ class GoogleAdsOAuthController extends Controller
                         <pre>' . htmlspecialchars(substr($data['debug']['trace'] ?? '', 0, 2000)) . '</pre>
                     </div>';
                 }
+
                 $html .= '</div>';
             }
 
@@ -58,7 +64,7 @@ class GoogleAdsOAuthController extends Controller
 </body>
 </html>';
 
-            return response($html, 200, ['Content-Type' => 'text/html']);
+            return $this->responseFactory->make($html, 200, ['Content-Type' => 'text/html']);
         }
     }
 
@@ -69,7 +75,7 @@ class GoogleAdsOAuthController extends Controller
         $clientSecret = $request->get('client_secret') ?? $request->session()->get('google_ads_oauth_client_secret');
 
         if (! $clientId || ! $clientSecret) {
-            return redirect('/admin/api-credentials')->with('error',
+            return $this->redirector->to('/admin/api-credentials')->with('error',
                 'Google Ads client credentials are required to start OAuth process'
             );
         }
@@ -81,13 +87,13 @@ class GoogleAdsOAuthController extends Controller
         ]);
 
         // Generate OAuth URL - prioritize HERD_SHARE_URL if set
-        $shareUrl = Config::get('app.herd_share_url');
+        $shareUrl = $this->repository->get('app.herd_share_url');
         if ($shareUrl) {
             // Use the share URL if configured
             $redirectUri = rtrim((string) $shareUrl, '/') . '/admin/google-ads/oauth/callback';
         } else {
             // Fall back to the regular app URL
-            $baseUrl = Config::get('app.url');
+            $baseUrl = $this->repository->get('app.url');
             $redirectUri = rtrim((string) $baseUrl, '/') . '/admin/google-ads/oauth/callback';
         }
 
@@ -99,10 +105,10 @@ class GoogleAdsOAuthController extends Controller
         }
 
         // Redirect to Google OAuth
-        return redirect($authUrl);
+        return $this->redirector->to($authUrl);
     }
 
-    public function callback(Request $request, GoogleAdsOAuthService $googleAdsOAuthService)
+    public function callback(Request $request, GoogleAdsOAuthService $googleAdsOAuthService): Response
     {
         try {
             // Check for errors
@@ -142,13 +148,13 @@ class GoogleAdsOAuthController extends Controller
             }
 
             // Exchange code for tokens - use same redirect URI logic
-            $shareUrl = Config::get('app.herd_share_url');
+            $shareUrl = $this->repository->get('app.herd_share_url');
             if ($shareUrl) {
                 // Use the share URL if configured
                 $redirectUri = rtrim((string) $shareUrl, '/') . '/admin/google-ads/oauth/callback';
             } else {
                 // Fall back to the regular app URL
-                $baseUrl = Config::get('app.url');
+                $baseUrl = $this->repository->get('app.url');
                 $redirectUri = rtrim((string) $baseUrl, '/') . '/admin/google-ads/oauth/callback';
             }
 
@@ -168,23 +174,23 @@ class GoogleAdsOAuthController extends Controller
                 'refreshToken' => $tokens['refresh_token'],
                 'message' => 'Successfully generated refresh token! You can now close this window and return to the form.',
             ]);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             // Log the full error for debugging
             Log::error('OAuth callback error', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString(),
                 'request_params' => $request->all(),
             ]);
 
             return $this->renderOAuthResult([
                 'success' => false,
-                'error' => 'Application error during OAuth callback: ' . $e->getMessage(),
+                'error' => 'Application error during OAuth callback: ' . $exception->getMessage(),
                 'debug' => [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'trace' => substr($e->getTraceAsString(), 0, 1000), // Limit trace length
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                    'trace' => substr($exception->getTraceAsString(), 0, 1000), // Limit trace length
                 ],
             ]);
         }

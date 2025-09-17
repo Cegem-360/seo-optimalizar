@@ -8,6 +8,7 @@ use App\Filament\Resources\CompetitorAnalyses\Pages\ListCompetitorAnalyses;
 use App\Filament\Resources\CompetitorAnalyses\Schemas\CompetitorAnalysisForm;
 use App\Filament\Resources\CompetitorAnalyses\Tables\CompetitorAnalysesTable;
 use App\Models\CompetitorAnalysis;
+use App\Models\Project;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -38,7 +39,7 @@ class CompetitorAnalysisResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof \App\Models\Project) {
+        if ($tenant instanceof Project) {
             $builder->where('project_id', $tenant->id);
         }
 

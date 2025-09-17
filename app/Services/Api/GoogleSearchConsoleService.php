@@ -47,7 +47,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         if ($method === 'POST') {
             $curlOptions[CURLOPT_POST] = true;
-            if (! empty($data)) {
+            if ($data !== []) {
                 $curlOptions[CURLOPT_POSTFIELDS] = json_encode($data);
             }
         }
@@ -59,7 +59,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $error = curl_error($curl);
         curl_close($curl);
 
-        if ($error) {
+        if ($error !== '' && $error !== '0') {
             throw new Exception('cURL error: ' . $error);
         }
 
@@ -94,7 +94,7 @@ class GoogleSearchConsoleService extends BaseApiService
         Log::debug('Google Search Console - Service account check', [
             'project_id' => $this->project->id,
             'has_service_account' => ! empty($serviceAccountJson),
-            'service_account_email' => isset($serviceAccountJson['client_email']) ? substr($serviceAccountJson['client_email'], 0, 20) . '...' : 'MISSING',
+            'service_account_email' => isset($serviceAccountJson['client_email']) ? substr((string) $serviceAccountJson['client_email'], 0, 20) . '...' : 'MISSING',
         ]);
 
         if (! $serviceAccountJson || empty($serviceAccountJson['private_key']) || empty($serviceAccountJson['client_email'])) {
@@ -123,7 +123,7 @@ class GoogleSearchConsoleService extends BaseApiService
         // Sign with private key
         $private_key = $serviceAccountJson['private_key'];
         openssl_sign($signature_input, $signature, $private_key, OPENSSL_ALGO_SHA256);
-        $signature = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+        $signature = rtrim(strtr(base64_encode((string) $signature), '+/', '-_'), '=');
 
         $jwt = $signature_input . '.' . $signature;
 
@@ -152,7 +152,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $error = curl_error($curl);
         curl_close($curl);
 
-        if ($error) {
+        if ($error !== '' && $error !== '0') {
             Log::error('Google Search Console - cURL error during token refresh', [
                 'project_id' => $this->project->id,
                 'error' => $error,
@@ -185,11 +185,12 @@ class GoogleSearchConsoleService extends BaseApiService
             ]);
             throw new Exception('Invalid JSON response: ' . json_last_error_msg());
         }
+
         $this->accessToken = $data['access_token'];
 
         Log::info('Google Search Console - Service account access token obtained successfully', [
             'project_id' => $this->project->id,
-            'token_length' => strlen($this->accessToken),
+            'token_length' => strlen((string) $this->accessToken),
         ]);
     }
 
@@ -209,10 +210,10 @@ class GoogleSearchConsoleService extends BaseApiService
             ]);
 
             return true;
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             Log::error('Google Search Console - Connection test error', [
                 'project_id' => $this->project->id,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ]);
 
             return false;
@@ -306,15 +307,13 @@ class GoogleSearchConsoleService extends BaseApiService
         Log::debug('Google Search Console - Keyword data response', [
             'project_id' => $this->project->id,
             'response_rows' => count($data['rows'] ?? []),
-            'detailed_results' => array_map(function ($row) {
-                return [
-                    'keyword' => $row['keys'][0] ?? 'UNKNOWN',
-                    'clicks' => $row['clicks'] ?? 0,
-                    'impressions' => $row['impressions'] ?? 0,
-                    'ctr' => $row['ctr'] ?? 0,
-                    'position' => round($row['position'] ?? 0, 2),
-                ];
-            }, array_slice($data['rows'] ?? [], 0, 10)), // First 10 for debugging
+            'detailed_results' => array_map(fn (array $row): array => [
+                'keyword' => $row['keys'][0] ?? 'UNKNOWN',
+                'clicks' => $row['clicks'] ?? 0,
+                'impressions' => $row['impressions'] ?? 0,
+                'ctr' => $row['ctr'] ?? 0,
+                'position' => round($row['position'] ?? 0, 2),
+            ], array_slice($data['rows'] ?? [], 0, 10)), // First 10 for debugging
         ]);
 
         return new Collection($data['rows'] ?? []);

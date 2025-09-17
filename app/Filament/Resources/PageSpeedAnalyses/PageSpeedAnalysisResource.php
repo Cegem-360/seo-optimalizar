@@ -8,6 +8,7 @@ use App\Filament\Resources\PageSpeedAnalyses\Pages\ListPageSpeedAnalyses;
 use App\Filament\Resources\PageSpeedAnalyses\Schemas\PageSpeedAnalysisForm;
 use App\Filament\Resources\PageSpeedAnalyses\Tables\PageSpeedAnalysesTable;
 use App\Models\PageSpeedAnalysis;
+use App\Models\Project;
 use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -38,7 +39,7 @@ class PageSpeedAnalysisResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof \App\Models\Project) {
+        if ($tenant instanceof Project) {
             $builder->where('project_id', $tenant->id);
         }
 

@@ -33,9 +33,7 @@ class GoogleAdsOAuthService
             'state' => $state,
         ];
 
-        $url = self::AUTH_URL . '?' . http_build_query($params);
-
-        return $url;
+        return self::AUTH_URL . '?' . http_build_query($params);
     }
 
     public function exchangeCodeForToken(string $code, string $clientId, string $clientSecret, string $redirectUri): array
@@ -68,7 +66,7 @@ class GoogleAdsOAuthService
         $error = curl_error($curl);
         curl_close($curl);
 
-        if ($error) {
+        if ($error !== '' && $error !== '0') {
             throw new Exception('cURL error: ' . $error);
         }
 

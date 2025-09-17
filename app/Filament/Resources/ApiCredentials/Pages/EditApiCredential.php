@@ -6,14 +6,18 @@ use App\Filament\Resources\ApiCredentials\ApiCredentialResource;
 use App\Models\ApiCredential;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Routing\UrlGenerator;
+use Illuminate\Session\SessionManager;
+use Illuminate\Support\Facades\Log;
 
 class EditApiCredential extends EditRecord
 {
     protected static string $resource = ApiCredentialResource::class;
 
+    public function __construct(private readonly FilesystemManager $filesystemManager, private readonly UrlGenerator $urlGenerator, private readonly SessionManager $sessionManager) {}
 
     protected function getHeaderActions(): array
     {
@@ -23,36 +27,36 @@ class EditApiCredential extends EditRecord
                 ->icon('heroicon-o-key')
                 ->color('success')
                 ->visible(function (): bool {
-                    $record = $this->getRecord();
-                    if (! $record instanceof ApiCredential || $record->service !== 'google_ads') {
+                    $model = $this->getRecord();
+                    if (! $model instanceof ApiCredential || $model->service !== 'google_ads') {
                         return false;
                     }
 
-                    $credentials = $record->credentials ?? [];
+                    $credentials = $model->credentials ?? [];
                     $clientId = $credentials['client_id'] ?? null;
                     $clientSecret = $credentials['client_secret'] ?? null;
 
-                    return !empty($clientId) && !empty($clientSecret);
+                    return ! empty($clientId) && ! empty($clientSecret);
                 })
                 ->disabled(function (): bool {
-                    $record = $this->getRecord();
-                    if (! $record instanceof ApiCredential) {
+                    $model = $this->getRecord();
+                    if (! $model instanceof ApiCredential) {
                         return true;
                     }
 
-                    $credentials = $record->credentials ?? [];
+                    $credentials = $model->credentials ?? [];
                     $clientId = $credentials['client_id'] ?? null;
                     $clientSecret = $credentials['client_secret'] ?? null;
 
                     return empty($clientId) || empty($clientSecret);
                 })
                 ->tooltip(function (): ?string {
-                    $record = $this->getRecord();
-                    if (! $record instanceof ApiCredential) {
+                    $model = $this->getRecord();
+                    if (! $model instanceof ApiCredential) {
                         return null;
                     }
 
-                    $credentials = $record->credentials ?? [];
+                    $credentials = $model->credentials ?? [];
                     $clientId = $credentials['client_id'] ?? null;
                     $clientSecret = $credentials['client_secret'] ?? null;
 
@@ -65,7 +69,7 @@ class EditApiCredential extends EditRecord
                 ->url(function () {
                     $model = $this->getRecord();
                     if (! $model instanceof ApiCredential) {
-                        return null;
+                        return;
                     }
 
                     $credentials = $model->credentials;
@@ -73,10 +77,10 @@ class EditApiCredential extends EditRecord
                     $clientSecret = $credentials['client_secret'] ?? null;
 
                     if (! $clientId || ! $clientSecret) {
-                        return null;
+                        return;
                     }
 
-                    return route('google-ads.oauth.start', [
+                    return $this->urlGenerator->route('google-ads.oauth.start', [
                         'client_id' => $clientId,
                         'client_secret' => $clientSecret,
                     ]);
@@ -107,45 +111,46 @@ class EditApiCredential extends EditRecord
 
         // Check for Google Ads refresh token in session (after OAuth)
         if ($data['service'] === 'google_ads') {
-            $sessionRefreshToken = session()->get('google_ads_refresh_token');
+            $sessionRefreshToken = $this->sessionManager->get('google_ads_refresh_token');
 
-            \Illuminate\Support\Facades\Log::debug('Google Ads OAuth token check in mutateFormDataBeforeFill', [
+            Log::debug('Google Ads OAuth token check in mutateFormDataBeforeFill', [
                 'service' => $data['service'],
-                'session_token' => $sessionRefreshToken ? 'EXISTS (' . substr($sessionRefreshToken, 0, 10) . '...)' : 'NOT_FOUND',
+                'session_token' => $sessionRefreshToken ? 'EXISTS (' . substr((string) $sessionRefreshToken, 0, 10) . '...)' : 'NOT_FOUND',
                 'credentials_before' => isset($data['credentials']) ? array_keys($data['credentials']) : 'NOT_SET',
             ]);
 
             if ($sessionRefreshToken) {
                 // Update credentials with the new refresh token
-                if (!isset($data['credentials'])) {
+                if (! isset($data['credentials'])) {
                     $data['credentials'] = [];
                 }
+
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
 
-                \Illuminate\Support\Facades\Log::info('Google Ads refresh token added to credentials', [
-                    'token_length' => strlen($sessionRefreshToken),
+                Log::info('Google Ads refresh token added to credentials', [
+                    'token_length' => strlen((string) $sessionRefreshToken),
                     'credentials_keys' => array_keys($data['credentials']),
                 ]);
 
                 // Automatically save the refresh token to database
                 $record = $this->getRecord();
-                if ($record instanceof \App\Models\ApiCredential) {
+                if ($record instanceof ApiCredential) {
                     $currentCredentials = $record->credentials ?? [];
                     $currentCredentials['refresh_token'] = $sessionRefreshToken;
 
                     $record->update(['credentials' => $currentCredentials]);
 
-                    \Illuminate\Support\Facades\Log::info('Google Ads refresh token automatically saved to database', [
+                    Log::info('Google Ads refresh token automatically saved to database', [
                         'record_id' => $record->id,
                         'credentials_keys' => array_keys($currentCredentials),
                     ]);
                 }
 
                 // Clear the session token to prevent reuse
-                session()->forget('google_ads_refresh_token');
+                $this->sessionManager->forget('google_ads_refresh_token');
 
                 // Show success notification
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title('Google Ads OAuth Successful')
                     ->body('Refresh token has been automatically added and saved to your credentials.')
                     ->success()
@@ -161,7 +166,7 @@ class EditApiCredential extends EditRecord
     {
         // Handle service account file upload
         if (isset($data['service_account_json_upload']) && $data['service_account_json_upload']) {
-            $tempPath = Storage::disk('local')->path($data['service_account_json_upload']);
+            $tempPath = $this->filesystemManager->disk('local')->path($data['service_account_json_upload']);
 
             if (file_exists($tempPath)) {
                 $content = file_get_contents($tempPath);
@@ -189,7 +194,7 @@ class EditApiCredential extends EditRecord
                     $data['service_account_file'] = $filename;
 
                     // Clean up temp file
-                    Storage::disk('local')->delete($data['service_account_json_upload']);
+                    $this->filesystemManager->disk('local')->delete($data['service_account_json_upload']);
                 }
             }
 
@@ -210,20 +215,20 @@ class EditApiCredential extends EditRecord
 
         // Handle Google Ads refresh token from session (backup check during save)
         if ($data['service'] === 'google_ads') {
-            $sessionRefreshToken = session()->get('google_ads_refresh_token');
+            $sessionRefreshToken = $this->sessionManager->get('google_ads_refresh_token');
 
-            \Illuminate\Support\Facades\Log::debug('Google Ads OAuth token check in mutateFormDataBeforeSave', [
+            Log::debug('Google Ads OAuth token check in mutateFormDataBeforeSave', [
                 'service' => $data['service'],
-                'session_token' => $sessionRefreshToken ? 'EXISTS (' . substr($sessionRefreshToken, 0, 10) . '...)' : 'NOT_FOUND',
+                'session_token' => $sessionRefreshToken ? 'EXISTS (' . substr((string) $sessionRefreshToken, 0, 10) . '...)' : 'NOT_FOUND',
                 'credentials_before' => isset($data['credentials']) ? array_keys($data['credentials']) : 'NOT_SET',
             ]);
 
             if ($sessionRefreshToken) {
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
-                session()->forget('google_ads_refresh_token');
+                $this->sessionManager->forget('google_ads_refresh_token');
 
-                \Illuminate\Support\Facades\Log::info('Google Ads refresh token added during save', [
-                    'token_length' => strlen($sessionRefreshToken),
+                Log::info('Google Ads refresh token added during save', [
+                    'token_length' => strlen((string) $sessionRefreshToken),
                     'credentials_keys' => array_keys($data['credentials']),
                 ]);
             }

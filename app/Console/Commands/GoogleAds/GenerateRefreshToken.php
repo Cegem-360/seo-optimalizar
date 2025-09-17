@@ -181,6 +181,7 @@ class GenerateRefreshToken extends Command
 
             return self::SUCCESS;
         }
+
         $this->error('No refresh token in response!');
         $this->error('Response: ' . $response);
 

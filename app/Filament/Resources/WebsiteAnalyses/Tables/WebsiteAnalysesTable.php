@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Tables;
 
+use Illuminate\Foundation\Application;
 use App\Models\Project;
+use App\Services\WebsiteAnalysisService;
+use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -138,7 +141,7 @@ class WebsiteAnalysesTable
                     ->label('Új elemzés')
                     ->icon('heroicon-o-magnifying-glass')
                     ->color('success')
-                    ->visible(fn ($record) => $record->status !== 'processing')
+                    ->visible(fn ($record): bool => $record->status !== 'processing')
                     ->schema([
                         Select::make('analysis_type')
                             ->label('Elemzés típusa')
@@ -167,8 +170,8 @@ class WebsiteAnalysesTable
                             ->default('demo')
                             ->required(),
                     ])
-                    ->action(function ($data, $record) {
-                        $service = app(\App\Services\WebsiteAnalysisService::class);
+                    ->action(function (array $data, $record): void {
+                        $websiteAnalysisService = (new Application())->make(WebsiteAnalysisService::class);
 
                         try {
                             $project = Filament::getTenant();
@@ -176,7 +179,8 @@ class WebsiteAnalysesTable
                             if (! $project instanceof Project) {
                                 return;
                             }
-                            $analysis = $service->createAnalysis([
+
+                            $analysis = $websiteAnalysisService->createAnalysis([
                                 'project_id' => $project->id,
                                 'url' => $data['url'],
                                 'analysis_type' => $data['analysis_type'],
@@ -186,8 +190,8 @@ class WebsiteAnalysesTable
 
                             // Demo válasz feldolgozása
                             if ($data['ai_provider'] === 'demo') {
-                                $demoResponse = $service->getDemoResponse($data['analysis_type']);
-                                $service->processAiResponse($analysis, $demoResponse);
+                                $demoResponse = $websiteAnalysisService->getDemoResponse($data['analysis_type']);
+                                $websiteAnalysisService->processAiResponse($analysis, $demoResponse);
                             }
 
                             Notification::make()
@@ -195,10 +199,10 @@ class WebsiteAnalysesTable
                                 ->body('A weboldal elemzés sikeresen elindult.')
                                 ->success()
                                 ->send();
-                        } catch (\Exception $e) {
+                        } catch (Exception $exception) {
                             Notification::make()
                                 ->title('Hiba')
-                                ->body('Az elemzés indítása sikertelen: ' . $e->getMessage())
+                                ->body('Az elemzés indítása sikertelen: ' . $exception->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -237,8 +241,8 @@ class WebsiteAnalysesTable
                             ->default('demo')
                             ->required(),
                     ])
-                    ->action(function ($data) {
-                        $service = app(\App\Services\WebsiteAnalysisService::class);
+                    ->action(function (array $data): void {
+                        $websiteAnalysisService = (new Application())->make(WebsiteAnalysisService::class);
 
                         try {
                             $project = Filament::getTenant();
@@ -246,7 +250,8 @@ class WebsiteAnalysesTable
                             if (! $project instanceof Project) {
                                 return;
                             }
-                            $analysis = $service->createAnalysis([
+
+                            $analysis = $websiteAnalysisService->createAnalysis([
                                 'project_id' => $project->id,
                                 'url' => $data['url'],
                                 'analysis_type' => $data['analysis_type'],
@@ -256,8 +261,8 @@ class WebsiteAnalysesTable
 
                             // Demo válasz feldolgozása
                             if ($data['ai_provider'] === 'demo') {
-                                $demoResponse = $service->getDemoResponse($data['analysis_type']);
-                                $service->processAiResponse($analysis, $demoResponse);
+                                $demoResponse = $websiteAnalysisService->getDemoResponse($data['analysis_type']);
+                                $websiteAnalysisService->processAiResponse($analysis, $demoResponse);
                             }
 
                             Notification::make()
@@ -265,10 +270,10 @@ class WebsiteAnalysesTable
                                 ->body('A weboldal elemzés sikeresen elkészült.')
                                 ->success()
                                 ->send();
-                        } catch (\Exception $e) {
+                        } catch (Exception $exception) {
                             Notification::make()
                                 ->title('Hiba')
-                                ->body('Az elemzés indítása sikertelen: ' . $e->getMessage())
+                                ->body('Az elemzés indítása sikertelen: ' . $exception->getMessage())
                                 ->danger()
                                 ->send();
                         }

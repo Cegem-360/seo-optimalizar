@@ -69,9 +69,9 @@ namespace App\Models{
  * @property int $id
  * @property int $project_id
  * @property string $service
- * @property string|null $service_account_file
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $last_used_at
+ * @property string|null $service_account_file
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read mixed $service_account_json
@@ -118,6 +118,98 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Competitor whereUrl($value)
  */
 	class Competitor extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $keyword_id
+ * @property int $project_id
+ * @property string $competitor_domain
+ * @property string|null $competitor_url
+ * @property int $position
+ * @property int|null $domain_authority
+ * @property int|null $page_authority
+ * @property int|null $backlinks_count
+ * @property int|null $content_length
+ * @property int|null $keyword_density
+ * @property bool $has_schema_markup
+ * @property bool $has_featured_snippet
+ * @property float|null $page_speed_score
+ * @property bool $is_mobile_friendly
+ * @property bool $has_ssl
+ * @property string|null $title_tag
+ * @property string|null $meta_description
+ * @property array<array-key, mixed>|null $headers_structure
+ * @property \Illuminate\Support\Carbon|null $analyzed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property bool $ai_discovered
+ * @property string|null $competitor_type
+ * @property float $strength_score
+ * @property string|null $relevance_reason
+ * @property array<array-key, mixed>|null $main_advantages
+ * @property string|null $estimated_traffic
+ * @property string|null $content_focus
+ * @property array<array-key, mixed>|null $competitor_strengths
+ * @property array<array-key, mixed>|null $competitor_weaknesses
+ * @property array<array-key, mixed>|null $project_strengths
+ * @property array<array-key, mixed>|null $project_weaknesses
+ * @property array<array-key, mixed>|null $opportunities
+ * @property array<array-key, mixed>|null $threats
+ * @property array<array-key, mixed>|null $action_items
+ * @property int|null $competitive_advantage_score
+ * @property string|null $ai_analysis_summary
+ * @property-read array $action_items_by_priority
+ * @property-read string $competitor_type_color
+ * @property-read bool $is_strong_competitor
+ * @property-read string $position_badge_color
+ * @property-read string $traffic_color
+ * @property-read \App\Models\Keyword $keyword
+ * @property-read \App\Models\Project $project
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereActionItems($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereAiAnalysisSummary($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereAiDiscovered($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereAnalyzedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereBacklinksCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCompetitiveAdvantageScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCompetitorDomain($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCompetitorStrengths($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCompetitorType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCompetitorUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCompetitorWeaknesses($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereContentFocus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereContentLength($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereDomainAuthority($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereEstimatedTraffic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereHasFeaturedSnippet($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereHasSchemaMarkup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereHasSsl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereHeadersStructure($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereIsMobileFriendly($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereKeywordDensity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereKeywordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereMainAdvantages($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereMetaDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereOpportunities($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis wherePageAuthority($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis wherePageSpeedScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis wherePosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereProjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereProjectStrengths($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereProjectWeaknesses($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereRelevanceReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereStrengthScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereThreats($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereTitleTag($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis whereUpdatedAt($value)
+ */
+	class CompetitorAnalysis extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -170,17 +262,23 @@ namespace App\Models{
  * @property int|null $difficulty_score
  * @property string|null $intent_type
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $competition_index
  * @property numeric|null $low_top_of_page_bid
  * @property numeric|null $high_top_of_page_bid
  * @property array<array-key, mixed>|null $monthly_search_volumes
  * @property \Illuminate\Support\Carbon|null $historical_metrics_updated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CompetitorAnalysis> $competitorAnalyses
+ * @property-read int|null $competitor_analyses_count
  * @property-read \App\Models\Ranking|null $latestRanking
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PageSpeedAnalysis> $pageSpeedAnalyses
+ * @property-read int|null $page_speed_analyses_count
  * @property-read \App\Models\Project $project
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Ranking> $rankings
  * @property-read int|null $rankings_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SeoAnalysis> $seoAnalyses
+ * @property-read int|null $seo_analyses_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Keyword byCategory(string $category)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Keyword byIntentType(string $intentType)
  * @method static \Database\Factories\KeywordFactory factory($count = null, $state = [])
@@ -251,6 +349,86 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationPreference whereUserId($value)
  */
 	class NotificationPreference extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property int|null $keyword_id
+ * @property string $tested_url
+ * @property string $device_type
+ * @property float|null $lcp
+ * @property float|null $fid
+ * @property float|null $cls
+ * @property float|null $fcp
+ * @property float|null $inp
+ * @property float|null $ttfb
+ * @property int|null $performance_score
+ * @property int|null $accessibility_score
+ * @property int|null $best_practices_score
+ * @property int|null $seo_score
+ * @property int|null $total_page_size
+ * @property int|null $total_requests
+ * @property float|null $load_time
+ * @property array<array-key, mixed>|null $resource_breakdown
+ * @property array<array-key, mixed>|null $third_party_resources
+ * @property array<array-key, mixed>|null $opportunities
+ * @property array<array-key, mixed>|null $diagnostics
+ * @property int|null $images_count
+ * @property int|null $unoptimized_images
+ * @property int|null $images_without_alt
+ * @property int|null $render_blocking_resources
+ * @property int|null $unused_css_bytes
+ * @property int|null $unused_js_bytes
+ * @property string $analysis_source
+ * @property \Illuminate\Support\Carbon $analyzed_at
+ * @property array<array-key, mixed>|null $raw_response
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $core_web_vitals_status
+ * @property-read string $formatted_page_size
+ * @property-read string $performance_color
+ * @property-read \App\Models\Keyword|null $keyword
+ * @property-read \App\Models\Project $project
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereAccessibilityScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereAnalysisSource($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereAnalyzedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereBestPracticesScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereCls($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereDeviceType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereDiagnostics($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereFcp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereFid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereImagesCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereImagesWithoutAlt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereInp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereKeywordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereLcp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereLoadTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereOpportunities($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis wherePerformanceScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereProjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereRawResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereRenderBlockingResources($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereResourceBreakdown($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereSeoScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTestedUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereThirdPartyResources($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTotalPageSize($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTotalRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTtfb($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUnoptimizedImages($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUnusedCssBytes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUnusedJsBytes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUpdatedAt($value)
+ */
+	class PageSpeedAnalysis extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -437,14 +615,73 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
+ * @property int $keyword_id
+ * @property int $project_id
+ * @property string|null $competition_level
+ * @property string|null $search_intent
+ * @property array<array-key, mixed>|null $dominant_content_types
+ * @property array<array-key, mixed>|null $opportunities
+ * @property array<array-key, mixed>|null $challenges
+ * @property array<array-key, mixed>|null $optimization_tips
+ * @property string|null $summary
+ * @property string|null $position_rating
+ * @property int|null $current_position
+ * @property int|null $target_position
+ * @property string|null $estimated_timeframe
+ * @property array<array-key, mixed>|null $main_competitors
+ * @property array<array-key, mixed>|null $competitor_advantages
+ * @property array<array-key, mixed>|null $improvement_areas
+ * @property array<array-key, mixed>|null $quick_wins
+ * @property string|null $detailed_analysis
+ * @property array<array-key, mixed>|null $raw_response
+ * @property string $analysis_source
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $competition_level_color
+ * @property-read string $position_rating_color
+ * @property-read \App\Models\Keyword $keyword
+ * @property-read \App\Models\Project $project
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereAnalysisSource($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereChallenges($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereCompetitionLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereCompetitorAdvantages($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereCurrentPosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereDetailedAnalysis($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereDominantContentTypes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereEstimatedTimeframe($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereImprovementAreas($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereKeywordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereMainCompetitors($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereOpportunities($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereOptimizationTips($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis wherePositionRating($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereProjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereQuickWins($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereRawResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereSearchIntent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereSummary($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereTargetPosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereUpdatedAt($value)
+ */
+	class SeoAnalysis extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
  * @property string $name
  * @property string $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
+ * @property int|null $latest_project_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property int|null $latest_project_id
  * @property-read \App\Models\Project|null $latestProject
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\NotificationPreference> $notificationPreferences
  * @property-read int|null $notification_preferences_count

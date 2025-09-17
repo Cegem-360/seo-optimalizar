@@ -6,15 +6,14 @@ use App\Enums\NavigationGroups;
 use App\Filament\Resources\WebsiteAnalyses\Pages\CreateWebsiteAnalysis;
 use App\Filament\Resources\WebsiteAnalyses\Pages\EditWebsiteAnalysis;
 use App\Filament\Resources\WebsiteAnalyses\Pages\ListWebsiteAnalyses;
+use App\Filament\Resources\WebsiteAnalyses\RelationManagers\SectionsRelationManager;
 use App\Filament\Resources\WebsiteAnalyses\Schemas\WebsiteAnalysisForm;
 use App\Filament\Resources\WebsiteAnalyses\Tables\WebsiteAnalysesTable;
 use App\Models\Project;
 use App\Models\WebsiteAnalysis;
-use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -58,7 +57,7 @@ class WebsiteAnalysisResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\SectionsRelationManager::class,
+            SectionsRelationManager::class,
         ];
     }
 

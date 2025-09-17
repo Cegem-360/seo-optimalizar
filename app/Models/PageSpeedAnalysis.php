@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -62,70 +63,72 @@ class PageSpeedAnalysis extends Model
         return $this->belongsTo(Keyword::class);
     }
 
-    public function getPerformanceColorAttribute(): string
+    protected function performanceColor(): Attribute
     {
-        return match (true) {
+        return Attribute::make(get: fn (): string => match (true) {
             $this->performance_score >= 90 => 'success',
             $this->performance_score >= 50 => 'warning',
             default => 'danger',
-        };
+        });
     }
 
-    public function getCoreWebVitalsStatusAttribute(): string
+    protected function coreWebVitalsStatus(): Attribute
     {
-        $passing = 0;
-        $metrics = 0;
-
-        // LCP: Good < 2.5s, Needs Improvement < 4s
-        if ($this->lcp !== null) {
-            $metrics++;
-            if ($this->lcp <= 2.5) {
-                $passing++;
+        return Attribute::make(get: function (): string {
+            $passing = 0;
+            $metrics = 0;
+            // LCP: Good < 2.5s, Needs Improvement < 4s
+            if ($this->lcp !== null) {
+                $metrics++;
+                if ($this->lcp <= 2.5) {
+                    $passing++;
+                }
             }
-        }
 
-        // FID: Good < 100ms, Needs Improvement < 300ms
-        if ($this->fid !== null) {
-            $metrics++;
-            if ($this->fid <= 100) {
-                $passing++;
+            // FID: Good < 100ms, Needs Improvement < 300ms
+            if ($this->fid !== null) {
+                $metrics++;
+                if ($this->fid <= 100) {
+                    $passing++;
+                }
             }
-        }
 
-        // CLS: Good < 0.1, Needs Improvement < 0.25
-        if ($this->cls !== null) {
-            $metrics++;
-            if ($this->cls <= 0.1) {
-                $passing++;
+            // CLS: Good < 0.1, Needs Improvement < 0.25
+            if ($this->cls !== null) {
+                $metrics++;
+                if ($this->cls <= 0.1) {
+                    $passing++;
+                }
             }
-        }
 
-        if ($metrics === 0) {
-            return 'no-data';
-        }
+            if ($metrics === 0) {
+                return 'no-data';
+            }
 
-        return match (true) {
-            $passing === $metrics => 'passing',
-            $passing > 0 => 'partial',
-            default => 'failing',
-        };
+            return match (true) {
+                $passing === $metrics => 'passing',
+                $passing > 0 => 'partial',
+                default => 'failing',
+            };
+        });
     }
 
-    public function getFormattedPageSizeAttribute(): string
+    protected function formattedPageSize(): Attribute
     {
-        if (! $this->total_page_size) {
-            return 'N/A';
-        }
+        return Attribute::make(get: function (): string {
+            if (! $this->total_page_size) {
+                return 'N/A';
+            }
 
-        $bytes = $this->total_page_size;
-        $units = ['B', 'KB', 'MB', 'GB'];
-        $unitIndex = 0;
+            $bytes = $this->total_page_size;
+            $units = ['B', 'KB', 'MB', 'GB'];
+            $unitIndex = 0;
+            while ($bytes >= 1024 && $unitIndex < count($units) - 1) {
+                $bytes /= 1024;
+                $unitIndex++;
+            }
 
-        while ($bytes >= 1024 && $unitIndex < count($units) - 1) {
-            $bytes /= 1024;
-            $unitIndex++;
-        }
-
-        return round($bytes, 2) . ' ' . $units[$unitIndex];
+            return round($bytes, 2) . ' ' . $units[$unitIndex];
+        });
     }
 }

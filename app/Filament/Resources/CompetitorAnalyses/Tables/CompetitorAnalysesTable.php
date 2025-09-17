@@ -55,7 +55,7 @@ class CompetitorAnalysesTable
                     ->label('Backlink-ek')
                     ->numeric()
                     ->sortable()
-                    ->formatStateUsing(fn (?int $state): string => $state ? number_format($state) : 'N/A'),
+                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? number_format($state) : 'N/A'),
                 TextColumn::make('page_speed_score')
                     ->label('Sebesség')
                     ->numeric()
@@ -72,7 +72,7 @@ class CompetitorAnalysesTable
                     ->label('Tartalom hossz')
                     ->numeric()
                     ->sortable()
-                    ->formatStateUsing(fn (?int $state): string => $state ? number_format($state) . ' karakter' : 'N/A')
+                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? number_format($state) . ' karakter' : 'N/A')
                     ->toggleable(),
                 TextColumn::make('has_ssl')
                     ->label('SSL')

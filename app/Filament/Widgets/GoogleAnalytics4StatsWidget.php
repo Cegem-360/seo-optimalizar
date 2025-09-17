@@ -125,8 +125,8 @@ class GoogleAnalytics4StatsWidget extends BaseStatsOverviewWidget
 
         if ($change < 0) {
             return sprintf('-%s%%', $formatted);
-        } else {
-            return '0%';
         }
+
+        return '0%';
     }
 }

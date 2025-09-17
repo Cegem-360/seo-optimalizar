@@ -185,15 +185,16 @@ class WebsiteAnalysisService
         if ($score === null) {
             return 'neutral';
         }
+
         if ($score >= 80) {
             return 'good';
         }
 
         if ($score >= 50) {
             return 'warning';
-        } else {
-            return 'error';
         }
+
+        return 'error';
     }
 
     public function getAnalysisPrompt(string $analysisType, string $url): string

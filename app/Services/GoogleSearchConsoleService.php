@@ -282,10 +282,10 @@ class GoogleSearchConsoleService
                 return;
             }
 
-            /** @var \App\Models\Keyword $keyword */
+            /** @var Keyword $keyword */
             $keyword = $ranking->keyword;
 
-            /** @var \App\Models\Project|null $project */
+            /** @var Project|null $project */
             $project = $keyword->project;
 
             if (! $project) {

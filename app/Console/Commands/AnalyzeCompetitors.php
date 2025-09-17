@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Keyword;
 use App\Services\Api\CompetitorAnalysisService;
+use Exception;
 use Illuminate\Console\Command;
 
 class AnalyzeCompetitors extends Command
@@ -25,12 +26,9 @@ class AnalyzeCompetitors extends Command
      */
     protected $description = 'Analyze competitors for keywords and store results';
 
-    private CompetitorAnalysisService $competitorService;
-
-    public function __construct(CompetitorAnalysisService $competitorService)
+    public function __construct(private readonly CompetitorAnalysisService $competitorAnalysisService)
     {
         parent::__construct();
-        $this->competitorService = $competitorService;
     }
 
     /**
@@ -49,7 +47,7 @@ class AnalyzeCompetitors extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Found {$keywords->count()} keywords to analyze.");
+        $this->info(sprintf('Found %s keywords to analyze.', $keywords->count()));
 
         $progressBar = $this->output->createProgressBar($keywords->count());
         $progressBar->start();
@@ -58,15 +56,15 @@ class AnalyzeCompetitors extends Command
 
         foreach ($keywords as $keyword) {
             $this->newLine();
-            $this->info("Analyzing competitors for keyword: {$keyword->keyword}");
+            $this->info('Analyzing competitors for keyword: ' . $keyword->keyword);
 
             try {
-                $competitors = $this->competitorService->analyzeTopCompetitors($keyword, $limit);
+                $competitors = $this->competitorAnalysisService->analyzeTopCompetitors($keyword, $limit);
 
                 $this->info('  ✓ Analyzed ' . count($competitors) . ' competitors');
                 $totalAnalyzed += count($competitors);
-            } catch (\Exception $e) {
-                $this->error("  ✗ Failed to analyze keyword {$keyword->keyword}: {$e->getMessage()}");
+            } catch (Exception $e) {
+                $this->error(sprintf('  ✗ Failed to analyze keyword %s: %s', $keyword->keyword, $e->getMessage()));
             }
 
             $progressBar->advance();
@@ -74,7 +72,7 @@ class AnalyzeCompetitors extends Command
 
         $progressBar->finish();
         $this->newLine(2);
-        $this->info("Competitor analysis completed! Total competitors analyzed: {$totalAnalyzed}");
+        $this->info('Competitor analysis completed! Total competitors analyzed: ' . $totalAnalyzed);
 
         return self::SUCCESS;
     }
@@ -92,7 +90,7 @@ class AnalyzeCompetitors extends Command
         }
 
         // Only analyze keywords that haven't been analyzed recently
-        $query->whereDoesntHave('competitorAnalyses', function ($q) {
+        $query->whereDoesntHave('competitorAnalyses', function ($q): void {
             $q->where('analyzed_at', '>', now()->subDays(7));
         });
 

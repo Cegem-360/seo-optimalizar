@@ -100,7 +100,7 @@ class GeminiApiService extends BaseApiService
                     $parsedAnalysis = $this->parseAnalysisResponse($analysis);
 
                     // Ha van Keyword model, mentsük el az elemzést
-                    if ($keywordModel && $parsedAnalysis) {
+                    if ($keywordModel instanceof Keyword && $parsedAnalysis) {
                         $this->saveSeoAnalysis($keywordModel, $parsedAnalysis, null);
                     }
 
@@ -175,7 +175,7 @@ class GeminiApiService extends BaseApiService
                     $parsedAnalysis = $this->parsePositionAnalysisResponse($analysis);
 
                     // Mentsük el az elemzést adatbázisba
-                    if ($parsedAnalysis) {
+                    if ($parsedAnalysis !== []) {
                         $this->saveSeoAnalysis($keyword, $parsedAnalysis, $currentPosition);
                     }
 
@@ -334,7 +334,7 @@ class GeminiApiService extends BaseApiService
 
     private function saveSeoAnalysis(Keyword $keyword, array $analysis, $currentPosition): void
     {
-        SeoAnalysis::create([
+        SeoAnalysis::query()->create([
             'keyword_id' => $keyword->id,
             'project_id' => $keyword->project_id,
             'competition_level' => $analysis['competition_level'] ?? null,

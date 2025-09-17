@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -55,25 +56,25 @@ class SeoAnalysis extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function getCompetitionLevelColorAttribute(): string
+    protected function competitionLevelColor(): Attribute
     {
-        return match ($this->competition_level) {
+        return Attribute::make(get: fn (): string => match ($this->competition_level) {
             'low' => 'success',
             'medium' => 'warning',
             'high' => 'danger',
             default => 'gray',
-        };
+        });
     }
 
-    public function getPositionRatingColorAttribute(): string
+    protected function positionRatingColor(): Attribute
     {
-        return match ($this->position_rating) {
+        return Attribute::make(get: fn (): string => match ($this->position_rating) {
             'kiváló' => 'success',
             'jó' => 'info',
             'közepes' => 'warning',
             'gyenge' => 'warning',
             'kritikus' => 'danger',
             default => 'gray',
-        };
+        });
     }
 }

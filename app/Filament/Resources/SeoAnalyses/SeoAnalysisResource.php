@@ -7,6 +7,7 @@ use App\Filament\Resources\SeoAnalyses\Pages\EditSeoAnalysis;
 use App\Filament\Resources\SeoAnalyses\Pages\ListSeoAnalyses;
 use App\Filament\Resources\SeoAnalyses\Schemas\SeoAnalysisForm;
 use App\Filament\Resources\SeoAnalyses\Tables\SeoAnalysesTable;
+use App\Models\Project;
 use App\Models\SeoAnalysis;
 use BackedEnum;
 use Filament\Facades\Filament;
@@ -38,7 +39,7 @@ class SeoAnalysisResource extends Resource
         $builder = parent::getEloquentQuery();
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof \App\Models\Project) {
+        if ($tenant instanceof Project) {
             $builder->where('project_id', $tenant->id);
         }
 
