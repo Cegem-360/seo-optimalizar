@@ -5,16 +5,14 @@ namespace App\Services;
 use App\Models\AnalysisSection;
 use App\Models\WebsiteAnalysis;
 use Exception;
-use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class WebsiteAnalysisService
 {
-    public function __construct(private readonly DatabaseManager $databaseManager) {}
-
     public function createAnalysis(array $data): WebsiteAnalysis
     {
-        return $this->databaseManager->transaction(fn () => WebsiteAnalysis::query()->create([
+        return DB::transaction(fn () => WebsiteAnalysis::query()->create([
             'project_id' => $data['project_id'],
             'url' => $data['url'],
             'analysis_type' => $data['analysis_type'],
@@ -28,7 +26,7 @@ class WebsiteAnalysisService
     public function processAiResponse(WebsiteAnalysis $websiteAnalysis, string $aiResponse): WebsiteAnalysis
     {
         try {
-            $this->databaseManager->beginTransaction();
+            DB::beginTransaction();
 
             // Mentjük a nyers választ
             $websiteAnalysis->update([
@@ -55,11 +53,11 @@ class WebsiteAnalysisService
                 ]);
             }
 
-            $this->databaseManager->commit();
+            DB::commit();
 
             return $websiteAnalysis->fresh(['sections']);
         } catch (Exception $exception) {
-            $this->databaseManager->rollBack();
+            DB::rollBack();
 
             $websiteAnalysis->update([
                 'status' => 'failed',
