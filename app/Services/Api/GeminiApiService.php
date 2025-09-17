@@ -4,6 +4,7 @@ namespace App\Services\Api;
 
 use App\Models\Keyword;
 use App\Models\Ranking;
+use App\Models\SeoAnalysis;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
@@ -52,7 +53,7 @@ class GeminiApiService extends BaseApiService
         }
     }
 
-    public function analyzeSerpResults(string $keyword, array $serpResults): ?array
+    public function analyzeSerpResults(string $keyword, array $serpResults, ?Keyword $keywordModel = null): ?array
     {
         try {
             $apiKey = $this->getCredential('api_key');
@@ -96,8 +97,14 @@ class GeminiApiService extends BaseApiService
 
                 if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                     $analysis = $data['candidates'][0]['content']['parts'][0]['text'];
+                    $parsedAnalysis = $this->parseAnalysisResponse($analysis);
 
-                    return $this->parseAnalysisResponse($analysis);
+                    // Ha van Keyword model, mentsük el az elemzést
+                    if ($keywordModel && $parsedAnalysis) {
+                        $this->saveSeoAnalysis($keywordModel, $parsedAnalysis, null);
+                    }
+
+                    return $parsedAnalysis;
                 }
             }
 
@@ -115,7 +122,7 @@ class GeminiApiService extends BaseApiService
             return null;
         }
 
-        return $this->analyzeSerpResults($keyword->keyword, $serpResults);
+        return $this->analyzeSerpResults($keyword->keyword, $serpResults, $keyword);
     }
 
     public function analyzeKeywordWithPosition(Keyword $keyword, $latestRanking = null): ?array
@@ -165,8 +172,14 @@ class GeminiApiService extends BaseApiService
 
                 if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                     $analysis = $data['candidates'][0]['content']['parts'][0]['text'];
+                    $parsedAnalysis = $this->parsePositionAnalysisResponse($analysis);
 
-                    return $this->parsePositionAnalysisResponse($analysis);
+                    // Mentsük el az elemzést adatbázisba
+                    if ($parsedAnalysis) {
+                        $this->saveSeoAnalysis($keyword, $parsedAnalysis, $currentPosition);
+                    }
+
+                    return $parsedAnalysis;
                 }
             }
 
@@ -317,6 +330,32 @@ class GeminiApiService extends BaseApiService
         }
 
         return $competitors;
+    }
+
+    private function saveSeoAnalysis(Keyword $keyword, array $analysis, $currentPosition): void
+    {
+        SeoAnalysis::create([
+            'keyword_id' => $keyword->id,
+            'project_id' => $keyword->project_id,
+            'competition_level' => $analysis['competition_level'] ?? null,
+            'search_intent' => $analysis['search_intent'] ?? null,
+            'dominant_content_types' => $analysis['dominant_content_types'] ?? [],
+            'opportunities' => $analysis['opportunities'] ?? [],
+            'challenges' => $analysis['challenges'] ?? [],
+            'optimization_tips' => $analysis['optimization_tips'] ?? [],
+            'summary' => $analysis['summary'] ?? null,
+            'position_rating' => $analysis['position_rating'] ?? null,
+            'current_position' => is_numeric($currentPosition) ? $currentPosition : null,
+            'target_position' => $analysis['target_position'] ?? null,
+            'estimated_timeframe' => $analysis['estimated_timeframe'] ?? null,
+            'main_competitors' => $analysis['main_competitors'] ?? [],
+            'competitor_advantages' => $analysis['competitor_advantages'] ?? [],
+            'improvement_areas' => $analysis['improvement_areas'] ?? [],
+            'quick_wins' => $analysis['quick_wins'] ?? [],
+            'detailed_analysis' => $analysis['detailed_analysis'] ?? null,
+            'raw_response' => $analysis,
+            'analysis_source' => 'gemini',
+        ]);
     }
 
     private function buildPositionAnalysisPrompt(string $keyword, $position, string $url, array $competitors): string

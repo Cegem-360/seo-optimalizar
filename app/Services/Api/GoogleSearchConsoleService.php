@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSearchConsoleService extends BaseApiService
@@ -48,7 +47,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         if ($method === 'POST') {
             $curlOptions[CURLOPT_POST] = true;
-            if (!empty($data)) {
+            if (! empty($data)) {
                 $curlOptions[CURLOPT_POSTFIELDS] = json_encode($data);
             }
         }
@@ -70,7 +69,7 @@ class GoogleSearchConsoleService extends BaseApiService
                 'method' => $method,
                 'url' => $url,
                 'status' => $httpCode,
-                'body' => $response_body
+                'body' => $response_body,
             ]);
             throw new Exception('API request failed. HTTP ' . $httpCode . ': ' . $response_body);
         }
@@ -87,18 +86,18 @@ class GoogleSearchConsoleService extends BaseApiService
     {
         Log::info('Google Search Console - Getting service account access token', [
             'project_id' => $this->project->id,
-            'service' => $this->serviceName
+            'service' => $this->serviceName,
         ]);
 
         $serviceAccountJson = $this->getCredential('service_account_json');
 
         Log::debug('Google Search Console - Service account check', [
             'project_id' => $this->project->id,
-            'has_service_account' => !empty($serviceAccountJson),
-            'service_account_email' => $serviceAccountJson['client_email'] ?? 'MISSING'
+            'has_service_account' => ! empty($serviceAccountJson),
+            'service_account_email' => isset($serviceAccountJson['client_email']) ? substr($serviceAccountJson['client_email'], 0, 20) . '...' : 'MISSING',
         ]);
 
-        if (!$serviceAccountJson || empty($serviceAccountJson['private_key']) || empty($serviceAccountJson['client_email'])) {
+        if (! $serviceAccountJson || empty($serviceAccountJson['private_key']) || empty($serviceAccountJson['client_email'])) {
             throw new Exception('Missing Google Search Console service account credentials');
         }
 
@@ -108,7 +107,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $header = rtrim(strtr(base64_encode(json_encode([
             'alg' => 'RS256',
-            'typ' => 'JWT'
+            'typ' => 'JWT',
         ])), '+/', '-_'), '=');
 
         $payload = rtrim(strtr(base64_encode(json_encode([
@@ -116,7 +115,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'scope' => 'https://www.googleapis.com/auth/webmasters.readonly',
             'aud' => 'https://oauth2.googleapis.com/token',
             'exp' => $expiry,
-            'iat' => $now
+            'iat' => $now,
         ])), '+/', '-_'), '=');
 
         $signature_input = $header . '.' . $payload;
@@ -156,7 +155,7 @@ class GoogleSearchConsoleService extends BaseApiService
         if ($error) {
             Log::error('Google Search Console - cURL error during token refresh', [
                 'project_id' => $this->project->id,
-                'error' => $error
+                'error' => $error,
             ]);
             throw new Exception('cURL error: ' . $error);
         }
@@ -164,14 +163,14 @@ class GoogleSearchConsoleService extends BaseApiService
         Log::debug('Google Search Console - Token refresh response', [
             'project_id' => $this->project->id,
             'status' => $httpCode,
-            'successful' => $httpCode === 200
+            'successful' => $httpCode === 200,
         ]);
 
         if ($httpCode !== 200) {
             Log::error('Google Search Console - Failed to refresh access token', [
                 'project_id' => $this->project->id,
                 'status' => $httpCode,
-                'body' => $response_body
+                'body' => $response_body,
             ]);
             throw new Exception('Failed to refresh Google Search Console access token. HTTP ' . $httpCode . ': ' . $response_body);
         }
@@ -182,7 +181,7 @@ class GoogleSearchConsoleService extends BaseApiService
             Log::error('Google Search Console - Invalid JSON response', [
                 'project_id' => $this->project->id,
                 'json_error' => json_last_error_msg(),
-                'response_body' => $response_body
+                'response_body' => $response_body,
             ]);
             throw new Exception('Invalid JSON response: ' . json_last_error_msg());
         }
@@ -191,7 +190,6 @@ class GoogleSearchConsoleService extends BaseApiService
         Log::info('Google Search Console - Service account access token obtained successfully', [
             'project_id' => $this->project->id,
             'token_length' => strlen($this->accessToken),
-            'service_account_email' => $serviceAccountJson['client_email']
         ]);
     }
 
@@ -199,7 +197,7 @@ class GoogleSearchConsoleService extends BaseApiService
     {
         Log::info('Google Search Console - Testing connection', [
             'project_id' => $this->project->id,
-            'service' => $this->serviceName
+            'service' => $this->serviceName,
         ]);
 
         try {
@@ -207,15 +205,16 @@ class GoogleSearchConsoleService extends BaseApiService
 
             Log::info('Google Search Console - Connection test successful', [
                 'project_id' => $this->project->id,
-                'sites_count' => count($data['siteEntry'] ?? [])
+                'sites_count' => count($data['siteEntry'] ?? []),
             ]);
-            return true;
 
+            return true;
         } catch (Exception $e) {
             Log::error('Google Search Console - Connection test error', [
                 'project_id' => $this->project->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -223,6 +222,7 @@ class GoogleSearchConsoleService extends BaseApiService
     public function getSites(): Collection
     {
         $data = $this->makeApiRequest('GET', $this->baseUrl . '/sites');
+
         return new Collection($data['siteEntry'] ?? []);
     }
 
@@ -232,6 +232,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $endDate ??= now()->subDays(1);
 
         $siteUrl = $this->project->url;
+        $propertyUrl = $this->getCredential('property_url') ?? $siteUrl;
 
         $payload = [
             'startDate' => $startDate->format('Y-m-d'),
@@ -241,7 +242,22 @@ class GoogleSearchConsoleService extends BaseApiService
             'startRow' => 0,
         ];
 
-        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
+        Log::info('Google Search Console - Fetching search analytics', [
+            'project_id' => $this->project->id,
+            'site_url' => $propertyUrl,
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+            'dimensions' => $dimensions,
+            'row_limit' => $rowLimit,
+        ]);
+
+        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
+
+        Log::debug('Google Search Console - Search analytics response', [
+            'project_id' => $this->project->id,
+            'total_rows' => count($data['rows'] ?? []),
+            'sample_data' => array_slice($data['rows'] ?? [], 0, 5), // First 5 rows for debugging
+        ]);
 
         return new Collection($data['rows'] ?? []);
     }
@@ -256,7 +272,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $startDate ??= now()->subDays(7);
         $endDate ??= now()->subDays(1);
-        $siteUrl = $this->project->url;
+        $propertyUrl = $this->getCredential('property_url') ?? $this->project->url;
 
         $payload = [
             'startDate' => $startDate->format('Y-m-d'),
@@ -276,7 +292,30 @@ class GoogleSearchConsoleService extends BaseApiService
             'rowLimit' => 1000,
         ];
 
-        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($siteUrl) . '/searchAnalytics/query', $payload);
+        Log::info('Google Search Console - Fetching keyword data', [
+            'project_id' => $this->project->id,
+            'property_url' => $propertyUrl,
+            'keyword_count' => count($keywordStrings),
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+            'sample_keywords' => array_slice($keywordStrings, 0, 5),
+        ]);
+
+        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
+
+        Log::debug('Google Search Console - Keyword data response', [
+            'project_id' => $this->project->id,
+            'response_rows' => count($data['rows'] ?? []),
+            'detailed_results' => array_map(function ($row) {
+                return [
+                    'keyword' => $row['keys'][0] ?? 'UNKNOWN',
+                    'clicks' => $row['clicks'] ?? 0,
+                    'impressions' => $row['impressions'] ?? 0,
+                    'ctr' => $row['ctr'] ?? 0,
+                    'position' => round($row['position'] ?? 0, 2),
+                ];
+            }, array_slice($data['rows'] ?? [], 0, 10)), // First 10 for debugging
+        ]);
 
         return new Collection($data['rows'] ?? []);
     }
@@ -284,7 +323,7 @@ class GoogleSearchConsoleService extends BaseApiService
     public function syncKeywordRankings(): int
     {
         Log::info('Google Search Console - Starting keyword ranking sync', [
-            'project_id' => $this->project->id
+            'project_id' => $this->project->id,
         ]);
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, Keyword> $keywords */
@@ -293,14 +332,14 @@ class GoogleSearchConsoleService extends BaseApiService
 
         Log::info('Google Search Console - Found keywords to sync', [
             'project_id' => $this->project->id,
-            'keyword_count' => $keywords->count()
+            'keyword_count' => $keywords->count(),
         ]);
 
         foreach ($keywords->chunk(50) as $chunkIndex => $keywordChunk) {
             Log::debug('Google Search Console - Processing keyword chunk', [
                 'project_id' => $this->project->id,
                 'chunk' => $chunkIndex + 1,
-                'chunk_size' => $keywordChunk->count()
+                'chunk_size' => $keywordChunk->count(),
             ]);
 
             try {
@@ -309,7 +348,7 @@ class GoogleSearchConsoleService extends BaseApiService
                 Log::debug('Google Search Console - Retrieved analytics data', [
                     'project_id' => $this->project->id,
                     'chunk' => $chunkIndex + 1,
-                    'analytics_count' => $searchAnalytics->count()
+                    'analytics_count' => $searchAnalytics->count(),
                 ]);
 
                 foreach ($keywordChunk as $keyword) {
@@ -324,7 +363,7 @@ class GoogleSearchConsoleService extends BaseApiService
                             'keyword' => $keyword->keyword,
                             'position' => $analytics['position'] ?? null,
                             'clicks' => $analytics['clicks'] ?? 0,
-                            'impressions' => $analytics['impressions'] ?? 0
+                            'impressions' => $analytics['impressions'] ?? 0,
                         ]);
                     }
                 }
@@ -332,7 +371,7 @@ class GoogleSearchConsoleService extends BaseApiService
                 Log::error('Google Search Console - Error processing keyword chunk', [
                     'project_id' => $this->project->id,
                     'chunk' => $chunkIndex + 1,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
 
@@ -343,7 +382,7 @@ class GoogleSearchConsoleService extends BaseApiService
         Log::info('Google Search Console - Keyword ranking sync completed', [
             'project_id' => $this->project->id,
             'synced_count' => $synced,
-            'total_keywords' => $keywords->count()
+            'total_keywords' => $keywords->count(),
         ]);
 
         return $synced;
