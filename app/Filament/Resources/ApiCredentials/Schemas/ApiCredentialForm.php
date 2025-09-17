@@ -16,7 +16,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 
 class ApiCredentialForm
@@ -64,7 +64,7 @@ class ApiCredentialForm
                             ->directory('service-accounts')
                             ->helperText('Upload the service account JSON file from Google Cloud Console')
                             ->required(fn (ApiCredential $apiCredential): bool => ! $apiCredential->service_account_file ||
-                                   ! (new FilesystemManager())->disk('local')->exists('service-accounts/' . $apiCredential->service_account_file))
+                                   ! Storage::disk('local')->exists('service-accounts/' . $apiCredential->service_account_file))
                             ->preserveFilenames()
                             ->columnSpanFull()
                             ->visible(fn (Get $get): bool => in_array($get('service'), [

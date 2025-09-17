@@ -146,7 +146,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property bool $ai_discovered
  * @property string|null $competitor_type
- * @property float $strength_score
+ * @property int|float $strength_score
  * @property string|null $relevance_reason
  * @property array<array-key, mixed>|null $main_advantages
  * @property string|null $estimated_traffic
@@ -160,13 +160,13 @@ namespace App\Models{
  * @property array<array-key, mixed>|null $action_items
  * @property int|null $competitive_advantage_score
  * @property string|null $ai_analysis_summary
- * @property-read array $action_items_by_priority
+ * @property-read mixed $action_items_by_priority
  * @property-read string $competitor_type_color
  * @property-read bool $is_strong_competitor
- * @property-read string $position_badge_color
- * @property-read string $traffic_color
  * @property-read \App\Models\Keyword $keyword
+ * @property-read string $position_badge_color
  * @property-read \App\Models\Project $project
+ * @property-read string $traffic_color
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CompetitorAnalysis query()
@@ -388,8 +388,8 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $core_web_vitals_status
  * @property-read string $formatted_page_size
- * @property-read string $performance_color
  * @property-read \App\Models\Keyword|null $keyword
+ * @property-read string $performance_color
  * @property-read \App\Models\Project $project
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis newQuery()
@@ -638,8 +638,8 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $competition_level_color
- * @property-read string $position_rating_color
  * @property-read \App\Models\Keyword $keyword
+ * @property-read string $position_rating_color
  * @property-read \App\Models\Project $project
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis newQuery()

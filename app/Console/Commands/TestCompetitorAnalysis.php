@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Keyword;
+use App\Models\Project;
 use App\Services\Api\CompetitorAnalysisService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -47,12 +48,14 @@ class TestCompetitorAnalysis extends Command
         }
 
         /** @var Keyword $keyword */
+        /** @var Project $project */
+        $project = $keyword->project;
         $this->info(sprintf('Using keyword: %s (ID: %s)', $keyword->keyword, $keyword->id));
-        $this->info('Project: ' . $keyword->project->name);
+        $this->info('Project: ' . $project->name);
         $this->newLine();
 
         // CompetitorAnalysisService inicializálása
-        $competitorAnalysisService = new CompetitorAnalysisService($keyword->project);
+        $competitorAnalysisService = new CompetitorAnalysisService($project);
 
         // Versenytársak felfedezése és elemzése
         $this->info('Discovering competitors with AI...');

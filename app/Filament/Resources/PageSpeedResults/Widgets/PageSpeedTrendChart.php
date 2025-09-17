@@ -26,7 +26,8 @@ class PageSpeedTrendChart extends ChartWidget
         }
 
         /** @var Collection<int, PageSpeedResult> $results */
-        $results = PageSpeedResult::forProject($project->id)
+        $results = PageSpeedResult::query()
+            ->forProject($project->id)
             ->strategy($this->filter)
             ->recent(30)
             ->orderBy('analyzed_at')

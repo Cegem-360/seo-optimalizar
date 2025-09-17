@@ -22,11 +22,12 @@ class PageSpeedService
     {
         if ($apiKey !== null) {
             $this->apiKey = $apiKey;
-        } elseif ($repository !== null) {
+        } elseif ($repository instanceof Repository) {
             $this->apiKey = $repository->get('services.google.pagespeed_api_key', '');
         } else {
             $this->apiKey = config('services.google.pagespeed_api_key', '');
         }
+
         $this->client = new Client();
     }
 

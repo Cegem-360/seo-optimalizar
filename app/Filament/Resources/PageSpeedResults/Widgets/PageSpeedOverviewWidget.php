@@ -20,23 +20,28 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
         }
 
         /** @var PageSpeedResult|null $latestResult */
-        $latestResult = PageSpeedResult::forProject($project->id)
+        $latestResult = PageSpeedResult::query()
+            ->forProject($project->id)
             ->latest('analyzed_at')
             ->first();
 
-        $avgPerformance = PageSpeedResult::forProject($project->id)
+        $avgPerformance = PageSpeedResult::query()
+            ->forProject($project->id)
             ->recent(30)
             ->avg('performance_score');
 
-        $avgSeo = PageSpeedResult::forProject($project->id)
+        $avgSeo = PageSpeedResult::query()
+            ->forProject($project->id)
             ->recent(30)
             ->avg('seo_score');
 
-        $avgAccessibility = PageSpeedResult::forProject($project->id)
+        $avgAccessibility = PageSpeedResult::query()
+            ->forProject($project->id)
             ->recent(30)
             ->avg('accessibility_score');
 
-        $totalScans = PageSpeedResult::forProject($project->id)
+        $totalScans = PageSpeedResult::query()
+            ->forProject($project->id)
             ->count();
 
         return [
@@ -46,7 +51,7 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
                 ->icon($this->getScoreIcon($latestResult?->performance_score)),
 
             Stat::make('Average Performance (30 days)', $avgPerformance ? round($avgPerformance) . '/100' : 'No data')
-                ->description('Based on ' . PageSpeedResult::forProject($project->id)->recent(30)->count() . ' scans')
+                ->description('Based on ' . PageSpeedResult::query()->forProject($project->id)->recent(30)->count() . ' scans')
                 ->color($this->getScoreColor($avgPerformance))
                 ->chart($this->getPerformanceTrend()),
 
@@ -110,7 +115,8 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
             return [];
         }
 
-        $results = PageSpeedResult::forProject($project->id)
+        $results = PageSpeedResult::query()
+            ->forProject($project->id)
             ->recent(7)
             ->orderBy('analyzed_at')
             ->pluck('performance_score')

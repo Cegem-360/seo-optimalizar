@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Tables;
 
-use Illuminate\Foundation\Application;
 use App\Models\Project;
 use App\Services\WebsiteAnalysisService;
 use Exception;
@@ -17,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Foundation\Application;
 
 class WebsiteAnalysesTable
 {

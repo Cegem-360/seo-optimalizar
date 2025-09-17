@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Ranking;
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
@@ -21,10 +22,11 @@ class CompetitorAnalysisService
 
     private ?GeminiApiService $geminiApiService = null;
 
-    public function __construct(?Project $project = null)
+    public function __construct(?Project $project = null, ?Repository $repository = null)
     {
         $this->client = new Client();
-        $this->pageSpeedService = new PageSpeedService(config('services.google.pagespeed_api_key'));
+        $apiKey = $repository?->get('services.google.pagespeed_api_key') ?? config('services.google.pagespeed_api_key');
+        $this->pageSpeedService = new PageSpeedService($apiKey, $repository);
         if ($project instanceof Project) {
             $this->geminiApiService = new GeminiApiService($project);
         }
@@ -314,6 +316,7 @@ class CompetitorAnalysisService
         if (in_array($domain, $mediumAuthDomains)) {
             return random_int(60, 79);
         }
+
         return random_int(20, 59);
     }
 
@@ -390,7 +393,7 @@ class CompetitorAnalysisService
 
     private function getGeminiApiKey(): ?string
     {
-        if (!$this->geminiApiService instanceof GeminiApiService) {
+        if (! $this->geminiApiService instanceof GeminiApiService) {
             return null;
         }
 
