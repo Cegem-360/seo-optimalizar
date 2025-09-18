@@ -54,28 +54,7 @@ class SectionsRelationManager extends RelationManager
                         default => $state,
                     }),
 
-                TextColumn::make('summary')
-                    ->label('Összefoglaló')
-                    ->limit(100)
-                    ->tooltip(fn ($record) => $record->summary),
-
-                TextColumn::make('findings')
-                    ->label('Megállapítások')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state) . ' elem' : 'Nincs')
-                    ->badge()
-                    ->color('info'),
-
-                TextColumn::make('recommendations')
-                    ->label('Javaslatok')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state) . ' elem' : 'Nincs')
-                    ->badge()
-                    ->color('success'),
-
-                TextColumn::make('priority')
-                    ->label('Prioritás')
-                    ->numeric()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+              
             ])
             ->defaultSort('priority')
             ->filters([
