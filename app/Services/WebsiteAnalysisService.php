@@ -123,8 +123,31 @@ class WebsiteAnalysisService
 
         // Szakaszok mentése
         if (isset($data['sections']) && is_array($data['sections'])) {
+            $priority = 0;
             foreach ($data['sections'] as $index => $section) {
-                $this->createSection($websiteAnalysis, $section, $index);
+                // Csak akkor dolgozzuk fel, ha a section tömb
+                if (! is_array($section)) {
+                    continue;
+                }
+
+                // Ha a section egy asszociatív tömb a szekció nevekkel kulcsként
+                if (! isset($section['type']) && ! isset($section['name'])) {
+                    foreach ($section as $sectionKey => $sectionContent) {
+                        if (is_array($sectionContent)) {
+                            $this->createSection($websiteAnalysis, [
+                                'type' => $sectionKey,
+                                'name' => $this->getSectionNameFromKey($sectionKey),
+                                'score' => $sectionContent['score'] ?? null,
+                                'findings' => $sectionContent['findings'] ?? [],
+                                'recommendations' => $sectionContent['recommendations'] ?? [],
+                                'data' => $sectionContent,
+                            ], $priority++);
+                        }
+                    }
+                } else {
+                    // Hagyományos formátum támogatása
+                    $this->createSection($websiteAnalysis, $section, $index);
+                }
             }
         }
 
@@ -199,6 +222,36 @@ class WebsiteAnalysisService
         return 'error';
     }
 
+    protected function getSectionNameFromKey(string $key): string
+    {
+        $sectionNames = [
+            'quality' => 'Minőség',
+            'structure' => 'Struktúra',
+            'keywords' => 'Kulcsszavak',
+            'readability' => 'Olvashatóság',
+            'seo' => 'SEO elemzés',
+            'performance' => 'Teljesítmény',
+            'accessibility' => 'Hozzáférhetőség',
+            'usability' => 'Használhatóság',
+            'content' => 'Tartalom',
+            'technical' => 'Technikai',
+            'meta' => 'Meta adatok',
+            'images' => 'Képek',
+            'links' => 'Linkek',
+            'mobile' => 'Mobil',
+            'navigation' => 'Navigáció',
+            'layout' => 'Elrendezés',
+            'forms' => 'Űrlapok',
+            'cta' => 'Cselekvésre ösztönzők',
+            'security' => 'Biztonság',
+            'title' => 'Címek',
+            'meta_description' => 'Meta leírás',
+            'headings' => 'Fejlécek',
+        ];
+
+        return $sectionNames[$key] ?? ucfirst(str_replace('_', ' ', $key));
+    }
+
     /**
      * Run AI analysis using the specified provider
      */
@@ -246,16 +299,18 @@ class WebsiteAnalysisService
 
     public function getAnalysisPrompt(string $analysisType, string $url): string
     {
+        $basePrompt = 'FONTOS: A válaszod CSAK tiszta JSON legyen, semmi más szöveg vagy magyarázat! ';
+
         $prompts = [
-            'seo' => sprintf('Elemezd a következő weboldalt SEO szempontból: %s. Adj strukturált választ JSON formátumban, amely tartalmazza: overall_score (0-100), sections tömböt különböző SEO aspektusokkal (title, meta, headings, content, images, links), mindegyik szakaszhoz score, findings, recommendations mezőkkel.', $url),
+            'seo' => $basePrompt . sprintf('Elemezd a következő weboldalt SEO szempontból: %s. A válasz pontosan ebben a JSON formátumban legyen: {"overall_score": szám 0-100 között, "sections": [{"title": {"score": szám, "findings": ["megállapítás1", "megállapítás2"], "recommendations": ["javaslat1", "javaslat2"]}}, {"meta": {"score": szám, "findings": [...], "recommendations": [...]}}, {"headings": {...}}, {"content": {...}}, {"images": {...}}, {"links": {...}}]}', $url),
 
-            'ux' => sprintf('Elemezd a következő weboldalt UX szempontból: %s. Adj strukturált választ JSON formátumban, amely tartalmazza: overall_score (0-100), sections tömböt (navigation, layout, readability, forms, cta), mindegyik szakaszhoz score, findings, recommendations mezőkkel.', $url),
+            'ux' => $basePrompt . sprintf('Elemezd a következő weboldalt UX szempontból: %s. A válasz pontosan ebben a JSON formátumban legyen: {"overall_score": szám 0-100 között, "sections": [{"navigation": {"score": szám, "findings": ["megállapítás1", "megállapítás2"], "recommendations": ["javaslat1", "javaslat2"]}}, {"layout": {"score": szám, "findings": [...], "recommendations": [...]}}, {"readability": {...}}, {"forms": {...}}, {"cta": {...}}]}', $url),
 
-            'content' => sprintf('Elemezd a következő weboldal tartalmát: %s. Adj strukturált választ JSON formátumban, amely tartalmazza: overall_score (0-100), sections tömböt (quality, structure, keywords, readability), mindegyik szakaszhoz score, findings, recommendations mezőkkel.', $url),
+            'content' => $basePrompt . sprintf('Elemezd a következő weboldal tartalmát: %s. A válasz pontosan ebben a JSON formátumban legyen: {"overall_score": szám 0-100 között, "sections": [{"quality": {"score": szám, "findings": ["megállapítás1", "megállapítás2"], "recommendations": ["javaslat1", "javaslat2"]}}, {"structure": {"score": szám, "findings": [...], "recommendations": [...]}}, {"keywords": {...}}, {"readability": {...}}]}', $url),
 
-            'technical' => sprintf('Végezz technikai elemzést a következő weboldalon: %s. Adj strukturált választ JSON formátumban, amely tartalmazza: overall_score (0-100), sections tömböt (performance, security, mobile, accessibility), mindegyik szakaszhoz score, findings, recommendations mezőkkel.', $url),
+            'technical' => $basePrompt . sprintf('Végezz technikai elemzést a következő weboldalon: %s. A válasz pontosan ebben a JSON formátumban legyen: {"overall_score": szám 0-100 között, "sections": [{"performance": {"score": szám, "findings": ["megállapítás1", "megállapítás2"], "recommendations": ["javaslat1", "javaslat2"]}}, {"security": {"score": szám, "findings": [...], "recommendations": [...]}}, {"mobile": {...}}, {"accessibility": {...}}]}', $url),
 
-            'competitor' => sprintf('Végezz versenytárs elemzést a következő weboldalon: %s. Adj strukturált választ JSON formátumban, amely tartalmazza: overall_score (0-100), sections tömböt (strengths, weaknesses, opportunities, threats), mindegyik szakaszhoz findings, recommendations mezőkkel.', $url),
+            'competitor' => $basePrompt . sprintf('Végezz versenytárs elemzést a következő weboldalon: %s. A válasz pontosan ebben a JSON formátumban legyen: {"overall_score": szám 0-100 között, "sections": [{"strengths": {"score": szám, "findings": ["erősség1", "erősség2"], "recommendations": ["javaslat1", "javaslat2"]}}, {"weaknesses": {"score": szám, "findings": [...], "recommendations": [...]}}, {"opportunities": {...}}, {"threats": {...}}]}', $url),
         ];
 
         return $prompts[$analysisType] ?? $prompts['seo'];
