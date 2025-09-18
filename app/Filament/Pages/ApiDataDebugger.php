@@ -23,7 +23,7 @@ class ApiDataDebugger extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bug-ant';
 
-    protected static string $view = 'filament.pages.api-data-debugger';
+    protected string $view = 'filament.pages.api-data-debugger';
 
     protected static ?string $navigationLabel = 'API Data Debugger';
 
@@ -60,19 +60,21 @@ class ApiDataDebugger extends Page
                 ->label('Fetch Search Console Data')
                 ->icon('heroicon-o-magnifying-glass')
                 ->color('primary')
+                ->fillForm([
+                    'startDate' => Carbon::now()->subDays(7),
+                    'endDate' => Carbon::now(),
+                    'limit' => 50,
+                ])
                 ->form([
                     DatePicker::make('startDate')
                         ->label('Start Date')
-                        ->default(Carbon::now()->subDays(7))
                         ->required(),
                     DatePicker::make('endDate')
                         ->label('End Date')
-                        ->default(Carbon::now())
                         ->required(),
                     TextInput::make('limit')
                         ->label('Row Limit')
                         ->numeric()
-                        ->default(50)
                         ->required(),
                 ])
                 ->action(function (array $data): void {
@@ -83,14 +85,16 @@ class ApiDataDebugger extends Page
                 ->label('Fetch Analytics Data')
                 ->icon('heroicon-o-chart-bar')
                 ->color('success')
+                ->fillForm([
+                    'startDate' => Carbon::now()->subDays(7),
+                    'endDate' => Carbon::now(),
+                ])
                 ->form([
                     DatePicker::make('startDate')
                         ->label('Start Date')
-                        ->default(Carbon::now()->subDays(7))
                         ->required(),
                     DatePicker::make('endDate')
                         ->label('End Date')
-                        ->default(Carbon::now())
                         ->required(),
                 ])
                 ->action(function (array $data): void {
@@ -101,14 +105,16 @@ class ApiDataDebugger extends Page
                 ->label('Fetch Google Ads Data')
                 ->icon('heroicon-o-currency-dollar')
                 ->color('warning')
+                ->fillForm([
+                    'startDate' => Carbon::now()->subDays(7),
+                    'endDate' => Carbon::now(),
+                ])
                 ->form([
                     DatePicker::make('startDate')
                         ->label('Start Date')
-                        ->default(Carbon::now()->subDays(7))
                         ->required(),
                     DatePicker::make('endDate')
                         ->label('End Date')
-                        ->default(Carbon::now())
                         ->required(),
                 ])
                 ->action(function (array $data): void {
