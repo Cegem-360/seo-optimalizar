@@ -168,8 +168,102 @@
         {{-- Analytics Data --}}
         @if ($selectedService === 'analytics' && $analyticsData)
             <div class="space-y-6">
+                {{-- Metadata --}}
                 <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Analytics Data</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Analytics Metadata</h3>
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                        @foreach ($analyticsData['metadata'] as $key => $value)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    {{ ucwords(str_replace('_', ' ', $key)) }}</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-200">
+                                    @if(is_array($value))
+                                        {{ json_encode($value) }}
+                                    @else
+                                        {{ $value }}
+                                    @endif
+                                </dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </div>
+
+                {{-- Totals --}}
+                @if(!empty($analyticsData['totals']))
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Analytics Totals</h3>
+                        @foreach ($analyticsData['totals'] as $index => $total)
+                            <div class="mb-4">
+                                <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Total Set {{ $index + 1 }}</h4>
+                                <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-4">
+                                    @foreach ($total as $metric => $value)
+                                        <div>
+                                            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ ucwords(str_replace('_', ' ', $metric)) }}</dt>
+                                            <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-200">{{ $value }}</dd>
+                                        </div>
+                                    @endforeach
+                                </dl>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                {{-- Raw Data Table --}}
+                @if(!empty($analyticsData['rows']))
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Analytics Raw Data ({{ count($analyticsData['rows']) }} rows)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Source</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Medium</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Device</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sessions</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Users</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Page Views</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Bounce Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach ($analyticsData['rows'] as $row)
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ $row['dimensions']['date'] ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ Str::limit($row['dimensions']['sessionSource'] ?? 'N/A', 20) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ $row['dimensions']['sessionMedium'] ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ $row['dimensions']['deviceCategory'] ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-200">
+                                                {{ $row['metrics']['sessions'] ?? 0 }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ $row['metrics']['totalUsers'] ?? 0 }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ $row['metrics']['screenPageViews'] ?? 0 }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                                {{ isset($row['metrics']['bounceRate']) ? round($row['metrics']['bounceRate'] * 100, 2) . '%' : 'N/A' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Raw JSON Data --}}
+                <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Raw JSON Data</h3>
                     <pre class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto text-xs text-gray-800 dark:text-gray-200"><code>{{ json_encode($analyticsData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</code></pre>
                 </div>
             </div>
