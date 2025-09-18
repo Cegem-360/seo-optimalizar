@@ -3,8 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\Project;
-use App\Services\Api\ApiServiceManager;
 use App\Services\GoogleSearchConsoleService;
+use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -12,22 +12,16 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Support\Icons\Heroicon;
-use Google\Analytics\Data\V1beta\BetaAnalyticsDataClient;
-use Google\Analytics\Data\V1beta\DateRange;
-use Google\Analytics\Data\V1beta\Dimension;
-use Google\Analytics\Data\V1beta\Metric;
-use Google\Analytics\Data\V1beta\RunReportRequest;
-use Google\ApiCore\ApiException;
 use Google\Client as GoogleClient;
 use Google\Service\SearchConsole;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use UnitEnum;
 
 class ApiDataDebugger extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-bug-ant';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bug-ant';
 
     protected static string $view = 'filament.pages.api-data-debugger';
 
@@ -35,16 +29,22 @@ class ApiDataDebugger extends Page
 
     protected static ?string $title = 'API Raw Data Viewer';
 
-    protected static ?string $navigationGroup = 'System Tools';
+    protected static string|UnitEnum|null $navigationGroup = 'System Tools';
 
     protected static ?int $navigationSort = 99;
 
     public ?array $searchConsoleData = null;
+
     public ?array $analyticsData = null;
+
     public ?array $googleAdsData = null;
+
     public ?string $selectedService = 'search_console';
+
     public ?string $dateFrom = null;
+
     public ?string $dateTo = null;
+
     public ?string $errorMessage = null;
 
     public function mount(): void
@@ -75,7 +75,7 @@ class ApiDataDebugger extends Page
                         ->default(50)
                         ->required(),
                 ])
-                ->action(function (array $data) {
+                ->action(function (array $data): void {
                     $this->fetchSearchConsoleData($data);
                 }),
 
@@ -93,7 +93,7 @@ class ApiDataDebugger extends Page
                         ->default(Carbon::now())
                         ->required(),
                 ])
-                ->action(function (array $data) {
+                ->action(function (array $data): void {
                     $this->fetchAnalyticsData($data);
                 }),
 
@@ -111,7 +111,7 @@ class ApiDataDebugger extends Page
                         ->default(Carbon::now())
                         ->required(),
                 ])
-                ->action(function (array $data) {
+                ->action(function (array $data): void {
                     $this->fetchGoogleAdsData($data);
                 }),
         ];
@@ -123,13 +123,13 @@ class ApiDataDebugger extends Page
             $this->errorMessage = null;
             $project = Filament::getTenant();
 
-            if (!$project instanceof Project) {
+            if (! $project instanceof Project) {
                 throw new Exception('No project selected');
             }
 
             $searchConsoleService = app(GoogleSearchConsoleService::class);
 
-            if (!$searchConsoleService->hasCredentials()) {
+            if (! $searchConsoleService->hasCredentials()) {
                 throw new Exception('Google Search Console credentials not configured');
             }
 
@@ -153,14 +153,14 @@ class ApiDataDebugger extends Page
 
             $searchConsole = new SearchConsole($googleClient);
 
-            $request = new SearchAnalyticsQueryRequest();
-            $request->setStartDate(Carbon::parse($data['startDate'])->format('Y-m-d'));
-            $request->setEndDate(Carbon::parse($data['endDate'])->format('Y-m-d'));
-            $request->setDimensions(['query', 'page', 'country', 'device']);
-            $request->setRowLimit($data['limit'] ?? 50);
-            $request->setDataState('all'); // Include fresh data
+            $searchAnalyticsQueryRequest = new SearchAnalyticsQueryRequest();
+            $searchAnalyticsQueryRequest->setStartDate(Carbon::parse($data['startDate'])->format('Y-m-d'));
+            $searchAnalyticsQueryRequest->setEndDate(Carbon::parse($data['endDate'])->format('Y-m-d'));
+            $searchAnalyticsQueryRequest->setDimensions(['query', 'page', 'country', 'device']);
+            $searchAnalyticsQueryRequest->setRowLimit($data['limit'] ?? 50);
+            $searchAnalyticsQueryRequest->setDataState('all'); // Include fresh data
 
-            $response = $searchConsole->searchanalytics->query($project->url, $request);
+            $response = $searchConsole->searchanalytics->query($project->url, $searchAnalyticsQueryRequest);
 
             $this->searchConsoleData = [
                 'metadata' => [
@@ -176,7 +176,7 @@ class ApiDataDebugger extends Page
                     'average_ctr' => 0,
                     'average_position' => 0,
                 ],
-                'rows' => []
+                'rows' => [],
             ];
 
             if ($response->getRows()) {
@@ -222,14 +222,13 @@ class ApiDataDebugger extends Page
                 ->title('Search Console data fetched successfully')
                 ->success()
                 ->send();
-
-        } catch (Exception $e) {
-            $this->errorMessage = 'Search Console Error: ' . $e->getMessage();
-            Log::error('Search Console Debug Error: ' . $e->getMessage());
+        } catch (Exception $exception) {
+            $this->errorMessage = 'Search Console Error: ' . $exception->getMessage();
+            Log::error('Search Console Debug Error: ' . $exception->getMessage());
 
             Notification::make()
                 ->title('Failed to fetch Search Console data')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }
@@ -241,7 +240,7 @@ class ApiDataDebugger extends Page
             $this->errorMessage = null;
             $project = Filament::getTenant();
 
-            if (!$project instanceof Project) {
+            if (! $project instanceof Project) {
                 throw new Exception('No project selected');
             }
 
@@ -262,14 +261,13 @@ class ApiDataDebugger extends Page
                 ->title('Analytics data placeholder loaded')
                 ->success()
                 ->send();
-
-        } catch (Exception $e) {
-            $this->errorMessage = 'Analytics Error: ' . $e->getMessage();
-            Log::error('Analytics Debug Error: ' . $e->getMessage());
+        } catch (Exception $exception) {
+            $this->errorMessage = 'Analytics Error: ' . $exception->getMessage();
+            Log::error('Analytics Debug Error: ' . $exception->getMessage());
 
             Notification::make()
                 ->title('Failed to fetch Analytics data')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }
@@ -281,7 +279,7 @@ class ApiDataDebugger extends Page
             $this->errorMessage = null;
             $project = Filament::getTenant();
 
-            if (!$project instanceof Project) {
+            if (! $project instanceof Project) {
                 throw new Exception('No project selected');
             }
 
@@ -302,14 +300,13 @@ class ApiDataDebugger extends Page
                 ->title('Google Ads data status checked')
                 ->success()
                 ->send();
-
-        } catch (Exception $e) {
-            $this->errorMessage = 'Google Ads Error: ' . $e->getMessage();
-            Log::error('Google Ads Debug Error: ' . $e->getMessage());
+        } catch (Exception $exception) {
+            $this->errorMessage = 'Google Ads Error: ' . $exception->getMessage();
+            Log::error('Google Ads Debug Error: ' . $exception->getMessage());
 
             Notification::make()
                 ->title('Failed to fetch Google Ads data')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }

@@ -7,7 +7,6 @@ use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use Exception;
 use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
@@ -44,7 +43,7 @@ class ListPageSpeedResults extends ListRecords
                         ->required()
                         ->helperText('Choose whether to analyze the mobile or desktop version of your site'),
                 ])
-                ->action(function (array $data) {
+                ->action(function (array $data): void {
                     $project = Filament::getTenant();
 
                     if ($project instanceof Project) {
