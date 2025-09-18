@@ -53,7 +53,6 @@ class SectionsRelationManager extends RelationManager
                         'error' => 'Hiba',
                         default => $state,
                     }),
-
               
             ])
             ->defaultSort('priority')
