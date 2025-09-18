@@ -30,7 +30,6 @@
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
-        "phpstan/phpstan": "^2.1",
         "rector/rector": "^2.1"
     },
     "autoload": {
@@ -82,16 +81,9 @@
         "rector:check": [
             "./vendor/bin/rector process --dry-run"
         ],
-        "phpstan": [
-            "./vendor/bin/phpstan analyse"
-        ],
-        "phpstan:check": [
-            "./vendor/bin/phpstan analyse --no-progress"
-        ],
         "fix": [
             "@pint",
-            "@rector",
-            "@phpstan"
+            "@rector"
         ],
         "check": [
             "@pint:check",

@@ -266,19 +266,19 @@ class WebsiteAnalysisService
 
             if ($websiteAnalysis->ai_provider === 'gemini') {
                 // Get Gemini service for the project
-                $geminiService = new GeminiApiService($project);
+                $geminiApiService = new GeminiApiService($project);
 
                 // Get the appropriate prompt
                 $prompt = $this->getAnalysisPrompt($websiteAnalysis->analysis_type, $websiteAnalysis->url);
 
                 // Call Gemini API
-                $response = $geminiService->analyzeWebsite(
+                $response = $geminiApiService->analyzeWebsite(
                     $websiteAnalysis->url,
                     $websiteAnalysis->analysis_type,
                     $prompt
                 );
 
-                if ($response) {
+                if ($response !== null && $response !== '' && $response !== '0') {
                     // Process the AI response
                     $this->processAiResponse($websiteAnalysis, $response);
                 } else {
@@ -287,13 +287,13 @@ class WebsiteAnalysisService
             } else {
                 throw new Exception('Nem támogatott AI szolgáltató: ' . $websiteAnalysis->ai_provider);
             }
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             $websiteAnalysis->update([
                 'status' => 'failed',
-                'error_message' => $e->getMessage(),
+                'error_message' => $exception->getMessage(),
             ]);
 
-            throw $e;
+            throw $exception;
         }
     }
 

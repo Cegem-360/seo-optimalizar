@@ -120,6 +120,26 @@ class PageSpeedResultsTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('analyzed_at', 'desc');
+            ->defaultSort('id', 'desc')
+            ->modifyQueryUsing(fn ($query) =>
+                // Kizárjuk a nagy méretű raw_data mezőt
+                $query->select([
+                    'page_speed_results.id',
+                    'page_speed_results.project_id',
+                    'page_speed_results.url',
+                    'page_speed_results.strategy',
+                    'page_speed_results.performance_score',
+                    'page_speed_results.accessibility_score',
+                    'page_speed_results.best_practices_score',
+                    'page_speed_results.seo_score',
+                    'page_speed_results.lcp_display',
+                    'page_speed_results.fcp_display',
+                    'page_speed_results.cls_display',
+                    'page_speed_results.analyzed_at',
+                    'page_speed_results.created_at',
+                    'page_speed_results.updated_at',
+                ]))
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(10);
     }
 }

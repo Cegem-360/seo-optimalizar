@@ -5,13 +5,13 @@ namespace App\Filament\Resources\CompetitorAnalyses\Pages;
 use App\Filament\Resources\CompetitorAnalyses\CompetitorAnalysisResource;
 use App\Models\Keyword;
 use App\Services\Api\CompetitorAnalysisService;
+use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Support\Enums\IconSize;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Artisan;
 
@@ -35,10 +35,11 @@ class ListCompetitorAnalyses extends ListRecords
                         ->label('Kulcsszó (opcionális)')
                         ->options(function (callable $get) {
                             if ($projectId = $get('project_id')) {
-                                return Keyword::where('project_id', $projectId)
+                                return Keyword::query()->where('project_id', $projectId)
                                     ->pluck('keyword', 'id');
                             }
-                            return Keyword::pluck('keyword', 'id');
+
+                            return Keyword::query()->pluck('keyword', 'id');
                         })
                         ->searchable()
                         ->placeholder('Minden kulcsszó'),
@@ -54,11 +55,11 @@ class ListCompetitorAnalyses extends ListRecords
                     $command = 'seo:analyze-competitors';
                     $options = ['--limit' => $data['limit']];
 
-                    if (!empty($data['project_id'])) {
+                    if (! empty($data['project_id'])) {
                         $options['--project'] = $data['project_id'];
                     }
 
-                    if (!empty($data['keyword_id'])) {
+                    if (! empty($data['keyword_id'])) {
                         $options['--keyword'] = $data['keyword_id'];
                     }
 
@@ -72,10 +73,10 @@ class ListCompetitorAnalyses extends ListRecords
                             ->send();
 
                         $this->redirect(static::getUrl());
-                    } catch (\Exception $e) {
+                    } catch (Exception $exception) {
                         Notification::make()
                             ->title('Hiba történt')
-                            ->body('Az elemzés elindítása során hiba történt: ' . $e->getMessage())
+                            ->body('Az elemzés elindítása során hiba történt: ' . $exception->getMessage())
                             ->danger()
                             ->send();
                     }

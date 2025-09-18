@@ -493,8 +493,8 @@ class GeminiApiService extends BaseApiService
             }
 
             return null;
-        } catch (Exception $e) {
-            throw new Exception('Gemini API error: ' . $e->getMessage());
+        } catch (Exception $exception) {
+            throw new Exception('Gemini API error: ' . $exception->getMessage(), $exception->getCode(), $exception);
         }
     }
 
