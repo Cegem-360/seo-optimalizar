@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Pages;
 
-use Filament\Actions\Action;
-use Exception;
 use App\Filament\Resources\WebsiteAnalyses\WebsiteAnalysisResource;
 use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
+use Exception;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -65,9 +65,8 @@ class EditWebsiteAnalysis extends EditRecord
             // Szakaszok törlése
             $record->sections()->delete();
 
-            // Új elemzés futtatása
-            $demoResponse = $service->getDemoResponse($record->analysis_type);
-            $service->processAiResponse($record, $demoResponse);
+            // Meghívjuk a valós AI szolgáltatást
+            $service->runAiAnalysis($record);
 
             // Frissített adatok betöltése
             $this->refreshFormData([
@@ -102,8 +101,8 @@ class EditWebsiteAnalysis extends EditRecord
 
             $record->update(['status' => 'processing']);
 
-            $demoResponse = $service->getDemoResponse($record->analysis_type);
-            $service->processAiResponse($record, $demoResponse);
+            // Meghívjuk a valós AI szolgáltatást
+            $service->runAiAnalysis($record);
 
             $this->refreshFormData([
                 'status',

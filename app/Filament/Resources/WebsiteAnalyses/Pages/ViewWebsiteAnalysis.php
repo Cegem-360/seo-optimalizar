@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Pages;
 
-use Filament\Actions\EditAction;
-use Filament\Actions\Action;
-use Exception;
 use App\Filament\Resources\WebsiteAnalyses\WebsiteAnalysisResource;
 use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
+use Exception;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -181,12 +181,11 @@ class ViewWebsiteAnalysis extends ViewRecord
             // Szakaszok törlése
             $record->sections()->delete();
 
-            // Új elemzés futtatása
-            $demoResponse = $service->getDemoResponse($record->analysis_type);
-            $service->processAiResponse($record, $demoResponse);
+            // Meghívjuk a valós AI szolgáltatást
+            $service->runAiAnalysis($record);
 
             // Oldal újratöltése
-            redirect()->to($this->getResource()::getUrl('view', ['record' => $this->record]));
+            $this->redirect(route($this->getResource()::getUrl('view', ['record' => $this->record])));
 
             Notification::make()
                 ->title('Újraelemzés sikeresen elkészült!')

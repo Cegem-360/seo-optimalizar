@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Pages;
 
-use Filament\Actions\Action;
-use Illuminate\Database\Eloquent\Model;
-use Exception;
-use App\Models\Project;
 use App\Filament\Resources\WebsiteAnalyses\WebsiteAnalysisResource;
+use App\Models\Project;
 use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
+use Exception;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateWebsiteAnalysis extends CreateRecord
 {
@@ -69,11 +69,7 @@ class CreateWebsiteAnalysis extends CreateRecord
     {
         try {
             $service = app(WebsiteAnalysisService::class);
-
-            // Dummy AI válasz a demo céljából
-            $demoResponse = $service->getDemoResponse($websiteAnalysis->analysis_type);
-
-            $service->processAiResponse($websiteAnalysis, $demoResponse);
+            $service->runAiAnalysis($websiteAnalysis);
 
             Notification::make()
                 ->title('Elemzés sikeresen elkészült!')

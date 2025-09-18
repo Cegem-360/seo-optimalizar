@@ -160,7 +160,6 @@ class WebsiteAnalysesTable
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
                             ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders())
-                            ->default('demo')
                             ->required(),
                     ])
                     ->action(function (array $data, $record): void {
@@ -181,10 +180,9 @@ class WebsiteAnalysesTable
                                 'ai_model' => WebsiteAnalysisService::getModelForProvider($data['ai_provider']),
                             ]);
 
-                            // Demo válasz feldolgozása
-                            if ($data['ai_provider'] === 'demo') {
-                                $demoResponse = $websiteAnalysisService->getDemoResponse($data['analysis_type']);
-                                $websiteAnalysisService->processAiResponse($analysis, $demoResponse);
+                            // Meghívjuk a valós AI szolgáltatást
+                            if ($data['ai_provider']) {
+                                $websiteAnalysisService->runAiAnalysis($analysis);
                             }
 
                             Notification::make()
@@ -227,7 +225,6 @@ class WebsiteAnalysesTable
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
                             ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders())
-                            ->default('demo')
                             ->required(),
                     ])
                     ->action(function (array $data): void {
@@ -248,10 +245,9 @@ class WebsiteAnalysesTable
                                 'ai_model' => WebsiteAnalysisService::getModelForProvider($data['ai_provider']),
                             ]);
 
-                            // Demo válasz feldolgozása
-                            if ($data['ai_provider'] === 'demo') {
-                                $demoResponse = $websiteAnalysisService->getDemoResponse($data['analysis_type']);
-                                $websiteAnalysisService->processAiResponse($analysis, $demoResponse);
+                            // Meghívjuk a valós AI szolgáltatást
+                            if ($data['ai_provider']) {
+                                $websiteAnalysisService->runAiAnalysis($analysis);
                             }
 
                             Notification::make()

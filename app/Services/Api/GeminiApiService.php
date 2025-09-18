@@ -446,6 +446,58 @@ class GeminiApiService extends BaseApiService
         ];
     }
 
+    /**
+     * Analyze a website URL using Gemini API
+     */
+    public function analyzeWebsite(string $url, string $analysisType, string $prompt): ?string
+    {
+        try {
+            $apiKey = $this->getCredential('api_key');
+
+            if (empty($apiKey)) {
+                throw new Exception('Missing Google Gemini API key');
+            }
+
+            // Egyszerűbb HTTP kérés közvetlenül
+            $client = new Client();
+            $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+                'json' => [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                [
+                                    'text' => $prompt,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.3,
+                        'topK' => 1,
+                        'topP' => 1,
+                        'maxOutputTokens' => 4096,
+                        'responseMimeType' => 'application/json',
+                    ],
+                ],
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $data = json_decode($response->getBody()->getContents(), true);
+
+                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                    return $data['candidates'][0]['content']['parts'][0]['text'];
+                }
+            }
+
+            return null;
+        } catch (Exception $e) {
+            throw new Exception('Gemini API error: ' . $e->getMessage());
+        }
+    }
+
     private function getSerpResultsForKeyword(Keyword $keyword): array
     {
         try {

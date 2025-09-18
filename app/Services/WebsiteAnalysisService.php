@@ -6,6 +6,7 @@ use App\Models\AnalysisSection;
 use App\Models\ApiCredential;
 use App\Models\Project;
 use App\Models\WebsiteAnalysis;
+use App\Services\Api\GeminiApiService;
 use Exception;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
@@ -198,6 +199,51 @@ class WebsiteAnalysisService
         return 'error';
     }
 
+    /**
+     * Run AI analysis using the specified provider
+     */
+    public function runAiAnalysis(WebsiteAnalysis $websiteAnalysis): void
+    {
+        try {
+            $project = $websiteAnalysis->project;
+
+            if (! $project instanceof Project) {
+                throw new Exception('Projekt nem található');
+            }
+
+            if ($websiteAnalysis->ai_provider === 'gemini') {
+                // Get Gemini service for the project
+                $geminiService = new GeminiApiService($project);
+
+                // Get the appropriate prompt
+                $prompt = $this->getAnalysisPrompt($websiteAnalysis->analysis_type, $websiteAnalysis->url);
+
+                // Call Gemini API
+                $response = $geminiService->analyzeWebsite(
+                    $websiteAnalysis->url,
+                    $websiteAnalysis->analysis_type,
+                    $prompt
+                );
+
+                if ($response) {
+                    // Process the AI response
+                    $this->processAiResponse($websiteAnalysis, $response);
+                } else {
+                    throw new Exception('Nem sikerült választ kapni a Gemini API-tól');
+                }
+            } else {
+                throw new Exception('Nem támogatott AI szolgáltató: ' . $websiteAnalysis->ai_provider);
+            }
+        } catch (Exception $e) {
+            $websiteAnalysis->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
+    }
+
     public function getAnalysisPrompt(string $analysisType, string $url): string
     {
         $prompts = [
@@ -215,122 +261,15 @@ class WebsiteAnalysisService
         return $prompts[$analysisType] ?? $prompts['seo'];
     }
 
-    public function getDemoResponse(string $analysisType): string
-    {
-        $demoResponses = [
-            'seo' => json_encode([
-                'overall_score' => 78,
-                'scores' => [
-                    'title' => 85,
-                    'meta_description' => 72,
-                    'headings' => 80,
-                    'content' => 75,
-                    'images' => 70,
-                    'links' => 82,
-                ],
-                'sections' => [
-                    [
-                        'type' => 'title',
-                        'name' => 'Címek optimalizálása',
-                        'score' => 85,
-                        'status' => 'good',
-                        'findings' => [
-                            'A főcím tartalmazza a kulcsszót',
-                            'A címhierarchia megfelelő',
-                        ],
-                        'recommendations' => [
-                            'Adj hozzá még egy H2 címet',
-                            'Optimalizáld a meta title hosszát',
-                        ],
-                    ],
-                    [
-                        'type' => 'content',
-                        'name' => 'Tartalom elemzés',
-                        'score' => 75,
-                        'status' => 'warning',
-                        'findings' => [
-                            'A tartalom hossza megfelelő',
-                            'Hiányoznak a belső linkek',
-                        ],
-                        'recommendations' => [
-                            'Adj hozzá több belső linket',
-                            'Használj több variációt a kulcsszóból',
-                        ],
-                    ],
-                ],
-            ]),
-
-            'ux' => json_encode([
-                'overall_score' => 82,
-                'scores' => [
-                    'navigation' => 85,
-                    'layout' => 80,
-                    'readability' => 78,
-                    'forms' => 85,
-                    'cta' => 82,
-                ],
-                'sections' => [
-                    [
-                        'type' => 'navigation',
-                        'name' => 'Navigáció',
-                        'score' => 85,
-                        'status' => 'good',
-                        'findings' => [
-                            'Egyértelmű menüstruktúra',
-                            'Responsive navigáció',
-                        ],
-                        'recommendations' => [
-                            'Adj hozzá breadcrumb navigációt',
-                            'Javítsd a mobil menü elérhetőségét',
-                        ],
-                    ],
-                ],
-            ]),
-
-            'technical' => json_encode([
-                'overall_score' => 71,
-                'scores' => [
-                    'performance' => 68,
-                    'security' => 85,
-                    'mobile' => 72,
-                    'accessibility' => 65,
-                ],
-                'sections' => [
-                    [
-                        'type' => 'performance',
-                        'name' => 'Teljesítmény',
-                        'score' => 68,
-                        'status' => 'warning',
-                        'findings' => [
-                            'Lassú betöltési idő',
-                            'Nagy képfájlok',
-                        ],
-                        'recommendations' => [
-                            'Optimalizáld a képeket',
-                            'Használj CDN-t',
-                            'Minimalizáld a CSS és JS fájlokat',
-                        ],
-                    ],
-                ],
-            ]),
-        ];
-
-        return $demoResponses[$analysisType] ?? $demoResponses['seo'];
-    }
-
     public static function getAvailableAiProviders(): array
     {
         $project = Filament::getTenant();
 
         if (! $project instanceof Project) {
-            return [
-                'demo' => 'Demo (teszt válasz)',
-            ];
+            return [];
         }
 
-        $providers = [
-            'demo' => 'Demo (teszt válasz)',
-        ];
+        $providers = [];
 
         // Dinamikusan betöltjük az aktív API credentialeket
         $activeCredentials = ApiCredential::query()->where('project_id', $project->id)
@@ -359,7 +298,7 @@ class WebsiteAnalysisService
             'claude' => 'claude-3-opus',
             'gemini' => 'gemini-1.5-flash',
             'ollama' => 'llama2',
-            default => 'demo',
+            default => '',
         };
     }
 }
