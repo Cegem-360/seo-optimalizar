@@ -10,7 +10,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Artisan;
 
 class ManualSync extends Page
 {
@@ -27,8 +27,6 @@ class ManualSync extends Page
     public bool $isLoading = false;
 
     public array $syncResults = [];
-
-    public function __construct(private readonly Kernel $kernel) {}
 
     protected function getHeaderActions(): array
     {
@@ -103,8 +101,8 @@ class ManualSync extends Page
                 throw new Exception('No project selected');
             }
 
-            $exitCode = $this->kernel->call('seo:test-api', ['project' => $tenant->id]);
-            $output = $this->kernel->output();
+            $exitCode = Artisan::call('seo:test-api', ['project' => $tenant->id]);
+            $output = Artisan::output();
 
             $this->syncResults[] = [
                 'operation' => 'API Connection Test',
@@ -154,8 +152,8 @@ class ManualSync extends Page
                 throw new Exception('No project selected');
             }
 
-            $exitCode = $this->kernel->call('seo:check-positions', ['--project' => $tenant->id]);
-            $output = $this->kernel->output();
+            $exitCode = Artisan::call('seo:check-positions', ['--project' => $tenant->id]);
+            $output = Artisan::output();
 
             $this->syncResults[] = [
                 'operation' => 'Search Console Sync',
@@ -205,11 +203,11 @@ class ManualSync extends Page
                 throw new Exception('No project selected');
             }
 
-            $exitCode = $this->kernel->call('seo:update-keywords', [
+            $exitCode = Artisan::call('seo:update-keywords', [
                 'project' => $tenant->id,
                 '--batch-size' => 10,
             ]);
-            $output = $this->kernel->output();
+            $output = Artisan::output();
 
             $this->syncResults[] = [
                 'operation' => 'Keyword Metrics Update',
@@ -259,12 +257,12 @@ class ManualSync extends Page
                 throw new Exception('No project selected');
             }
 
-            $exitCode = $this->kernel->call('seo:update-keywords-historical', [
+            $exitCode = Artisan::call('seo:update-keywords-historical', [
                 'project' => $tenant->id,
                 '--batch-size' => 3,
                 '--force' => true,
             ]);
-            $output = $this->kernel->output();
+            $output = Artisan::output();
 
             $this->syncResults[] = [
                 'operation' => 'Historical Metrics Update',
@@ -314,8 +312,8 @@ class ManualSync extends Page
                 throw new Exception('No project selected');
             }
 
-            $exitCode = $this->kernel->call('seo:pagespeed', ['project' => $tenant->id]);
-            $output = $this->kernel->output();
+            $exitCode = Artisan::call('seo:pagespeed', ['project' => $tenant->id]);
+            $output = Artisan::output();
 
             $this->syncResults[] = [
                 'operation' => 'PageSpeed Analysis',
