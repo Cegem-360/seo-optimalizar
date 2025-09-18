@@ -27,7 +27,7 @@ class PageSpeedService
         } else {
             try {
                 $this->apiKey = config('services.google.pagespeed_api_key', '');
-            } catch (\Exception) {
+            } catch (Exception) {
                 $this->apiKey = '';
             }
         }

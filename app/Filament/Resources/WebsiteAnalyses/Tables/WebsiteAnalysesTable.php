@@ -129,7 +129,7 @@ class WebsiteAnalysesTable
 
                 SelectFilter::make('ai_provider')
                     ->label('AI szolgáltató')
-                    ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders()),
+                    ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders()),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -159,7 +159,7 @@ class WebsiteAnalysesTable
 
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
-                            ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders())
+                            ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders())
                             ->default('demo')
                             ->required(),
                     ])
@@ -226,7 +226,7 @@ class WebsiteAnalysesTable
 
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
-                            ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders())
+                            ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders())
                             ->default('demo')
                             ->required(),
                     ])

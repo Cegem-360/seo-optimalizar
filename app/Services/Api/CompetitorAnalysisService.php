@@ -27,9 +27,10 @@ class CompetitorAnalysisService
         $this->client = new Client();
         try {
             $apiKey = $repository?->get('services.google.pagespeed_api_key') ?? config('services.google.pagespeed_api_key');
-        } catch (\Exception) {
+        } catch (Exception) {
             $apiKey = '';
         }
+
         $this->pageSpeedService = new PageSpeedService($apiKey, $repository);
         if ($project instanceof Project) {
             $this->geminiApiService = new GeminiApiService($project);

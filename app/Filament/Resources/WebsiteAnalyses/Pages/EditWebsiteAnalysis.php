@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Pages;
 
+use Filament\Actions\Action;
+use Exception;
 use App\Filament\Resources\WebsiteAnalyses\WebsiteAnalysisResource;
 use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
-use Filament\Actions;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -17,7 +18,7 @@ class EditWebsiteAnalysis extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('reanalyze')
+            Action::make('reanalyze')
                 ->label('Újraelemzés')
                 ->icon('heroicon-m-arrow-path')
                 ->color('warning')
@@ -25,16 +26,16 @@ class EditWebsiteAnalysis extends EditRecord
                 ->modalHeading('Elemzés újrafuttatása')
                 ->modalDescription('Biztosan újra szeretnéd futtatni az elemzést? Ez felülírja a jelenlegi eredményeket.')
                 ->modalSubmitActionLabel('Igen, újraelemzés')
-                ->action(function () {
+                ->action(function (): void {
                     $this->runReanalysis();
                 }),
 
-            Actions\Action::make('runAiAnalysis')
+            Action::make('runAiAnalysis')
                 ->label('AI elemzés indítása')
                 ->icon('heroicon-m-play')
                 ->color('success')
-                ->visible(fn () => $this->record instanceof WebsiteAnalysis && $this->record->status === 'pending')
-                ->action(function () {
+                ->visible(fn (): bool => $this->record instanceof WebsiteAnalysis && $this->record->status === 'pending')
+                ->action(function (): void {
                     $this->runAiAnalysis();
                 }),
 
@@ -82,10 +83,10 @@ class EditWebsiteAnalysis extends EditRecord
                 ->title('Újraelemzés sikeresen elkészült!')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+        } catch (Exception $exception) {
             Notification::make()
                 ->title('Hiba történt az újraelemzés során')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }
@@ -117,10 +118,10 @@ class EditWebsiteAnalysis extends EditRecord
                 ->title('AI elemzés sikeresen elkészült!')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+        } catch (Exception $exception) {
             Notification::make()
                 ->title('Hiba történt az AI elemzés során')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }

@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Pages;
 
+use Filament\Actions\EditAction;
+use Filament\Actions\Action;
+use Exception;
 use App\Filament\Resources\WebsiteAnalyses\WebsiteAnalysisResource;
 use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
-use Filament\Actions;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -21,9 +23,9 @@ class ViewWebsiteAnalysis extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            EditAction::make(),
 
-            Actions\Action::make('reanalyze')
+            Action::make('reanalyze')
                 ->label('Újraelemzés')
                 ->icon('heroicon-m-arrow-path')
                 ->color('warning')
@@ -31,7 +33,7 @@ class ViewWebsiteAnalysis extends ViewRecord
                 ->modalHeading('Elemzés újrafuttatása')
                 ->modalDescription('Biztosan újra szeretnéd futtatni az elemzést? Ez felülírja a jelenlegi eredményeket.')
                 ->modalSubmitActionLabel('Igen, újraelemzés')
-                ->action(function () {
+                ->action(function (): void {
                     $this->runReanalysis();
                 }),
         ];
@@ -108,9 +110,9 @@ class ViewWebsiteAnalysis extends ViewRecord
 
                         KeyValueEntry::make('scores')
                             ->label('Részpontszámok')
-                            ->visible(fn ($record) => ! empty($record->scores)),
+                            ->visible(fn ($record): bool => ! empty($record->scores)),
                     ])
-                    ->visible(fn ($record) => $record->status === 'completed'),
+                    ->visible(fn ($record): bool => $record->status === 'completed'),
 
                 Section::make('Elemzési szakaszok')
                     ->schema([
@@ -121,8 +123,8 @@ class ViewWebsiteAnalysis extends ViewRecord
                                     return 'Nincs elemzési szakasz';
                                 }
 
-                                return $record->sections->map(function ($section) {
-                                    $score = $section->score ? " ({$section->score}/100)" : '';
+                                return $record->sections->map(function ($section): string {
+                                    $score = $section->score ? sprintf(' (%s/100)', $section->score) : '';
                                     $status = match ($section->status) {
                                         'good' => '✅',
                                         'warning' => '⚠️',
@@ -131,17 +133,19 @@ class ViewWebsiteAnalysis extends ViewRecord
                                     };
 
                                     return "**{$status} {$section->section_name}{$score}**\n\n" .
-                                           ($section->summary ? "{$section->summary}\n\n" : '') .
+                                           ($section->summary ? $section->summary . '
+
+' : '') .
                                            "**Megállapítások:**\n" .
-                                           collect($section->findings)->map(fn ($finding) => "• {$finding}")->implode("\n") .
+                                           collect($section->findings)->map(fn ($finding): string => '• ' . $finding)->implode("\n") .
                                            "\n\n**Javaslatok:**\n" .
-                                           collect($section->recommendations)->map(fn ($rec) => "• {$rec}")->implode("\n");
+                                           collect($section->recommendations)->map(fn ($rec): string => '• ' . $rec)->implode("\n");
                                 })->implode("\n\n---\n\n");
                             })
                             ->markdown()
                             ->columnSpanFull(),
                     ])
-                    ->visible(fn ($record) => $record->status === 'completed' && $record->sections->isNotEmpty()),
+                    ->visible(fn ($record): bool => $record->status === 'completed' && $record->sections->isNotEmpty()),
 
                 Section::make('AI válasz')
                     ->schema([
@@ -151,7 +155,7 @@ class ViewWebsiteAnalysis extends ViewRecord
                             ->markdown(),
                     ])
                     ->collapsed()
-                    ->visible(fn ($record) => ! empty($record->raw_response)),
+                    ->visible(fn ($record): bool => ! empty($record->raw_response)),
             ]);
     }
 
@@ -188,10 +192,10 @@ class ViewWebsiteAnalysis extends ViewRecord
                 ->title('Újraelemzés sikeresen elkészült!')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+        } catch (Exception $exception) {
             Notification::make()
                 ->title('Hiba történt az újraelemzés során')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }

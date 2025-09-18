@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Pages;
 
+use Filament\Actions\Action;
+use Illuminate\Database\Eloquent\Model;
+use Exception;
+use App\Models\Project;
 use App\Filament\Resources\WebsiteAnalyses\WebsiteAnalysisResource;
 use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
-use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -14,20 +17,20 @@ class CreateWebsiteAnalysis extends CreateRecord
 {
     protected static string $resource = WebsiteAnalysisResource::class;
 
-    protected function getCreateFormAction(): Actions\Action
+    protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()
             ->label('Elemzés létrehozása');
     }
 
-    protected function getCreateAndAnalyzeAction(): Actions\Action
+    protected function getCreateAndAnalyzeAction(): Action
     {
-        return Actions\Action::make('createAndAnalyze')
+        return Action::make('createAndAnalyze')
             ->label('Létrehozás és elemzés indítása')
             ->action(function () {
                 $this->create();
 
-                if ($this->record) {
+                if ($this->record instanceof Model) {
                     /** @var WebsiteAnalysis $record */
                     $record = $this->record;
                     $this->runAnalysis($record);
@@ -56,30 +59,30 @@ class CreateWebsiteAnalysis extends CreateRecord
         if ($tenant) {
             /** @var WebsiteAnalysis $record */
             $record = $this->record;
-            /** @var \App\Models\Project $project */
+            /** @var Project $project */
             $project = $tenant;
             $record->update(['project_id' => $project->id]);
         }
     }
 
-    private function runAnalysis(WebsiteAnalysis $record): void
+    private function runAnalysis(WebsiteAnalysis $websiteAnalysis): void
     {
         try {
             $service = app(WebsiteAnalysisService::class);
 
             // Dummy AI válasz a demo céljából
-            $demoResponse = $service->getDemoResponse($record->analysis_type);
+            $demoResponse = $service->getDemoResponse($websiteAnalysis->analysis_type);
 
-            $service->processAiResponse($record, $demoResponse);
+            $service->processAiResponse($websiteAnalysis, $demoResponse);
 
             Notification::make()
                 ->title('Elemzés sikeresen elkészült!')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+        } catch (Exception $exception) {
             Notification::make()
                 ->title('Hiba történt az elemzés során')
-                ->body($e->getMessage())
+                ->body($exception->getMessage())
                 ->danger()
                 ->send();
         }

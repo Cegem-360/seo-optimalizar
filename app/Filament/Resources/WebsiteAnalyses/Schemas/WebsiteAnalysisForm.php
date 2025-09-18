@@ -45,7 +45,7 @@ class WebsiteAnalysisForm
 
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
-                            ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders())
+                            ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders())
                             ->default('demo')
                             ->required(),
 

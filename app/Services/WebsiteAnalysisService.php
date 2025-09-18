@@ -333,20 +333,20 @@ class WebsiteAnalysisService
         ];
 
         // Dinamikusan betöltjük az aktív API credentialeket
-        $activeCredentials = ApiCredential::where('project_id', $project->id)
+        $activeCredentials = ApiCredential::query()->where('project_id', $project->id)
             ->where('is_active', true)
             ->get();
 
-        foreach ($activeCredentials as $credential) {
-            $providerName = match ($credential->service) {
+        foreach ($activeCredentials as $activeCredential) {
+            $providerName = match ($activeCredential->service) {
                 'gemini' => 'Google Gemini',
                 'openai' => 'OpenAI (GPT)',
                 'claude' => 'Anthropic Claude',
                 'ollama' => 'Ollama (Local)',
-                default => ucfirst($credential->service),
+                default => ucfirst((string) $activeCredential->service),
             };
 
-            $providers[$credential->service] = $providerName;
+            $providers[$activeCredential->service] = $providerName;
         }
 
         return $providers;
