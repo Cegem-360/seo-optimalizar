@@ -23,6 +23,8 @@ class ApiDataDebugger extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bug-ant';
 
+    protected string $view = 'filament.pages.api-data-debugger';
+
     protected static ?string $navigationLabel = 'API Data Debugger';
 
     protected static ?string $title = 'API Raw Data Viewer';
