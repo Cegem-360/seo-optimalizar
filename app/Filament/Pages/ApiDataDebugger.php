@@ -23,8 +23,6 @@ class ApiDataDebugger extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bug-ant';
 
-    protected string $view = 'filament.pages.api-data-debugger';
-
     protected static ?string $navigationLabel = 'API Data Debugger';
 
     protected static ?string $title = 'API Raw Data Viewer';
@@ -65,7 +63,7 @@ class ApiDataDebugger extends Page
                     'endDate' => Carbon::now(),
                     'limit' => 50,
                 ])
-                ->form([
+                ->schema([
                     DatePicker::make('startDate')
                         ->label('Start Date')
                         ->required(),
@@ -89,7 +87,7 @@ class ApiDataDebugger extends Page
                     'startDate' => Carbon::now()->subDays(7),
                     'endDate' => Carbon::now(),
                 ])
-                ->form([
+                ->schema([
                     DatePicker::make('startDate')
                         ->label('Start Date')
                         ->required(),
@@ -109,7 +107,7 @@ class ApiDataDebugger extends Page
                     'startDate' => Carbon::now()->subDays(7),
                     'endDate' => Carbon::now(),
                 ])
-                ->form([
+                ->schema([
                     DatePicker::make('startDate')
                         ->label('Start Date')
                         ->required(),
