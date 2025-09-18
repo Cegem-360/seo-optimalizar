@@ -25,7 +25,11 @@ class PageSpeedService
         } elseif ($repository instanceof Repository) {
             $this->apiKey = $repository->get('services.google.pagespeed_api_key', '');
         } else {
-            $this->apiKey = config('services.google.pagespeed_api_key', '');
+            try {
+                $this->apiKey = config('services.google.pagespeed_api_key', '');
+            } catch (\Exception) {
+                $this->apiKey = '';
+            }
         }
 
         $this->client = new Client();

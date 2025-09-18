@@ -4,20 +4,18 @@ namespace App\Filament\Resources\ApiCredentials\Pages;
 
 use App\Filament\Resources\ApiCredentials\ApiCredentialResource;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Filesystem\FilesystemManager;
-use Illuminate\Session\SessionManager;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class CreateApiCredential extends CreateRecord
 {
     protected static string $resource = ApiCredentialResource::class;
 
-    public function __construct(private readonly FilesystemManager $filesystemManager, private readonly SessionManager $sessionManager) {}
-
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Handle service account file upload
         if (isset($data['service_account_json_upload'])) {
-            $tempPath = $this->filesystemManager->disk('local')->path($data['service_account_json_upload']);
+            $tempPath = Storage::disk('local')->path($data['service_account_json_upload']);
 
             if (file_exists($tempPath)) {
                 $content = file_get_contents($tempPath);
@@ -39,7 +37,7 @@ class CreateApiCredential extends CreateRecord
                     $data['service_account_file'] = $filename;
 
                     // Clean up temp file
-                    $this->filesystemManager->disk('local')->delete($data['service_account_json_upload']);
+                    Storage::disk('local')->delete($data['service_account_json_upload']);
                 }
             }
 
@@ -60,10 +58,10 @@ class CreateApiCredential extends CreateRecord
 
         // Handle Google Ads refresh token from session
         if ($data['service'] === 'google_ads') {
-            $sessionRefreshToken = $this->sessionManager->get('google_ads_refresh_token');
+            $sessionRefreshToken = Session::get('google_ads_refresh_token');
             if ($sessionRefreshToken) {
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
-                $this->sessionManager->forget('google_ads_refresh_token');
+                Session::forget('google_ads_refresh_token');
             }
         }
 

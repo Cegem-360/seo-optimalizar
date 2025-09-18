@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WebsiteAnalyses\Schemas;
 
+use App\Services\WebsiteAnalysisService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
@@ -44,12 +45,8 @@ class WebsiteAnalysisForm
 
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
-                            ->options([
-                                'openai' => 'OpenAI',
-                                'claude' => 'Claude',
-                                'gemini' => 'Google Gemini',
-                                'custom' => 'Egyéb',
-                            ])
+                            ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders())
+                            ->default('demo')
                             ->required(),
 
                         TextInput::make('ai_model')

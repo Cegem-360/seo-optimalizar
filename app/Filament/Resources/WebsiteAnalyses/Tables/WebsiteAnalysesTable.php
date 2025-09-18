@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -128,14 +129,10 @@ class WebsiteAnalysesTable
 
                 SelectFilter::make('ai_provider')
                     ->label('AI szolgáltató')
-                    ->options([
-                        'openai' => 'OpenAI',
-                        'claude' => 'Claude',
-                        'gemini' => 'Google Gemini',
-                        'custom' => 'Egyéb',
-                    ]),
+                    ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders()),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
                 Action::make('analyze')
                     ->label('Új elemzés')
@@ -162,11 +159,7 @@ class WebsiteAnalysesTable
 
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
-                            ->options([
-                                'openai' => 'OpenAI (GPT)',
-                                'claude' => 'Anthropic Claude',
-                                'demo' => 'Demo (teszt válasz)',
-                            ])
+                            ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders())
                             ->default('demo')
                             ->required(),
                     ])
@@ -185,7 +178,7 @@ class WebsiteAnalysesTable
                                 'url' => $data['url'],
                                 'analysis_type' => $data['analysis_type'],
                                 'ai_provider' => $data['ai_provider'],
-                                'ai_model' => $data['ai_provider'] === 'openai' ? 'gpt-4' : ($data['ai_provider'] === 'claude' ? 'claude-3-opus' : 'demo'),
+                                'ai_model' => WebsiteAnalysisService::getModelForProvider($data['ai_provider']),
                             ]);
 
                             // Demo válasz feldolgozása
@@ -233,11 +226,7 @@ class WebsiteAnalysesTable
 
                         Select::make('ai_provider')
                             ->label('AI szolgáltató')
-                            ->options([
-                                'demo' => 'Demo (teszt válasz)',
-                                'openai' => 'OpenAI (GPT)',
-                                'claude' => 'Anthropic Claude',
-                            ])
+                            ->options(fn () => WebsiteAnalysisService::getAvailableAiProviders())
                             ->default('demo')
                             ->required(),
                     ])
@@ -256,7 +245,7 @@ class WebsiteAnalysesTable
                                 'url' => $data['url'],
                                 'analysis_type' => $data['analysis_type'],
                                 'ai_provider' => $data['ai_provider'],
-                                'ai_model' => $data['ai_provider'] === 'openai' ? 'gpt-4' : ($data['ai_provider'] === 'claude' ? 'claude-3-opus' : 'demo'),
+                                'ai_model' => WebsiteAnalysisService::getModelForProvider($data['ai_provider']),
                             ]);
 
                             // Demo válasz feldolgozása

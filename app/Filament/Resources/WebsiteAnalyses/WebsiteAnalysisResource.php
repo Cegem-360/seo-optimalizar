@@ -6,6 +6,7 @@ use App\Enums\NavigationGroups;
 use App\Filament\Resources\WebsiteAnalyses\Pages\CreateWebsiteAnalysis;
 use App\Filament\Resources\WebsiteAnalyses\Pages\EditWebsiteAnalysis;
 use App\Filament\Resources\WebsiteAnalyses\Pages\ListWebsiteAnalyses;
+use App\Filament\Resources\WebsiteAnalyses\Pages\ViewWebsiteAnalysis;
 use App\Filament\Resources\WebsiteAnalyses\RelationManagers\SectionsRelationManager;
 use App\Filament\Resources\WebsiteAnalyses\Schemas\WebsiteAnalysisForm;
 use App\Filament\Resources\WebsiteAnalyses\Tables\WebsiteAnalysesTable;
@@ -66,6 +67,7 @@ class WebsiteAnalysisResource extends Resource
         return [
             'index' => ListWebsiteAnalyses::route('/'),
             'create' => CreateWebsiteAnalysis::route('/create'),
+            'view' => ViewWebsiteAnalysis::route('/{record}'),
             'edit' => EditWebsiteAnalysis::route('/{record}/edit'),
         ];
     }

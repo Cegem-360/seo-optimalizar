@@ -8,16 +8,13 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Filesystem\FilesystemManager;
-use Illuminate\Routing\UrlGenerator;
-use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class EditApiCredential extends EditRecord
 {
     protected static string $resource = ApiCredentialResource::class;
-
-    public function __construct(private readonly FilesystemManager $filesystemManager, private readonly UrlGenerator $urlGenerator, private readonly SessionManager $sessionManager) {}
 
     protected function getHeaderActions(): array
     {
@@ -80,7 +77,7 @@ class EditApiCredential extends EditRecord
                         return;
                     }
 
-                    return $this->urlGenerator->route('google-ads.oauth.start', [
+                    return route('google-ads.oauth.start', [
                         'client_id' => $clientId,
                         'client_secret' => $clientSecret,
                     ]);
@@ -111,7 +108,7 @@ class EditApiCredential extends EditRecord
 
         // Check for Google Ads refresh token in session (after OAuth)
         if ($data['service'] === 'google_ads') {
-            $sessionRefreshToken = $this->sessionManager->get('google_ads_refresh_token');
+            $sessionRefreshToken = Session::get('google_ads_refresh_token');
 
             Log::debug('Google Ads OAuth token check in mutateFormDataBeforeFill', [
                 'service' => $data['service'],
@@ -147,7 +144,7 @@ class EditApiCredential extends EditRecord
                 }
 
                 // Clear the session token to prevent reuse
-                $this->sessionManager->forget('google_ads_refresh_token');
+                Session::forget('google_ads_refresh_token');
 
                 // Show success notification
                 Notification::make()
@@ -166,7 +163,7 @@ class EditApiCredential extends EditRecord
     {
         // Handle service account file upload
         if (isset($data['service_account_json_upload']) && $data['service_account_json_upload']) {
-            $tempPath = $this->filesystemManager->disk('local')->path($data['service_account_json_upload']);
+            $tempPath = Storage::disk('local')->path($data['service_account_json_upload']);
 
             if (file_exists($tempPath)) {
                 $content = file_get_contents($tempPath);
@@ -194,7 +191,7 @@ class EditApiCredential extends EditRecord
                     $data['service_account_file'] = $filename;
 
                     // Clean up temp file
-                    $this->filesystemManager->disk('local')->delete($data['service_account_json_upload']);
+                    Storage::disk('local')->delete($data['service_account_json_upload']);
                 }
             }
 
@@ -215,7 +212,7 @@ class EditApiCredential extends EditRecord
 
         // Handle Google Ads refresh token from session (backup check during save)
         if ($data['service'] === 'google_ads') {
-            $sessionRefreshToken = $this->sessionManager->get('google_ads_refresh_token');
+            $sessionRefreshToken = Session::get('google_ads_refresh_token');
 
             Log::debug('Google Ads OAuth token check in mutateFormDataBeforeSave', [
                 'service' => $data['service'],
@@ -225,7 +222,7 @@ class EditApiCredential extends EditRecord
 
             if ($sessionRefreshToken) {
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
-                $this->sessionManager->forget('google_ads_refresh_token');
+                Session::forget('google_ads_refresh_token');
 
                 Log::info('Google Ads refresh token added during save', [
                     'token_length' => strlen((string) $sessionRefreshToken),

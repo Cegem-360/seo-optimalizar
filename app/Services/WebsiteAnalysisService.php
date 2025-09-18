@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\AnalysisSection;
+use App\Models\ApiCredential;
+use App\Models\Project;
 use App\Models\WebsiteAnalysis;
 use Exception;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -313,5 +316,50 @@ class WebsiteAnalysisService
         ];
 
         return $demoResponses[$analysisType] ?? $demoResponses['seo'];
+    }
+
+    public static function getAvailableAiProviders(): array
+    {
+        $project = Filament::getTenant();
+
+        if (! $project instanceof Project) {
+            return [
+                'demo' => 'Demo (teszt válasz)',
+            ];
+        }
+
+        $providers = [
+            'demo' => 'Demo (teszt válasz)',
+        ];
+
+        // Dinamikusan betöltjük az aktív API credentialeket
+        $activeCredentials = ApiCredential::where('project_id', $project->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($activeCredentials as $credential) {
+            $providerName = match ($credential->service) {
+                'gemini' => 'Google Gemini',
+                'openai' => 'OpenAI (GPT)',
+                'claude' => 'Anthropic Claude',
+                'ollama' => 'Ollama (Local)',
+                default => ucfirst($credential->service),
+            };
+
+            $providers[$credential->service] = $providerName;
+        }
+
+        return $providers;
+    }
+
+    public static function getModelForProvider(string $provider): string
+    {
+        return match ($provider) {
+            'openai' => 'gpt-4',
+            'claude' => 'claude-3-opus',
+            'gemini' => 'gemini-1.5-flash',
+            'ollama' => 'llama2',
+            default => 'demo',
+        };
     }
 }

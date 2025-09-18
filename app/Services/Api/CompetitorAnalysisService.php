@@ -25,7 +25,11 @@ class CompetitorAnalysisService
     public function __construct(?Project $project = null, ?Repository $repository = null)
     {
         $this->client = new Client();
-        $apiKey = $repository?->get('services.google.pagespeed_api_key') ?? config('services.google.pagespeed_api_key');
+        try {
+            $apiKey = $repository?->get('services.google.pagespeed_api_key') ?? config('services.google.pagespeed_api_key');
+        } catch (\Exception) {
+            $apiKey = '';
+        }
         $this->pageSpeedService = new PageSpeedService($apiKey, $repository);
         if ($project instanceof Project) {
             $this->geminiApiService = new GeminiApiService($project);
