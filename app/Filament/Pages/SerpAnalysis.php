@@ -147,7 +147,7 @@ class SerpAnalysis extends Page implements HasSchemas
 
                 // Lekérjük a legfrissebb pozíció adatokat
                 $latestRanking = $keyword->rankings()
-                    ->orderBy('checked_at', 'desc')
+                    ->orderBy('fetched_at', 'desc')
                     ->first();
 
                 $analysis = $gemini->analyzeKeywordWithPosition($keyword, $latestRanking);
@@ -181,7 +181,7 @@ class SerpAnalysis extends Page implements HasSchemas
                     $this->analysisResults[] = [
                         'keyword' => $keyword->keyword,
                         'current_position' => $analysis['current_position'] ?? null,
-                        'checked_at' => $latestRanking->checked_at ?? null,
+                        'checked_at' => $latestRanking->fetched_at ?? null,
                         'analysis' => $analysis,
                         'saved_id' => $serpResult->id,
                     ];

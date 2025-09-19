@@ -84,8 +84,8 @@ class Keyword extends Model
 
     public function latestRanking(): BelongsTo
     {
-        return $this->belongsTo(Ranking::class, 'id', 'keyword_id')
-            ->latest('checked_at');
+        return $this->belongsTo(SearchConsoleRanking::class, 'id', 'keyword_id')
+            ->latest('fetched_at');
     }
 
     #[Scope]

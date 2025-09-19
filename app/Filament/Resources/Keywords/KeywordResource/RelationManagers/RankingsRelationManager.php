@@ -45,7 +45,7 @@ class RankingsRelationManager extends RelationManager
                     ->label('Featured Snippet')
                     ->default(false),
 
-                DateTimePicker::make('checked_at')
+                DateTimePicker::make('fetched_at')
                     ->label('Checked Date')
                     ->required()
                     ->default(now()),
@@ -123,7 +123,7 @@ class RankingsRelationManager extends RelationManager
                     ->badge()
                     ->color('primary'),
 
-                TextColumn::make('checked_at')
+                TextColumn::make('fetched_at')
                     ->dateTime()
                     ->sortable()
                     ->label('Checked'),
@@ -143,7 +143,7 @@ class RankingsRelationManager extends RelationManager
                     ->label('Has Featured Snippet'),
 
                 Filter::make('last_30_days')
-                    ->query(fn (Builder $builder): Builder => $builder->where('checked_at', '>=', now()->subDays(30)))
+                    ->query(fn (Builder $builder): Builder => $builder->where('fetched_at', '>=', now()->subDays(30)))
                     ->label('Last 30 Days'),
             ])
             ->actions([
@@ -153,7 +153,7 @@ class RankingsRelationManager extends RelationManager
             ->bulkActions([
                 DeleteBulkAction::make(),
             ])
-            ->defaultSort('checked_at', 'desc')
+            ->defaultSort('fetched_at', 'desc')
             ->paginated([10, 25, 50]);
     }
 }

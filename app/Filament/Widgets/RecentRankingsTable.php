@@ -75,7 +75,7 @@ class RecentRankingsTable extends TableWidget
                     ->date()
                     ->sortable(),
             ])
-            ->defaultSort('checked_at', 'desc')
+            ->defaultSort('fetched_at', 'desc')
             ->paginated([10, 25, 50])
             ->poll('60s');
     }

@@ -60,7 +60,7 @@ class KeywordPerformanceWidget extends BaseWidget
                     ->label('Current Position')
                     ->getStateUsing(function ($record) {
                         $latestRanking = $record->rankings()
-                            ->orderBy('checked_at', 'desc')
+                            ->orderBy('fetched_at', 'desc')
                             ->first();
 
                         return $latestRanking->position ?? '–';
@@ -77,12 +77,12 @@ class KeywordPerformanceWidget extends BaseWidget
                     ->label('Change (7d)')
                     ->getStateUsing(function ($record): string {
                         $latest = $record->rankings()
-                            ->orderBy('checked_at', 'desc')
+                            ->orderBy('fetched_at', 'desc')
                             ->first();
 
                         $weekAgo = $record->rankings()
-                            ->where('checked_at', '<=', now()->subDays(7))
-                            ->orderBy('checked_at', 'desc')
+                            ->where('fetched_at', '<=', now()->subDays(7))
+                            ->orderBy('fetched_at', 'desc')
                             ->first();
 
                         if (! $latest || ! $weekAgo) {

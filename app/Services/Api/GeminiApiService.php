@@ -510,9 +510,10 @@ class GeminiApiService extends BaseApiService
     {
         try {
             // Ranking adatok lekérése
-            /** @var Collection<int, Ranking> $rankings */
-            $rankings = $keyword->rankings()
-                ->orderBy('checked_at', 'desc')
+            /** @var Collection<int, SearchConsoleRanking> $rankings */
+            $rankings = $this->project->searchConsoleRankings()
+                ->where('query', $keyword->keyword)
+                ->orderBy('fetched_at', 'desc')
                 ->limit(10)
                 ->get();
 

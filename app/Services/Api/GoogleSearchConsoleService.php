@@ -394,22 +394,25 @@ class GoogleSearchConsoleService extends BaseApiService
         $ctr = $analytics['ctr'] ?? 0;
 
         // Get the latest ranking to compare positions
-        /** @var Ranking|null $latestRanking */
-        $latestRanking = $keyword->rankings()->latest('checked_at')->first();
+        /** @var SearchConsoleRanking|null $latestRanking */
+        $latestRanking = $keyword->project->searchConsoleRankings()->where('query', $keyword->keyword)->latest('fetched_at')->first();
         $previousPosition = $latestRanking?->position;
 
-        Ranking::query()->create([
-            'keyword_id' => $keyword->id,
+        SearchConsoleRanking::query()->create([
+            'project_id' => $keyword->project_id,
+            'query' => $keyword->keyword,
+            'page' => null, // GSC doesn't provide specific URL in search analytics
             'position' => $position ? round($position) : null,
             'previous_position' => $previousPosition,
-            'url' => null, // GSC doesn't provide specific URL in search analytics
-            'featured_snippet' => false, // Would need separate API call to detect
-            'serp_features' => [
-                'clicks' => $clicks,
-                'impressions' => $impressions,
-                'ctr' => $ctr,
-            ],
-            'checked_at' => now(),
+            'clicks' => $clicks ?? 0,
+            'impressions' => $impressions ?? 0,
+            'ctr' => $ctr ?? 0,
+            'date_from' => now()->format('Y-m-d'),
+            'date_to' => now()->format('Y-m-d'),
+            'days_count' => 1,
+            'device' => 'desktop',
+            'country' => 'hun',
+            'fetched_at' => now(),
         ]);
 
         // Send notifications for significant changes
