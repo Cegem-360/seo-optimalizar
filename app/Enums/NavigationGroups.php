@@ -13,6 +13,7 @@ enum NavigationGroups: string implements HasIcon, HasLabel
     case Reports = 'Reports';
     case Settings = 'Settings';
     case Analytics = 'Analytics';
+    case SeoTools = 'SEO Tools';
 
     public function getLabel(): string
     {
@@ -21,6 +22,7 @@ enum NavigationGroups: string implements HasIcon, HasLabel
             self::Reports => 'Reports',
             self::Settings => 'Settings',
             self::Analytics => 'Analytics',
+            self::SeoTools => 'SEO Tools',
         };
     }
 
@@ -31,6 +33,7 @@ enum NavigationGroups: string implements HasIcon, HasLabel
             self::Reports => Heroicon::DocumentChartBar->getIconForSize(IconSize::Small),
             self::Settings => Heroicon::Cog6Tooth->getIconForSize(IconSize::Small),
             self::Analytics => Heroicon::ChartBar->getIconForSize(IconSize::Small),
+            self::SeoTools => Heroicon::WrenchScrewdriver->getIconForSize(IconSize::Small),
         };
     }
 }
