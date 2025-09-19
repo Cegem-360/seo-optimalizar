@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\SerpAnalysisResults\Schemas;
 
-use Filament\Infolists\Components\BadgeEntry;
 use Filament\Infolists\Components\KeyValueEntry;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class SerpAnalysisResultInfolist
@@ -30,15 +29,17 @@ class SerpAnalysisResultInfolist
 
                 Section::make('Pozíció elemzés')
                     ->schema([
-                        BadgeEntry::make('analysis_data.position_rating')
+                        TextEntry::make('analysis_data.position_rating')
                             ->label('Értékelés')
-                            ->colors([
-                                'success' => 'kiváló',
-                                'primary' => 'jó',
-                                'warning' => 'közepes',
-                                'danger' => 'gyenge',
-                                'secondary' => 'kritikus',
-                            ]),
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'kiváló' => 'success',
+                                'jó' => 'info',
+                                'közepes' => 'warning',
+                                'gyenge' => 'danger',
+                                'kritikus' => 'gray',
+                                default => 'gray',
+                            }),
 
                         TextEntry::make('analysis_data.current_position')
                             ->label('Jelenlegi pozíció')
@@ -114,7 +115,9 @@ class SerpAnalysisResultInfolist
                             ->keyLabel('Pozíció')
                             ->valueLabel('Cím és URL')
                             ->formatStateUsing(function ($state) {
-                                if (!is_array($state)) return [];
+                                if (! is_array($state)) {
+                                    return [];
+                                }
 
                                 $formatted = [];
                                 foreach ($state as $result) {
@@ -123,6 +126,7 @@ class SerpAnalysisResultInfolist
                                     $link = $result['link'] ?? '';
                                     $formatted["#$position"] = "$title ($link)";
                                 }
+
                                 return $formatted;
                             })
                             ->columnSpanFull(),
