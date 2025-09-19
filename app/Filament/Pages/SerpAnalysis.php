@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\NavigationGroups;
 use App\Models\Keyword;
 use App\Models\Project;
 use App\Models\SerpAnalysisResult;
@@ -26,7 +27,7 @@ class SerpAnalysis extends Page implements HasSchemas
 
     protected string $view = 'filament.pages.serp-analysis';
 
-    protected static UnitEnum|string|null $navigationGroup = 'SEO Tools';
+    protected static UnitEnum|string|null $navigationGroup = NavigationGroups::SeoTools;
 
     protected static ?int $navigationSort = 1;
 
