@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\Project;
 use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -41,7 +40,7 @@ class RecentRankingsTable extends TableWidget
                     ->badge()
                     ->color('gray'),
 
-                BadgeColumn::make('change')
+                TextColumn::make('change')
                     ->label('Change')
                     ->getStateUsing(function (SearchConsoleRanking $searchConsoleRanking): string {
                         if (! $searchConsoleRanking->previous_position) {
@@ -59,11 +58,12 @@ class RecentRankingsTable extends TableWidget
 
                         return '0';
                     })
-                    ->colors([
-                        'success' => fn ($state): bool => str_starts_with($state ?? '', '+') || $state === 'NEW',
-                        'danger' => fn ($state): bool => str_starts_with($state ?? '', '-'),
-                        'gray' => fn ($state): bool => $state === '0',
-                    ]),
+                    ->badge()
+                    ->color(fn ($state): string => match (true) {
+                        str_starts_with($state ?? '', '+') || $state === 'NEW' => 'success',
+                        str_starts_with($state ?? '', '-') => 'danger',
+                        default => 'gray',
+                    }),
 
                 TextColumn::make('url')
                     ->label('URL')

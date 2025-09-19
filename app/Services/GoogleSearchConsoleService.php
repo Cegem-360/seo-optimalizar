@@ -148,26 +148,29 @@ class GoogleSearchConsoleService
             ]);
 
             // Get previous ranking for comparison
-            /** @var Ranking|null $previousRanking */
-            $previousRanking = $keyword->rankings()->latest('checked_at')->first();
+            /** @var SearchConsoleRanking|null $previousRanking */
+            $previousRanking = $project->searchConsoleRankings()->where('query', $keyword->keyword)->latest('date_to')->first();
 
             // Create new ranking entry
-            $ranking = Ranking::query()->create([
-                'keyword_id' => $keyword->id,
+            $ranking = SearchConsoleRanking::query()->create([
+                'project_id' => $project->id,
+                'query' => $keyword->keyword,
+                'page' => $data['url'],
                 'position' => $data['position'],
                 'previous_position' => $previousRanking?->position,
-                'url' => $data['url'],
-                'featured_snippet' => false,
-                'serp_features' => json_encode([
-                    'clicks' => $data['clicks'],
-                    'impressions' => $data['impressions'],
-                    'ctr' => $data['ctr'],
-                ]),
-                'checked_at' => now(),
+                'clicks' => $data['clicks'] ?? 0,
+                'impressions' => $data['impressions'] ?? 0,
+                'ctr' => $data['ctr'] ?? 0,
+                'date_from' => now()->format('Y-m-d'),
+                'date_to' => now()->format('Y-m-d'),
+                'days_count' => 1,
+                'device' => 'desktop',
+                'country' => 'hun',
+                'fetched_at' => now(),
             ]);
 
             // Check for significant changes and send notifications
-            $ranking->loadMissing(['keyword.project']);
+            $ranking->loadMissing(['project']);
             $this->checkForSignificantChanges($ranking);
 
             $importedCount++;
@@ -224,16 +227,16 @@ class GoogleSearchConsoleService
         return false;
     }
 
-    private function checkForSignificantChanges(Ranking $ranking): void
+    private function checkForSignificantChanges(SearchConsoleRanking $searchConsoleRanking): void
     {
-        $previousPosition = $ranking->previous_position;
-        $currentPosition = $ranking->position;
+        $previousPosition = $searchConsoleRanking->previous_position;
+        $currentPosition = $searchConsoleRanking->position;
 
         // No previous position, this is new
         if (! $previousPosition) {
             // Send notification only if it's a good position
             if ($currentPosition <= 10) {
-                $this->sendNotification($ranking, $currentPosition <= 3 ? 'top3' : 'first_page');
+                $this->sendNotification($searchConsoleRanking, $currentPosition <= 3 ? 'top3' : 'first_page');
             }
 
             return;
@@ -245,15 +248,15 @@ class GoogleSearchConsoleService
         if ($change > 0) {
             // Entered top 3
             if ($currentPosition <= 3 && $previousPosition > 3) {
-                $this->sendNotification($ranking, 'top3');
+                $this->sendNotification($searchConsoleRanking, 'top3');
             }
             // Entered first page
             elseif ($currentPosition <= 10 && $previousPosition > 10) {
-                $this->sendNotification($ranking, 'first_page');
+                $this->sendNotification($searchConsoleRanking, 'first_page');
             }
             // Significant improvement (5+ positions)
             elseif ($change >= 5) {
-                $this->sendNotification($ranking, 'significant_improvement');
+                $this->sendNotification($searchConsoleRanking, 'significant_improvement');
             }
         }
 
@@ -263,33 +266,26 @@ class GoogleSearchConsoleService
 
             // Dropped out of first page
             if ($previousPosition <= 10 && $currentPosition > 10) {
-                $this->sendNotification($ranking, 'dropped_out');
+                $this->sendNotification($searchConsoleRanking, 'dropped_out');
             }
             // Significant decline (5+ positions)
             elseif ($absoluteChange >= 5) {
-                $this->sendNotification($ranking, 'significant_decline');
+                $this->sendNotification($searchConsoleRanking, 'significant_decline');
             }
         }
     }
 
-    private function sendNotification(Ranking $ranking, string $changeType): void
+    private function sendNotification(SearchConsoleRanking $searchConsoleRanking, string $changeType): void
     {
         try {
-            $ranking->loadMissing(['keyword.project']);
+            $searchConsoleRanking->loadMissing(['project']);
 
-            if (! $ranking->keyword) {
+            if (! $searchConsoleRanking->project) {
                 return;
             }
 
-            /** @var Keyword $keyword */
-            $keyword = $ranking->keyword;
-
-            /** @var Project|null $project */
-            $project = $keyword->project;
-
-            if (! $project) {
-                return;
-            }
+            /** @var Project $project */
+            $project = $searchConsoleRanking->project;
 
             // Get all users who have access to this project
             $users = $project->users;
@@ -311,7 +307,7 @@ class GoogleSearchConsoleService
                         $channels[] = 'database';
                     }
 
-                    $notification = new RankingChangeNotification($ranking, $changeType, $this->repository->get('app.url'), $channels);
+                    $notification = new RankingChangeNotification($searchConsoleRanking, $changeType, $this->repository->get('app.url'), $channels);
                     $user->notify($notification);
                 }
             }

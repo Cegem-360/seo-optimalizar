@@ -22,6 +22,8 @@ class SearchConsoleRankingResource extends Resource
 {
     protected static ?string $model = SearchConsoleRanking::class;
 
+    protected static ?string $tenantOwnershipRelationshipName = 'project';
+
     protected static ?string $navigationLabel = 'Search Console Rankings';
 
     protected static ?string $pluralModelLabel = 'Search Console Rankings';
