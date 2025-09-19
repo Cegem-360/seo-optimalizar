@@ -68,20 +68,6 @@ class SerpAnalysisResultInfolist
                     ])
                     ->columns(2),
 
-                Section::make('Javítási lehetőségek')
-                    ->schema([
-                        KeyValueEntry::make('analysis_data.improvement_areas')
-                            ->label('Javítási területek')
-                            ->keyLabel('Prioritás')
-                            ->valueLabel('Terület'),
-
-                        KeyValueEntry::make('analysis_data.quick_wins')
-                            ->label('Gyors győzelmek')
-                            ->keyLabel('Sorszám')
-                            ->valueLabel('Feladat'),
-                    ])
-                    ->columns(2),
-
                 Section::make('SERP metrikák')
                     ->schema([
                         TextEntry::make('serp_metrics.total_results')
