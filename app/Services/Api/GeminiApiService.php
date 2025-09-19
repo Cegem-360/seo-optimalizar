@@ -69,7 +69,7 @@ class GeminiApiService extends BaseApiService
 
             // Egyszerűbb HTTP kérés közvetlenül
             $client = new Client();
-            $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+            $response = $client->post($this->baseUrl . '/models/gemini-2.0-flash:generateContent?key=' . $apiKey, [
                 'json' => [
                     'contents' => [
                         [
@@ -149,6 +149,7 @@ class GeminiApiService extends BaseApiService
             $prompt = $this->buildPositionAnalysisPrompt(keyword: $keyword->keyword, domain: $projectDomain);
 
             $client = new Client();
+            https:// generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
             $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
                 'json' => [
                     'contents' => [
