@@ -171,28 +171,53 @@
                 {{-- Data Structure Overview --}}
                 <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">GA4 Adatok Struktúrája</h3>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 lg:grid-cols-2">
                         @foreach ($analyticsData as $category => $data)
                             <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                 <h4 class="font-medium text-gray-900 dark:text-white mb-2">{{ ucwords(str_replace('_', ' ', $category)) }}</h4>
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
                                     @if(is_array($data))
-                                        <div class="space-y-1">
-                                            @foreach ($data as $key => $value)
-                                                <div>
-                                                    <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ $key }}</span>
-                                                    @if($key === 'rows' && is_array($value))
-                                                        <span class="text-gray-500">({{ count($value) }} sorok)</span>
-                                                    @elseif($key === 'totals' && is_array($value))
-                                                        <span class="text-gray-500">({{ count($value) }} összegzés)</span>
-                                                    @elseif(is_array($value))
-                                                        <span class="text-gray-500">(tömb: {{ count($value) }} elem)</span>
-                                                    @else
-                                                        <span class="text-gray-500">({{ gettype($value) }})</span>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
+                                        {{-- Ha ez egy egyszerű numerikus tömb (mint a traffic_sources, top_pages) --}}
+                                        @if(array_keys($data) === range(0, count($data) - 1))
+                                            <div class="space-y-2">
+                                                <div class="text-xs text-gray-500">Tömbben {{ count($data) }} elem van</div>
+                                                @if(count($data) > 0)
+                                                    <div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs">
+                                                        <div class="font-medium text-blue-800 dark:text-blue-300 mb-1">Első elem szerkezete:</div>
+                                                        @if(is_array($data[0]))
+                                                            @foreach ($data[0] as $key => $value)
+                                                                <div class="flex justify-between">
+                                                                    <span class="font-mono">{{ $key }}:</span>
+                                                                    <span class="text-blue-600 dark:text-blue-400">
+                                                                        @if(is_array($value))
+                                                                            [{{ implode(', ', array_slice(array_keys($value), 0, 3)) }}{{ count($value) > 3 ? '...' : '' }}]
+                                                                        @else
+                                                                            {{ gettype($value) }}
+                                                                        @endif
+                                                                    </span>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <span>{{ gettype($data[0]) }}</span>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            {{-- Ha ez egy asszociatív tömb (mint az overview) --}}
+                                            <div class="space-y-1">
+                                                @foreach ($data as $key => $value)
+                                                    <div class="flex justify-between">
+                                                        <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ $key }}</span>
+                                                        @if(is_array($value))
+                                                            <span class="text-gray-500">(tömb: {{ count($value) }} elem)</span>
+                                                        @else
+                                                            <span class="text-gray-500">({{ gettype($value) }})</span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     @else
                                         <span class="text-gray-500">{{ gettype($data) }}</span>
                                     @endif
@@ -210,63 +235,41 @@
                                 {{ ucwords(str_replace('_', ' ', $category)) }} - Részletes Adatok
                             </h3>
 
-                            {{-- Totals if available --}}
-                            @if(isset($categoryData['totals']) && is_array($categoryData['totals']))
-                                <div class="mb-6">
-                                    <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Összegzések</h4>
-                                    @foreach ($categoryData['totals'] as $totalIndex => $total)
-                                        <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                            <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Összegzés #{{ $totalIndex + 1 }}</h5>
-                                            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
-                                                @if(is_array($total))
-                                                    @foreach ($total as $metric => $value)
-                                                        <div>
-                                                            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $metric }}</dt>
-                                                            <dd class="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-200">
-                                                                {{ is_numeric($value) ? number_format($value) : $value }}
-                                                            </dd>
-                                                        </div>
-                                                    @endforeach
-                                                @endif
-                                            </dl>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-
-                            {{-- Rows if available --}}
-                            @if(isset($categoryData['rows']) && is_array($categoryData['rows']) && count($categoryData['rows']) > 0)
+                            {{-- Ha ez egy egyszerű numerikus tömb (mint traffic_sources, top_pages) --}}
+                            @if(array_keys($categoryData) === range(0, count($categoryData) - 1))
                                 <div class="mb-6">
                                     <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                        Adatsorok ({{ count($categoryData['rows']) }} db) - Első 5 sor megjelenítve
+                                        Adatsorok ({{ count($categoryData) }} db) - Első 10 sor megjelenítve
                                     </h4>
 
                                     {{-- Show structure of first row --}}
-                                    @if(isset($categoryData['rows'][0]))
-                                        @php $firstRow = $categoryData['rows'][0]; @endphp
+                                    @if(count($categoryData) > 0)
+                                        @php $firstRow = $categoryData[0]; @endphp
                                         <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                                            <h5 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Első sor szerkezete:</h5>
+                                            <h5 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Első elem szerkezete:</h5>
                                             <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                                @foreach ($firstRow as $key => $value)
-                                                    <div class="text-xs">
-                                                        <span class="font-mono bg-blue-100 dark:bg-blue-800 px-1 rounded">{{ $key }}</span>
-                                                        @if(is_array($value))
-                                                            <span class="text-blue-600 dark:text-blue-400">
-                                                                ({{ count($value) }} elem: {{ implode(', ', array_keys($value)) }})
-                                                            </span>
-                                                        @else
-                                                            <span class="text-blue-600 dark:text-blue-400">({{ gettype($value) }})</span>
-                                                        @endif
-                                                    </div>
-                                                @endforeach
+                                                @if(is_array($firstRow))
+                                                    @foreach ($firstRow as $key => $value)
+                                                        <div class="text-xs">
+                                                            <span class="font-mono bg-blue-100 dark:bg-blue-800 px-1 rounded">{{ $key }}</span>
+                                                            @if(is_array($value))
+                                                                <span class="text-blue-600 dark:text-blue-400">
+                                                                    ({{ count($value) }} elem: {{ implode(', ', array_keys($value)) }})
+                                                                </span>
+                                                            @else
+                                                                <span class="text-blue-600 dark:text-blue-400">({{ gettype($value) }})</span>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                @endif
                                             </div>
                                         </div>
                                     @endif
 
-                                    {{-- Display first 5 rows in detail --}}
-                                    @foreach (array_slice($categoryData['rows'], 0, 5) as $rowIndex => $row)
+                                    {{-- Display first 10 rows in detail --}}
+                                    @foreach (array_slice($categoryData, 0, 10) as $rowIndex => $row)
                                         <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border">
-                                            <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Sor #{{ $rowIndex + 1 }}</h5>
+                                            <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Elem #{{ $rowIndex + 1 }}</h5>
 
                                             @if(is_array($row))
                                                 @foreach ($row as $section => $sectionData)
@@ -280,8 +283,10 @@
                                                                         <dd class="text-sm text-gray-900 dark:text-gray-200 font-medium">
                                                                             @if(is_numeric($value) && $value > 1000)
                                                                                 {{ number_format($value) }}
+                                                                            @elseif(is_numeric($value))
+                                                                                {{ $value }}
                                                                             @else
-                                                                                {{ Str::limit((string)$value, 30) }}
+                                                                                {{ Str::limit((string)$value, 40) }}
                                                                             @endif
                                                                         </dd>
                                                                     </div>
@@ -292,40 +297,161 @@
                                                         @endif
                                                     </div>
                                                 @endforeach
+                                            @else
+                                                <span class="text-sm text-gray-600 dark:text-gray-300">{{ $row }}</span>
                                             @endif
                                         </div>
                                     @endforeach
 
-                                    @if(count($categoryData['rows']) > 5)
+                                    @if(count($categoryData) > 10)
                                         <p class="text-sm text-gray-500 dark:text-gray-400 italic">
-                                            ... és még {{ count($categoryData['rows']) - 5 }} sor (lásd a teljes JSON-t lent)
+                                            ... és még {{ count($categoryData) - 10 }} elem (lásd a teljes JSON-t lent)
                                         </p>
                                     @endif
                                 </div>
-                            @endif
+                            @else
+                                {{-- Asszociatív tömb kezelése (mint az overview) --}}
 
-                            {{-- Other properties --}}
-                            @php
-                                $otherKeys = array_diff(array_keys($categoryData), ['totals', 'rows']);
-                            @endphp
-                            @if(!empty($otherKeys))
-                                <div>
-                                    <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Egyéb Tulajdonságok</h4>
-                                    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        @foreach ($otherKeys as $key)
-                                            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $key }}</dt>
-                                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-200">
-                                                    @if(is_array($categoryData[$key]))
-                                                        <pre class="text-xs bg-gray-100 dark:bg-gray-600 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($categoryData[$key], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
-                                                    @else
-                                                        {{ $categoryData[$key] }}
+                                {{-- Totals if available --}}
+                                @if(isset($categoryData['totals']) && is_array($categoryData['totals']))
+                                    <div class="mb-6">
+                                        <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Összegzések</h4>
+                                        @foreach ($categoryData['totals'] as $totalIndex => $total)
+                                            <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Összegzés #{{ $totalIndex + 1 }}</h5>
+                                                <dl class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                                                    @if(is_array($total))
+                                                        @foreach ($total as $metric => $value)
+                                                            <div>
+                                                                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $metric }}</dt>
+                                                                <dd class="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-200">
+                                                                    {{ is_numeric($value) ? number_format($value) : $value }}
+                                                                </dd>
+                                                            </div>
+                                                        @endforeach
                                                     @endif
-                                                </dd>
+                                                </dl>
                                             </div>
                                         @endforeach
-                                    </dl>
-                                </div>
+                                    </div>
+                                @endif
+
+                                {{-- Rows if available --}}
+                                @if(isset($categoryData['rows']) && is_array($categoryData['rows']) && count($categoryData['rows']) > 0)
+                                    <div class="mb-6">
+                                        <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                            Adatsorok ({{ count($categoryData['rows']) }} db) - Első 5 sor megjelenítve
+                                        </h4>
+
+                                        {{-- Show structure of first row --}}
+                                        @if(isset($categoryData['rows'][0]))
+                                            @php $firstRow = $categoryData['rows'][0]; @endphp
+                                            <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                                                <h5 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Első sor szerkezete:</h5>
+                                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                    @foreach ($firstRow as $key => $value)
+                                                        <div class="text-xs">
+                                                            <span class="font-mono bg-blue-100 dark:bg-blue-800 px-1 rounded">{{ $key }}</span>
+                                                            @if(is_array($value))
+                                                                <span class="text-blue-600 dark:text-blue-400">
+                                                                    ({{ count($value) }} elem: {{ implode(', ', array_keys($value)) }})
+                                                                </span>
+                                                            @else
+                                                                <span class="text-blue-600 dark:text-blue-400">({{ gettype($value) }})</span>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        {{-- Display first 5 rows in detail --}}
+                                        @foreach (array_slice($categoryData['rows'], 0, 5) as $rowIndex => $row)
+                                            <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border">
+                                                <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Sor #{{ $rowIndex + 1 }}</h5>
+
+                                                @if(is_array($row))
+                                                    @foreach ($row as $section => $sectionData)
+                                                        <div class="mb-3">
+                                                            <h6 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{{ $section }}</h6>
+                                                            @if(is_array($sectionData))
+                                                                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                                                                    @foreach ($sectionData as $key => $value)
+                                                                        <div>
+                                                                            <dt class="text-xs text-gray-400 font-mono">{{ $key }}</dt>
+                                                                            <dd class="text-sm text-gray-900 dark:text-gray-200 font-medium">
+                                                                                @if(is_numeric($value) && $value > 1000)
+                                                                                    {{ number_format($value) }}
+                                                                                @else
+                                                                                    {{ Str::limit((string)$value, 30) }}
+                                                                                @endif
+                                                                            </dd>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            @else
+                                                                <span class="text-sm text-gray-600 dark:text-gray-300">{{ $sectionData }}</span>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                        @endforeach
+
+                                        @if(count($categoryData['rows']) > 5)
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                ... és még {{ count($categoryData['rows']) - 5 }} sor (lásd a teljes JSON-t lent)
+                                            </p>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                {{-- Ha egyszerű asszociatív tömb (mint az overview) --}}
+                                @if(!isset($categoryData['totals']) && !isset($categoryData['rows']))
+                                    <div class="mb-6">
+                                        <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Adatok</h4>
+                                        <dl class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                                            @foreach ($categoryData as $key => $value)
+                                                <div>
+                                                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $key }}</dt>
+                                                    <dd class="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-200">
+                                                        @if(is_numeric($value))
+                                                            {{ number_format($value) }}
+                                                        @elseif(is_array($value))
+                                                            [tömb: {{ count($value) }} elem]
+                                                        @else
+                                                            {{ $value }}
+                                                        @endif
+                                                    </dd>
+                                                </div>
+                                            @endforeach
+                                        </dl>
+                                    </div>
+                                @endif
+
+                                {{-- Other properties --}}
+                                @php
+                                    $otherKeys = array_diff(array_keys($categoryData), ['totals', 'rows']);
+                                @endphp
+                                @if(!empty($otherKeys) && (isset($categoryData['totals']) || isset($categoryData['rows'])))
+                                    <div>
+                                        <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Egyéb Tulajdonságok</h4>
+                                        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            @foreach ($otherKeys as $key)
+                                                <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $key }}</dt>
+                                                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-200">
+                                                        @if(is_array($categoryData[$key]))
+                                                            <pre class="text-xs bg-gray-100 dark:bg-gray-600 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($categoryData[$key], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                        @else
+                                                            {{ $categoryData[$key] }}
+                                                        @endif
+                                                    </dd>
+                                                </div>
+                                            @endforeach
+                                        </dl>
+                                    </div>
+                                @endif
                             @endif
                         </div>
                     @endif
