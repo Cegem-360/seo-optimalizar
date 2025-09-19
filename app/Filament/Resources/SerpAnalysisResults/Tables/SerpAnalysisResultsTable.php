@@ -6,7 +6,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -28,15 +27,17 @@ class SerpAnalysisResultsTable
                     ->sortable()
                     ->formatStateUsing(fn ($state) => $state ? "#$state" : 'N/A'),
 
-                BadgeColumn::make('analysis_data.position_rating')
+                TextColumn::make('analysis_data.position_rating')
                     ->label('Értékelés')
-                    ->colors([
-                        'success' => 'kiváló',
-                        'primary' => 'jó',
-                        'warning' => 'közepes',
-                        'danger' => 'gyenge',
-                        'secondary' => 'kritikus',
-                    ]),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'kiváló' => 'success',
+                        'jó' => 'info',
+                        'közepes' => 'warning',
+                        'gyenge' => 'danger',
+                        'kritikus' => 'gray',
+                        default => 'gray',
+                    }),
 
                 TextColumn::make('analysis_data.target_position')
                     ->label('Cél pozíció')
