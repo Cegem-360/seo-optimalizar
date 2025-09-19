@@ -11,6 +11,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\Indicator;
 
 class RankingsTable
 {
@@ -263,6 +264,43 @@ class RankingsTable
                 Filter::make('recent')
                     ->label('Checked in last 7 days')
                     ->query(fn (Builder $builder): Builder => $builder->recentlyChecked(7)),
+
+                Filter::make('checked_at')
+                    ->label('Date Range')
+                    ->form([
+                        \Filament\Forms\Components\DatePicker::make('checked_from')
+                            ->label('From')
+                            ->placeholder('Select start date'),
+                        \Filament\Forms\Components\DatePicker::make('checked_until')
+                            ->label('Until')
+                            ->placeholder('Select end date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['checked_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('checked_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['checked_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('checked_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['checked_from'] ?? null) {
+                            $indicators[] = Indicator::make('From: ' . \Carbon\Carbon::parse($data['checked_from'])->format('M d, Y'))
+                                ->removeField('checked_from');
+                        }
+
+                        if ($data['checked_until'] ?? null) {
+                            $indicators[] = Indicator::make('Until: ' . \Carbon\Carbon::parse($data['checked_until'])->format('M d, Y'))
+                                ->removeField('checked_until');
+                        }
+
+                        return $indicators;
+                    }),
             ])
             ->recordActions([
                 EditAction::make(),

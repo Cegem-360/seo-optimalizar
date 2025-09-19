@@ -7,6 +7,7 @@ use App\Models\Ranking;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Carbon\Carbon;
 
 class RankingsOverviewWidget extends StatsOverviewWidget
 {
@@ -23,6 +24,22 @@ class RankingsOverviewWidget extends StatsOverviewWidget
             $query->where('project_id', $project->id);
         })->recentlyChecked(30);
 
+        // Get date range for display
+        $earliestRanking = (clone $baseQuery)->oldest('checked_at')->first();
+        $latestRanking = (clone $baseQuery)->latest('checked_at')->first();
+
+        $dateRangeDescription = 'No data available';
+        if ($earliestRanking && $latestRanking) {
+            $startDate = Carbon::parse($earliestRanking->checked_at)->format('M d, Y');
+            $endDate = Carbon::parse($latestRanking->checked_at)->format('M d, Y');
+
+            if ($startDate === $endDate) {
+                $dateRangeDescription = "Data from: {$startDate}";
+            } else {
+                $dateRangeDescription = "Data from: {$startDate} - {$endDate}";
+            }
+        }
+
         $totalRankings = (clone $baseQuery)->count();
         $topThree = (clone $baseQuery)->topThree()->count();
         $topTen = (clone $baseQuery)->topTen()->count();
@@ -34,7 +51,7 @@ class RankingsOverviewWidget extends StatsOverviewWidget
 
         return [
             Stat::make('Total Rankings', $totalRankings)
-                ->description('Keywords tracked in last 30 days')
+                ->description($dateRangeDescription)
                 ->color('primary')
                 ->icon('heroicon-o-chart-bar'),
 
