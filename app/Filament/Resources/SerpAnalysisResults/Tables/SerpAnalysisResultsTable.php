@@ -25,7 +25,7 @@ class SerpAnalysisResultsTable
                     ->label('Pozíció')
                     ->numeric()
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => $state ? "#$state" : 'N/A'),
+                    ->formatStateUsing(fn ($state): string => $state ? '#' . $state : 'N/A'),
 
                 TextColumn::make('analysis_data.position_rating')
                     ->label('Értékelés')
@@ -42,7 +42,7 @@ class SerpAnalysisResultsTable
                 TextColumn::make('analysis_data.target_position')
                     ->label('Cél pozíció')
                     ->numeric()
-                    ->formatStateUsing(fn ($state) => $state ? "#$state" : 'N/A'),
+                    ->formatStateUsing(fn ($state): string => $state ? '#' . $state : 'N/A'),
 
                 TextColumn::make('analysis_data.estimated_timeframe')
                     ->label('Időtáv')
@@ -51,7 +51,7 @@ class SerpAnalysisResultsTable
                 TextColumn::make('serp_metrics.total_results')
                     ->label('Találatok')
                     ->numeric()
-                    ->formatStateUsing(fn ($state) => $state ? number_format($state) : 'N/A'),
+                    ->formatStateUsing(fn ($state): string => $state ? number_format($state) : 'N/A'),
 
                 TextColumn::make('created_at')
                     ->label('Elemzés dátuma')

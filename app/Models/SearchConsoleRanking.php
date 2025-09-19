@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Database\Factories\SearchConsoleRankingFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SearchConsoleRanking extends Model
 {
-    /** @use HasFactory<\Database\Factories\SearchConsoleRankingFactory> */
+    /** @use HasFactory<SearchConsoleRankingFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -76,7 +78,7 @@ class SearchConsoleRanking extends Model
     protected function positionTrend(): Attribute
     {
         return Attribute::make(
-            get: function () {
+            get: function (): string {
                 if ($this->previous_position === null) {
                     return 'new';
                 }
@@ -97,7 +99,7 @@ class SearchConsoleRanking extends Model
     protected function clicksTrend(): Attribute
     {
         return Attribute::make(
-            get: function () {
+            get: function (): string {
                 if ($this->previous_clicks === null) {
                     return 'new';
                 }
@@ -118,7 +120,7 @@ class SearchConsoleRanking extends Model
     protected function dateRange(): Attribute
     {
         return Attribute::make(
-            get: function () {
+            get: function (): string {
                 $from = Carbon::parse($this->date_from)->format('M d, Y');
                 $to = Carbon::parse($this->date_to)->format('M d, Y');
 
@@ -126,53 +128,60 @@ class SearchConsoleRanking extends Model
                     return $from;
                 }
 
-                return "{$from} - {$to}";
+                return sprintf('%s - %s', $from, $to);
             }
         );
     }
 
     // Scopes
-    public function scopeDateRange(Builder $query, $from, $to): Builder
+    protected function scopeDateRange(Builder $builder, $from, $to): Builder
     {
-        return $query->where('date_from', '>=', $from)
+        return $builder->where('date_from', '>=', $from)
             ->where('date_to', '<=', $to);
     }
 
-    public function scopeCurrentPeriod(Builder $query): Builder
+    #[Scope]
+    protected function currentPeriod(Builder $builder): Builder
     {
-        return $query->whereDate('date_to', '>=', Carbon::now()->subDays(30));
+        return $builder->whereDate('date_to', '>=', Carbon::now()->subDays(30));
     }
 
-    public function scopeTopPositions(Builder $query, int $limit = 10): Builder
+    #[Scope]
+    protected function topPositions(Builder $builder, int $limit = 10): Builder
     {
-        return $query->where('position', '<=', $limit);
+        return $builder->where('position', '<=', $limit);
     }
 
-    public function scopeImproved(Builder $query): Builder
+    #[Scope]
+    protected function improved(Builder $builder): Builder
     {
-        return $query->whereNotNull('previous_position')
+        return $builder->whereNotNull('previous_position')
             ->whereColumn('position', '<', 'previous_position');
     }
 
-    public function scopeDeclined(Builder $query): Builder
+    #[Scope]
+    protected function declined(Builder $builder): Builder
     {
-        return $query->whereNotNull('previous_position')
+        return $builder->whereNotNull('previous_position')
             ->whereColumn('position', '>', 'previous_position');
     }
 
-    public function scopeWithClicks(Builder $query): Builder
+    #[Scope]
+    protected function withClicks(Builder $builder): Builder
     {
-        return $query->where('clicks', '>', 0);
+        return $builder->where('clicks', '>', 0);
     }
 
-    public function scopeByDevice(Builder $query, string $device): Builder
+    #[Scope]
+    protected function byDevice(Builder $builder, string $device): Builder
     {
-        return $query->where('device', $device);
+        return $builder->where('device', $device);
     }
 
-    public function scopeByCountry(Builder $query, string $country): Builder
+    #[Scope]
+    protected function byCountry(Builder $builder, string $country): Builder
     {
-        return $query->where('country', $country);
+        return $builder->where('country', $country);
     }
 
     // Helper methods

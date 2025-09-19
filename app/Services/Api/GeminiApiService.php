@@ -3,7 +3,6 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
-use App\Models\Ranking;
 use App\Models\SeoAnalysis;
 use Exception;
 use GuzzleHttp\Client;
@@ -544,8 +543,8 @@ class GeminiApiService extends BaseApiService
                         'keyword' => $keyword->keyword,
                         'location' => $keyword->geo_target ?: 'Hungary',
                         'id' => 'search_' . uniqid(),
-                        'total_results' => rand(100000, 5000000),
-                        'time_taken_displayed' => round(rand(20, 80) / 100, 2) . ' seconds',
+                        'total_results' => random_int(100000, 5000000),
+                        'time_taken_displayed' => round(random_int(20, 80) / 100, 2) . ' seconds',
                         'device' => 'desktop',
                         'google_domain' => 'google.com',
                     ],
@@ -570,8 +569,8 @@ class GeminiApiService extends BaseApiService
                     'keyword' => $keyword->keyword,
                     'location' => $keyword->geo_target ?: 'Hungary',
                     'id' => 'search_' . uniqid(),
-                    'total_results' => rand(100000, 5000000),
-                    'time_taken_displayed' => round(rand(20, 80) / 100, 2) . ' seconds',
+                    'total_results' => random_int(100000, 5000000),
+                    'time_taken_displayed' => round(random_int(20, 80) / 100, 2) . ' seconds',
                     'device' => 'desktop',
                     'google_domain' => 'google.com',
                 ],

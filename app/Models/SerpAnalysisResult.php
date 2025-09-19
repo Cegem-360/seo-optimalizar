@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SerpAnalysisResult extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'project_id',
         'keyword_id',

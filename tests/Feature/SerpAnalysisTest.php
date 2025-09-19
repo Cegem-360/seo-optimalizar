@@ -8,14 +8,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->project = Project::factory()->create();
     $this->project->users()->attach($this->user);
     $this->actingAs($this->user);
 });
 
-it('can save serp analysis results to database', function () {
+it('can save serp analysis results to database', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
 
     $analysisData = [
@@ -40,16 +40,16 @@ it('can save serp analysis results to database', function () {
         'ai_analysis' => 'Detailed AI analysis text',
     ];
 
-    $result = SerpAnalysisResult::create($analysisData);
+    $serpAnalysisResult = SerpAnalysisResult::query()->create($analysisData);
 
-    expect($result)->toBeInstanceOf(SerpAnalysisResult::class)
-        ->and($result->project_id)->toBe($this->project->id)
-        ->and($result->keyword_id)->toBe($keyword->id)
-        ->and($result->search_id)->toBe('test-search-id')
-        ->and($result->organic_results)->toBeArray()
-        ->and($result->serp_metrics)->toBeArray()
-        ->and($result->analysis_data)->toBeArray()
-        ->and($result->ai_analysis)->toBe('Detailed AI analysis text');
+    expect($serpAnalysisResult)->toBeInstanceOf(SerpAnalysisResult::class)
+        ->and($serpAnalysisResult->project_id)->toBe($this->project->id)
+        ->and($serpAnalysisResult->keyword_id)->toBe($keyword->id)
+        ->and($serpAnalysisResult->search_id)->toBe('test-search-id')
+        ->and($serpAnalysisResult->organic_results)->toBeArray()
+        ->and($serpAnalysisResult->serp_metrics)->toBeArray()
+        ->and($serpAnalysisResult->analysis_data)->toBeArray()
+        ->and($serpAnalysisResult->ai_analysis)->toBe('Detailed AI analysis text');
 
     $this->assertDatabaseHas('serp_analysis_results', [
         'project_id' => $this->project->id,
@@ -58,7 +58,7 @@ it('can save serp analysis results to database', function () {
     ]);
 });
 
-it('has working relationships', function () {
+it('has working relationships', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
     $result = SerpAnalysisResult::factory()->create([
         'project_id' => $this->project->id,
@@ -71,7 +71,7 @@ it('has working relationships', function () {
         ->and($result->keyword->id)->toBe($keyword->id);
 });
 
-it('casts json fields correctly', function () {
+it('casts json fields correctly', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
     $result = SerpAnalysisResult::factory()->create([
         'project_id' => $this->project->id,
@@ -83,7 +83,7 @@ it('casts json fields correctly', function () {
         ->and($result->analysis_data)->toBeArray();
 });
 
-it('can store multiple analysis results for same keyword', function () {
+it('can store multiple analysis results for same keyword', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
 
     $result1 = SerpAnalysisResult::factory()->create([
@@ -97,10 +97,10 @@ it('can store multiple analysis results for same keyword', function () {
     ]);
 
     expect($result1->id)->not->toBe($result2->id)
-        ->and(SerpAnalysisResult::where('keyword_id', $keyword->id)->count())->toBe(2);
+        ->and(SerpAnalysisResult::query()->where('keyword_id', $keyword->id)->count())->toBe(2);
 });
 
-it('deletes analysis results when project is deleted', function () {
+it('deletes analysis results when project is deleted', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
     $result = SerpAnalysisResult::factory()->create([
         'project_id' => $this->project->id,
@@ -114,7 +114,7 @@ it('deletes analysis results when project is deleted', function () {
     $this->assertDatabaseMissing('serp_analysis_results', ['id' => $result->id]);
 });
 
-it('deletes analysis results when keyword is deleted', function () {
+it('deletes analysis results when keyword is deleted', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
     $result = SerpAnalysisResult::factory()->create([
         'project_id' => $this->project->id,
@@ -128,7 +128,7 @@ it('deletes analysis results when keyword is deleted', function () {
     $this->assertDatabaseMissing('serp_analysis_results', ['id' => $result->id]);
 });
 
-it('stores complex nested json data correctly', function () {
+it('stores complex nested json data correctly', function (): void {
     $keyword = Keyword::factory()->create(['project_id' => $this->project->id]);
 
     $complexData = [
@@ -186,13 +186,13 @@ it('stores complex nested json data correctly', function () {
         'ai_analysis' => 'Comprehensive analysis of SERP positioning...',
     ];
 
-    $result = SerpAnalysisResult::create($complexData);
-    $result->refresh();
+    $serpAnalysisResult = SerpAnalysisResult::query()->create($complexData);
+    $serpAnalysisResult->refresh();
 
-    expect($result->organic_results)->toHaveCount(2)
-        ->and($result->organic_results[0]['sitelinks'])->toHaveCount(2)
-        ->and($result->organic_results[1]['rich_snippet']['rating'])->toBe(4.5)
-        ->and($result->serp_metrics['features'])->toContain('featured_snippet')
-        ->and($result->analysis_data['main_competitors'])->toHaveCount(3)
-        ->and($result->analysis_data['target_position'])->toBe(5);
+    expect($serpAnalysisResult->organic_results)->toHaveCount(2)
+        ->and($serpAnalysisResult->organic_results[0]['sitelinks'])->toHaveCount(2)
+        ->and($serpAnalysisResult->organic_results[1]['rich_snippet']['rating'])->toBe(4.5)
+        ->and($serpAnalysisResult->serp_metrics['features'])->toContain('featured_snippet')
+        ->and($serpAnalysisResult->analysis_data['main_competitors'])->toHaveCount(3)
+        ->and($serpAnalysisResult->analysis_data['target_position'])->toBe(5);
 });

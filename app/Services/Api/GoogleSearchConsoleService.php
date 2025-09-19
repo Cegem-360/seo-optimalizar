@@ -3,7 +3,6 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
-use App\Models\Ranking;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;

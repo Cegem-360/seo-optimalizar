@@ -3,10 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Project;
-use App\Models\Ranking;
+use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\DB;
 
 class CompetitorComparisonWidget extends ChartWidget
 {
@@ -45,17 +44,8 @@ class CompetitorComparisonWidget extends ChartWidget
         }
 
         // Get latest rankings for each keyword
-        $rankings = Ranking::query()
-            ->whereHas('keyword', function ($query) use ($tenant): void {
-                $query->where('project_id', $tenant->id);
-            })
-            ->whereIn('rankings.id', function ($query) use ($tenant): void {
-                $query->select(DB::raw('MAX(rankings.id)'))
-                    ->from('rankings')
-                    ->join('keywords', 'rankings.keyword_id', '=', 'keywords.id')
-                    ->where('keywords.project_id', $tenant->id)
-                    ->groupBy('rankings.keyword_id');
-            })
+        $rankings = SearchConsoleRanking::query()
+            ->where('project_id', $tenant->id)
             ->get();
 
         $distribution = [

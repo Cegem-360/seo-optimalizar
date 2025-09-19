@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Project;
-use App\Models\Ranking;
+use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
@@ -48,17 +48,15 @@ class TrafficOverviewWidget extends ChartWidget
         $startDate = Carbon::now()->subDays($days);
 
         // Get rankings data grouped by date
-        $rankings = Ranking::query()
-            ->whereHas('keyword', function ($query) use ($tenant): void {
-                $query->where('project_id', $tenant->id);
-            })
-            ->whereBetween('checked_at', [$startDate, $endDate])
-            ->selectRaw('DATE(checked_at) as date')
+        $rankings = SearchConsoleRanking::query()
+            ->where('project_id', $tenant->id)
+            ->whereBetween('date_to', [$startDate, $endDate])
+            ->selectRaw('DATE(date_to) as date')
             ->selectRaw('AVG(position) as avg_position')
-            ->selectRaw('COUNT(DISTINCT keyword_id) as keywords_tracked')
+            ->selectRaw('COUNT(DISTINCT query) as keywords_tracked')
             ->selectRaw('COUNT(CASE WHEN position <= 10 THEN 1 END) as top10_count')
-            ->selectRaw('SUM(JSON_EXTRACT(serp_features, "$.clicks")) as total_clicks')
-            ->selectRaw('SUM(JSON_EXTRACT(serp_features, "$.impressions")) as total_impressions')
+            ->selectRaw('SUM(clicks) as total_clicks')
+            ->selectRaw('SUM(impressions) as total_impressions')
             ->groupBy('date')
             ->orderBy('date')
             ->get();

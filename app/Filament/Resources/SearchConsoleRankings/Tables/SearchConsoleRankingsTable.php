@@ -39,7 +39,7 @@ class SearchConsoleRankingsTable
                     ->label('URL')
                     ->searchable()
                     ->limit(30)
-                    ->formatStateUsing(fn ($state) => parse_url($state, PHP_URL_PATH) ?? $state)
+                    ->formatStateUsing(fn ($state) => parse_url((string) $state, PHP_URL_PATH) ?? $state)
                     ->tooltip(fn ($record) => $record->page)
                     ->url(fn ($record) => $record->page, true),
 
@@ -49,26 +49,28 @@ class SearchConsoleRankingsTable
                     ->numeric(2)
                     ->badge()
                     ->color(fn ($record) => $record->getPositionBadgeColor())
-                    ->formatStateUsing(fn ($state) => number_format($state, 1)),
+                    ->formatStateUsing(fn ($state): string => number_format($state, 1)),
 
                 TextColumn::make('position_change')
                     ->label('Change')
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(function ($state) {
+                    ->formatStateUsing(function ($state): string {
                         if ($state === null) {
                             return 'NEW';
                         }
+
                         if ($state > 0) {
                             return '↑ ' . abs($state);
                         }
+
                         if ($state < 0) {
                             return '↓ ' . abs($state);
                         }
 
                         return '→ 0';
                     })
-                    ->color(fn ($state) => match (true) {
+                    ->color(fn ($state): string => match (true) {
                         $state === null => 'info',
                         $state > 0 => 'success',
                         $state < 0 => 'danger',
@@ -85,14 +87,14 @@ class SearchConsoleRankingsTable
                 TextColumn::make('clicks_change_percent')
                     ->label('Click Δ%')
                     ->sortable()
-                    ->formatStateUsing(function ($state) {
+                    ->formatStateUsing(function ($state): string {
                         if ($state === null) {
                             return '-';
                         }
 
                         return ($state > 0 ? '+' : '') . number_format($state, 1) . '%';
                     })
-                    ->color(fn ($state) => match (true) {
+                    ->color(fn ($state): string => match (true) {
                         $state === null => 'gray',
                         $state > 0 => 'success',
                         $state < 0 => 'danger',
@@ -109,9 +111,9 @@ class SearchConsoleRankingsTable
                 TextColumn::make('ctr')
                     ->label('CTR')
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => number_format($state * 100, 2) . '%')
+                    ->formatStateUsing(fn ($state): string => number_format($state * 100, 2) . '%')
                     ->badge()
-                    ->color(fn ($state) => match (true) {
+                    ->color(fn ($state): string => match (true) {
                         $state >= 0.10 => 'success',
                         $state >= 0.05 => 'warning',
                         $state >= 0.02 => 'info',
@@ -121,7 +123,7 @@ class SearchConsoleRankingsTable
                 TextColumn::make('device')
                     ->label('Device')
                     ->badge()
-                    ->icon(fn ($state) => match ($state) {
+                    ->icon(fn ($state): ?string => match ($state) {
                         'mobile' => 'heroicon-m-device-phone-mobile',
                         'tablet' => 'heroicon-m-device-tablet',
                         'desktop' => 'heroicon-m-computer-desktop',
@@ -131,7 +133,7 @@ class SearchConsoleRankingsTable
                 TextColumn::make('country')
                     ->label('Country')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => strtoupper($state)),
+                    ->formatStateUsing(fn ($state) => strtoupper((string) $state)),
 
                 TextColumn::make('fetched_at')
                     ->label('Fetched')
@@ -152,17 +154,15 @@ class SearchConsoleRankingsTable
                             ->label('To')
                             ->default(Carbon::now()),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['date_from'],
-                                fn (Builder $query, $date): Builder => $query->where('date_from', '>=', $date),
-                            )
-                            ->when(
-                                $data['date_to'],
-                                fn (Builder $query, $date): Builder => $query->where('date_to', '<=', $date),
-                            );
-                    })
+                    ->query(fn (Builder $builder, array $data): Builder => $builder
+                        ->when(
+                            $data['date_from'],
+                            fn (Builder $builder, $date): Builder => $builder->where('date_from', '>=', $date),
+                        )
+                        ->when(
+                            $data['date_to'],
+                            fn (Builder $builder, $date): Builder => $builder->where('date_to', '<=', $date),
+                        ))
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
 
@@ -189,13 +189,13 @@ class SearchConsoleRankingsTable
                         '21-50' => 'Position 21-50',
                         '50+' => 'Beyond 50',
                     ])
-                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
-                        'top3' => $query->where('position', '<=', 3),
-                        'top10' => $query->where('position', '<=', 10),
-                        '11-20' => $query->whereBetween('position', [10.01, 20]),
-                        '21-50' => $query->whereBetween('position', [20.01, 50]),
-                        '50+' => $query->where('position', '>', 50),
-                        default => $query,
+                    ->query(fn (Builder $builder, array $data): Builder => match ($data['value'] ?? null) {
+                        'top3' => $builder->where('position', '<=', 3),
+                        'top10' => $builder->where('position', '<=', 10),
+                        '11-20' => $builder->whereBetween('position', [10.01, 20]),
+                        '21-50' => $builder->whereBetween('position', [20.01, 50]),
+                        '50+' => $builder->where('position', '>', 50),
+                        default => $builder,
                     }),
 
                 // Device Filter
@@ -227,23 +227,23 @@ class SearchConsoleRankingsTable
                         'stable' => 'Stable →',
                         'new' => 'New',
                     ])
-                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
-                        'improved' => $query->improved(),
-                        'declined' => $query->declined(),
-                        'stable' => $query->where('position_change', 0),
-                        'new' => $query->whereNull('previous_position'),
-                        default => $query,
+                    ->query(fn (Builder $builder, array $data): Builder => match ($data['value'] ?? null) {
+                        'improved' => $builder->improved(),
+                        'declined' => $builder->declined(),
+                        'stable' => $builder->where('position_change', 0),
+                        'new' => $builder->whereNull('previous_position'),
+                        default => $builder,
                     }),
 
                 // Clicks Filter
                 Filter::make('has_clicks')
                     ->label('Has Clicks')
-                    ->query(fn (Builder $query): Builder => $query->withClicks()),
+                    ->query(fn (Builder $builder): Builder => $builder->withClicks()),
 
                 // Recent Filter
                 Filter::make('recent')
                     ->label('Recent (Last 7 days)')
-                    ->query(fn (Builder $query): Builder => $query->where('fetched_at', '>=', Carbon::now()->subDays(7))),
+                    ->query(fn (Builder $builder): Builder => $builder->where('fetched_at', '>=', Carbon::now()->subDays(7))),
             ])
             ->recordActions([
                 ViewAction::make(),

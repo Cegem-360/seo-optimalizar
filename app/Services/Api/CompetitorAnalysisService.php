@@ -6,7 +6,6 @@ use App\Models\CompetitorAnalysis;
 use App\Models\Keyword;
 use App\Models\PageSpeedAnalysis;
 use App\Models\Project;
-use App\Models\Ranking;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Config\Repository;

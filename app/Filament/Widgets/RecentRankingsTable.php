@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Project;
-use App\Models\Ranking;
+use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -25,8 +25,8 @@ class RecentRankingsTable extends TableWidget
         return $table
             ->query(fn (): Builder => $this->getTableQuery())
             ->columns([
-                TextColumn::make('keyword.keyword')
-                    ->label('Keyword')
+                TextColumn::make('query')
+                    ->label('Query')
                     ->searchable()
                     ->sortable(),
 
@@ -43,12 +43,12 @@ class RecentRankingsTable extends TableWidget
 
                 BadgeColumn::make('change')
                     ->label('Change')
-                    ->getStateUsing(function (Ranking $ranking): string {
-                        if (! $ranking->previous_position) {
+                    ->getStateUsing(function (SearchConsoleRanking $searchConsoleRanking): string {
+                        if (! $searchConsoleRanking->previous_position) {
                             return 'NEW';
                         }
 
-                        $change = $ranking->previous_position - $ranking->position;
+                        $change = $searchConsoleRanking->previous_position - $searchConsoleRanking->position;
                         if ($change > 0) {
                             return '+' . $change;
                         }
@@ -70,9 +70,9 @@ class RecentRankingsTable extends TableWidget
                     ->limit(50)
                     ->tooltip(fn ($record) => $record->url),
 
-                TextColumn::make('checked_at')
-                    ->label('Checked At')
-                    ->dateTime()
+                TextColumn::make('date_to')
+                    ->label('Date')
+                    ->date()
                     ->sortable(),
             ])
             ->defaultSort('checked_at', 'desc')
@@ -85,13 +85,10 @@ class RecentRankingsTable extends TableWidget
         $tenant = Filament::getTenant();
 
         if (! $tenant instanceof Project) {
-            return Ranking::query()->whereRaw('1 = 0');
+            return SearchConsoleRanking::query()->whereRaw('1 = 0');
         }
 
-        return Ranking::query()
-            ->with(['keyword'])
-            ->whereHas('keyword', function ($query) use ($tenant): void {
-                $query->where('project_id', $tenant->id);
-            });
+        return SearchConsoleRanking::query()
+            ->where('project_id', $tenant->id);
     }
 }

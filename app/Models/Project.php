@@ -37,7 +37,7 @@ class Project extends Model
 
     public function rankings(): HasManyThrough
     {
-        return $this->hasManyThrough(Ranking::class, Keyword::class);
+        return $this->hasManyThrough(SearchConsoleRanking::class, Keyword::class);
     }
 
     public function competitors(): HasMany

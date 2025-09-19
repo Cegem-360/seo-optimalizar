@@ -9,6 +9,9 @@ use App\Filament\Resources\SearchConsoleRankings\Pages\ListSearchConsoleRankings
 use App\Filament\Resources\SearchConsoleRankings\Pages\SearchConsoleRankingsDashboard;
 use App\Filament\Resources\SearchConsoleRankings\Schemas\SearchConsoleRankingForm;
 use App\Filament\Resources\SearchConsoleRankings\Tables\SearchConsoleRankingsTable;
+use App\Filament\Resources\SearchConsoleRankings\Widgets\ClicksPerformanceWidget;
+use App\Filament\Resources\SearchConsoleRankings\Widgets\PositionDistributionWidget;
+use App\Filament\Resources\SearchConsoleRankings\Widgets\SearchConsoleOverviewWidget;
 use App\Models\SearchConsoleRanking;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -59,9 +62,9 @@ class SearchConsoleRankingResource extends Resource
     public static function getWidgets(): array
     {
         return [
-            Widgets\SearchConsoleOverviewWidget::class,
-            Widgets\PositionDistributionWidget::class,
-            Widgets\ClicksPerformanceWidget::class,
+            SearchConsoleOverviewWidget::class,
+            PositionDistributionWidget::class,
+            ClicksPerformanceWidget::class,
         ];
     }
 }

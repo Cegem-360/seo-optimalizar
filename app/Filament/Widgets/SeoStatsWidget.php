@@ -4,7 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Keyword;
 use App\Models\Project;
-use App\Models\Ranking;
+use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -21,17 +21,11 @@ class SeoStatsWidget extends StatsOverviewWidget
         }
 
         $totalKeywords = Keyword::query()->where('project_id', $tenant->id)->count();
-        $totalRankings = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
-            $query->where('project_id', $tenant->id);
-        })->count();
+        $totalRankings = SearchConsoleRanking::query()->where('project_id', $tenant->id)->count();
 
-        $avgPosition = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
-            $query->where('project_id', $tenant->id);
-        })->avg('position');
+        $avgPosition = SearchConsoleRanking::query()->where('project_id', $tenant->id)->avg('position');
 
-        $topPositions = Ranking::query()->whereHas('keyword', function ($query) use ($tenant): void {
-            $query->where('project_id', $tenant->id);
-        })->where('position', '<=', 10)->count();
+        $topPositions = SearchConsoleRanking::query()->where('project_id', $tenant->id)->where('position', '<=', 10)->count();
 
         return [
             Stat::make('Total Keywords', $totalKeywords)

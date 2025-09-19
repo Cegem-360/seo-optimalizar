@@ -154,7 +154,7 @@ class SerpAnalysis extends Page implements HasSchemas
 
                 if ($analysis !== null && $analysis !== []) {
                     // Mentés az adatbázisba
-                    $serpResult = SerpAnalysisResult::create([
+                    $serpResult = SerpAnalysisResult::query()->create([
                         'project_id' => $project->id,
                         'keyword_id' => $keyword->id,
                         'search_id' => $analysis['search_metadata']['id'] ?? null,

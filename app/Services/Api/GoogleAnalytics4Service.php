@@ -372,20 +372,20 @@ class GoogleAnalytics4Service extends BaseApiService
     /**
      * Get comprehensive GA4 data for debugging and analysis
      */
-    public function getAllGA4Data(Carbon $startDate = null, Carbon $endDate = null): array
+    public function getAllGA4Data(?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         try {
             $client = $this->getClient();
             $propertyId = $this->getCredential('property_id');
 
-            if (!$client instanceof BetaAnalyticsDataClient || !$propertyId) {
+            if (! $client instanceof BetaAnalyticsDataClient || ! $propertyId) {
                 throw new Exception('GA4 client or property ID not configured');
             }
 
-            $startDate = $startDate ?? Carbon::now()->subDays(30);
-            $endDate = $endDate ?? Carbon::now();
+            $startDate ??= Carbon::now()->subDays(30);
+            $endDate ??= Carbon::now();
 
-            $data = [
+            return [
                 'overview' => $this->getOverviewData($client, $propertyId, $startDate, $endDate),
                 'traffic_sources' => $this->getTrafficSourcesData($client, $propertyId, $startDate, $endDate),
                 'top_pages' => $this->getTopPagesData($client, $propertyId, $startDate, $endDate),
@@ -394,8 +394,6 @@ class GoogleAnalytics4Service extends BaseApiService
                 'conversion_data' => $this->getConversionData($client, $propertyId, $startDate, $endDate),
                 'real_time' => $this->getRealTimeData($client, $propertyId),
             ];
-
-            return $data;
         } catch (Exception $exception) {
             Log::error('GA4 getAllData error', [
                 'error' => $exception->getMessage(),
@@ -407,9 +405,9 @@ class GoogleAnalytics4Service extends BaseApiService
         }
     }
 
-    private function getOverviewData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    private function getOverviewData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId, Carbon $startDate, Carbon $endDate): array
     {
-        $request = (new RunReportRequest())
+        $runReportRequest = (new RunReportRequest())
             ->setProperty('properties/' . $propertyId)
             ->setDateRanges([
                 new DateRange([
@@ -428,13 +426,14 @@ class GoogleAnalytics4Service extends BaseApiService
                 new Metric(['name' => 'conversions']),
             ]);
 
-        $response = $client->runReport($request);
-        return $this->processGA4Data($response)->first() ?? [];
+        $runReportResponse = $betaAnalyticsDataClient->runReport($runReportRequest);
+
+        return $this->processGA4Data($runReportResponse)->first() ?? [];
     }
 
-    private function getTrafficSourcesData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    private function getTrafficSourcesData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId, Carbon $startDate, Carbon $endDate): array
     {
-        $request = (new RunReportRequest())
+        $runReportRequest = (new RunReportRequest())
             ->setProperty('properties/' . $propertyId)
             ->setDateRanges([
                 new DateRange([
@@ -460,13 +459,14 @@ class GoogleAnalytics4Service extends BaseApiService
             ])
             ->setLimit(20);
 
-        $response = $client->runReport($request);
-        return $this->processGA4Data($response)->toArray();
+        $runReportResponse = $betaAnalyticsDataClient->runReport($runReportRequest);
+
+        return $this->processGA4Data($runReportResponse)->toArray();
     }
 
-    private function getTopPagesData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    private function getTopPagesData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId, Carbon $startDate, Carbon $endDate): array
     {
-        $request = (new RunReportRequest())
+        $runReportRequest = (new RunReportRequest())
             ->setProperty('properties/' . $propertyId)
             ->setDateRanges([
                 new DateRange([
@@ -492,13 +492,14 @@ class GoogleAnalytics4Service extends BaseApiService
             ])
             ->setLimit(20);
 
-        $response = $client->runReport($request);
-        return $this->processGA4Data($response)->toArray();
+        $runReportResponse = $betaAnalyticsDataClient->runReport($runReportRequest);
+
+        return $this->processGA4Data($runReportResponse)->toArray();
     }
 
-    private function getUserDemographicsData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    private function getUserDemographicsData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId, Carbon $startDate, Carbon $endDate): array
     {
-        $request = (new RunReportRequest())
+        $runReportRequest = (new RunReportRequest())
             ->setProperty('properties/' . $propertyId)
             ->setDateRanges([
                 new DateRange([
@@ -524,13 +525,14 @@ class GoogleAnalytics4Service extends BaseApiService
             ])
             ->setLimit(15);
 
-        $response = $client->runReport($request);
-        return $this->processGA4Data($response)->toArray();
+        $runReportResponse = $betaAnalyticsDataClient->runReport($runReportRequest);
+
+        return $this->processGA4Data($runReportResponse)->toArray();
     }
 
-    private function getDeviceData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    private function getDeviceData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId, Carbon $startDate, Carbon $endDate): array
     {
-        $request = (new RunReportRequest())
+        $runReportRequest = (new RunReportRequest())
             ->setProperty('properties/' . $propertyId)
             ->setDateRanges([
                 new DateRange([
@@ -557,13 +559,14 @@ class GoogleAnalytics4Service extends BaseApiService
             ])
             ->setLimit(15);
 
-        $response = $client->runReport($request);
-        return $this->processGA4Data($response)->toArray();
+        $runReportResponse = $betaAnalyticsDataClient->runReport($runReportRequest);
+
+        return $this->processGA4Data($runReportResponse)->toArray();
     }
 
-    private function getConversionData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    private function getConversionData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId, Carbon $startDate, Carbon $endDate): array
     {
-        $request = (new RunReportRequest())
+        $runReportRequest = (new RunReportRequest())
             ->setProperty('properties/' . $propertyId)
             ->setDateRanges([
                 new DateRange([
@@ -587,11 +590,12 @@ class GoogleAnalytics4Service extends BaseApiService
             ])
             ->setLimit(10);
 
-        $response = $client->runReport($request);
-        return $this->processGA4Data($response)->toArray();
+        $runReportResponse = $betaAnalyticsDataClient->runReport($runReportRequest);
+
+        return $this->processGA4Data($runReportResponse)->toArray();
     }
 
-    private function getRealTimeData(BetaAnalyticsDataClient $client, string $propertyId): array
+    private function getRealTimeData(BetaAnalyticsDataClient $betaAnalyticsDataClient, string $propertyId): array
     {
         try {
             // Real-time data requires different approach
@@ -612,10 +616,12 @@ class GoogleAnalytics4Service extends BaseApiService
                 ])
                 ->setLimit(5);
 
-            $response = $client->runReport($request);
+            $response = $betaAnalyticsDataClient->runReport($request);
+
             return $this->processGA4Data($response)->toArray();
         } catch (Exception $exception) {
             Log::warning('GA4 real-time data not available', ['error' => $exception->getMessage()]);
+
             return [];
         }
     }

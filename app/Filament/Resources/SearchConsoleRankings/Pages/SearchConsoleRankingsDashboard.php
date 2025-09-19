@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\SearchConsoleRankings\Pages;
 
 use App\Filament\Resources\SearchConsoleRankings\SearchConsoleRankingResource;
-use App\Filament\Resources\SearchConsoleRankings\Widgets;
+use App\Filament\Resources\SearchConsoleRankings\Widgets\ClicksPerformanceWidget;
+use App\Filament\Resources\SearchConsoleRankings\Widgets\PositionDistributionWidget;
+use App\Filament\Resources\SearchConsoleRankings\Widgets\SearchConsoleOverviewWidget;
 use App\Models\Project;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -12,6 +14,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SearchConsoleRankingsDashboard extends Page
 {
@@ -103,62 +106,62 @@ class SearchConsoleRankingsDashboard extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            Widgets\SearchConsoleOverviewWidget::class,
-            Widgets\PositionDistributionWidget::class,
-            Widgets\ClicksPerformanceWidget::class,
+            SearchConsoleOverviewWidget::class,
+            PositionDistributionWidget::class,
+            ClicksPerformanceWidget::class,
         ];
     }
 
-    public function getFilteredQuery()
+    public function getFilteredQuery(): ?HasMany
     {
         $project = Filament::getTenant();
 
         if (! $project instanceof Project) {
-            return;
+            return null;
         }
 
-        $query = $project->searchConsoleRankings();
+        $hasMany = $project->searchConsoleRankings();
 
         // Date range filter
         if ($this->filters['date_from']) {
-            $query->where('date_from', '>=', $this->filters['date_from']);
+            $hasMany->where('date_from', '>=', $this->filters['date_from']);
         }
 
         if ($this->filters['date_to']) {
-            $query->where('date_to', '<=', $this->filters['date_to']);
+            $hasMany->where('date_to', '<=', $this->filters['date_to']);
         }
 
         // Device filter
         if ($this->filters['device'] !== 'all') {
-            $query->where('device', $this->filters['device']);
+            $hasMany->where('device', $this->filters['device']);
         }
 
         // Country filter
         if ($this->filters['country'] !== 'all') {
-            $query->where('country', $this->filters['country']);
+            $hasMany->where('country', $this->filters['country']);
         }
 
         // Position range filter
         if ($this->filters['position_range'] !== 'all') {
             switch ($this->filters['position_range']) {
                 case 'top3':
-                    $query->where('position', '<=', 3);
+                    $hasMany->where('position', '<=', 3);
                     break;
                 case 'top10':
-                    $query->where('position', '<=', 10);
+                    $hasMany->where('position', '<=', 10);
                     break;
                 case '11-20':
-                    $query->whereBetween('position', [10.01, 20]);
+                    $hasMany->whereBetween('position', [10.01, 20]);
                     break;
                 case '21-50':
-                    $query->whereBetween('position', [20.01, 50]);
+                    $hasMany->whereBetween('position', [20.01, 50]);
                     break;
                 case '50+':
-                    $query->where('position', '>', 50);
+                    $hasMany->where('position', '>', 50);
                     break;
             }
         }
 
-        return $query;
+        return $hasMany;
     }
 }

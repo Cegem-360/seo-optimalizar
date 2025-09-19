@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Keyword;
 use App\Models\Project;
-use App\Models\Ranking;
 use App\Models\User;
 use App\Notifications\RankingChangeNotification;
 use Carbon\Carbon;

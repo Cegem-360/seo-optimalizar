@@ -43,11 +43,11 @@ class SerpAnalysisResultInfolist
 
                         TextEntry::make('analysis_data.current_position')
                             ->label('Jelenlegi pozíció')
-                            ->formatStateUsing(fn ($state) => $state ? "#$state" : 'Nem található'),
+                            ->formatStateUsing(fn ($state): string => $state ? '#' . $state : 'Nem található'),
 
                         TextEntry::make('analysis_data.target_position')
                             ->label('Célpozíció')
-                            ->formatStateUsing(fn ($state) => $state ? "#$state" : 'Nincs megadva'),
+                            ->formatStateUsing(fn ($state): string => $state ? '#' . $state : 'Nincs megadva'),
 
                         TextEntry::make('analysis_data.estimated_timeframe')
                             ->label('Becsült időtáv'),
