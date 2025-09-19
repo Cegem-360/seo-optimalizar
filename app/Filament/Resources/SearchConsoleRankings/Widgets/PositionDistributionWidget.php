@@ -9,7 +9,10 @@ use Filament\Widgets\ChartWidget;
 
 class PositionDistributionWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Position Distribution';
+    public function getHeading(): string
+    {
+        return 'Position Distribution';
+    }
 
     protected static ?int $sort = 2;
 

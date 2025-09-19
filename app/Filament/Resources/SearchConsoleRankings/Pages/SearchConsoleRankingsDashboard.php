@@ -54,7 +54,7 @@ class SearchConsoleRankingsDashboard extends Page
                 ->label('Filter Data')
                 ->icon('heroicon-o-funnel')
                 ->color('gray')
-                ->form([
+                ->schema([
                     DatePicker::make('date_from')
                         ->label('From Date')
                         ->default(Carbon::now()->subDays(30)),

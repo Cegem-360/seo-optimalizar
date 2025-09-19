@@ -9,7 +9,10 @@ use Filament\Widgets\ChartWidget;
 
 class ClicksPerformanceWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Clicks Performance (Last 30 Days)';
+    public function getHeading(): string
+    {
+        return 'Clicks Performance (Last 30 Days)';
+    }
 
     protected static ?int $sort = 3;
 
