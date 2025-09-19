@@ -68,24 +68,6 @@ class SerpAnalysisResultInfolist
                     ])
                     ->columns(2),
 
-                Section::make('SERP metrikák')
-                    ->schema([
-                        TextEntry::make('serp_metrics.total_results')
-                            ->label('Összes találat')
-                            ->numeric()
-                            ->formatStateUsing(fn ($state) => $state ? number_format($state) : 'N/A'),
-
-                        TextEntry::make('serp_metrics.search_time')
-                            ->label('Keresési idő'),
-
-                        TextEntry::make('serp_metrics.device')
-                            ->label('Eszköz'),
-
-                        TextEntry::make('serp_metrics.location')
-                            ->label('Lokáció'),
-                    ])
-                    ->columns(4),
-
                 Section::make('AI elemzés')
                     ->schema([
                         TextEntry::make('ai_analysis')
