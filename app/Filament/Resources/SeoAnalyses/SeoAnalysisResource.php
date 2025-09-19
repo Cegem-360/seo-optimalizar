@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SeoAnalyses;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\SeoAnalyses\Pages\CreateSeoAnalysis;
 use App\Filament\Resources\SeoAnalyses\Pages\EditSeoAnalysis;
 use App\Filament\Resources\SeoAnalyses\Pages\ListSeoAnalyses;
@@ -9,11 +10,9 @@ use App\Filament\Resources\SeoAnalyses\Schemas\SeoAnalysisForm;
 use App\Filament\Resources\SeoAnalyses\Tables\SeoAnalysesTable;
 use App\Models\Project;
 use App\Models\SeoAnalysis;
-use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -22,9 +21,7 @@ class SeoAnalysisResource extends Resource
 {
     protected static ?string $model = SeoAnalysis::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
-
-    protected static string|UnitEnum|null $navigationGroup = 'SEO Analytics';
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoManagement;
 
     protected static ?string $modelLabel = 'SEO Elemzés';
 

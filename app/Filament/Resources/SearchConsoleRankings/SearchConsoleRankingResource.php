@@ -10,7 +10,6 @@ use App\Filament\Resources\SearchConsoleRankings\Pages\SearchConsoleRankingsDash
 use App\Filament\Resources\SearchConsoleRankings\Schemas\SearchConsoleRankingForm;
 use App\Filament\Resources\SearchConsoleRankings\Tables\SearchConsoleRankingsTable;
 use App\Models\SearchConsoleRanking;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -19,8 +18,6 @@ use UnitEnum;
 class SearchConsoleRankingResource extends Resource
 {
     protected static ?string $model = SearchConsoleRanking::class;
-
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar-square';
 
     protected static ?string $navigationLabel = 'Search Console Rankings';
 
