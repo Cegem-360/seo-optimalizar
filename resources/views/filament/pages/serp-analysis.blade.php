@@ -21,9 +21,10 @@
                         <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
                     </div>
                     <div>
-                        <p class="text-lg font-semibold">Elemzés folyamatban...</p>
+                        <p class="text-lg font-semibold">AI webes keresés és elemzés folyamatban...</p>
                         @if($this->currentKeyword)
-                            <p class="text-sm opacity-90">{{ $this->currentKeyword }}</p>
+                            <p class="text-sm opacity-90">Kulcsszó: {{ $this->currentKeyword }}</p>
+                            <p class="text-xs opacity-75 mt-1">Valós idejű versenytárs azonosítás...</p>
                         @endif
                     </div>
                 </div>
@@ -67,7 +68,8 @@
                                     @if($position)
                                         <div class="inline-flex flex-col items-center bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4">
                                             <span class="text-4xl font-black">{{ $position }}</span>
-                                            <span class="text-xs uppercase tracking-wider mt-1">pozíció</span>
+                                            <span class="text-xs uppercase tracking-wider mt-1">AI pozíció</span>
+                                            <span class="text-xs opacity-75 mt-0.5">webes keresés alapján</span>
                                         </div>
                                     @else
                                         <div class="inline-flex items-center bg-white/20 backdrop-blur-md rounded-xl px-4 py-2">
@@ -146,7 +148,7 @@
                                             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
                                             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100-4h-.5a1 1 0 000-2H8a2 2 0 012-2h2a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
                                         </svg>
-                                        Top Versenytársak
+                                        AI által azonosított TOP versenytársak
                                     </h4>
                                     <div class="flex flex-wrap gap-2">
                                         @foreach($analysis['main_competitors'] as $index => $competitor)
@@ -298,15 +300,23 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">SERP Pozíció Elemzés</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">AI Webes Keresés & SERP Elemzés</h3>
                     <p class="text-gray-600 mb-6">
-                        Válassz ki egy vagy több kulcsszót a listából a részletes elemzéshez.
+                        Válassz ki egy vagy több kulcsszót. Az AI saját webes keresést végez és azonosítja a valós versenytársakat.
                     </p>
-                    <div class="inline-flex items-center text-sm text-indigo-600 font-medium">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"></path>
-                        </svg>
-                        Google Gemini AI alapú elemzés
+                    <div class="space-y-2">
+                        <div class="inline-flex items-center text-sm text-indigo-600 font-medium">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"></path>
+                            </svg>
+                            Google Gemini AI webes keresés
+                        </div>
+                        <div class="inline-flex items-center text-sm text-purple-600 font-medium ml-7">
+                            <span class="text-xs">• Valós idejű versenytárs felismerés</span>
+                        </div>
+                        <div class="inline-flex items-center text-sm text-purple-600 font-medium ml-7">
+                            <span class="text-xs">• Aktuális pozíció meghatározás</span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -382,10 +382,8 @@ class GeminiApiService extends BaseApiService
                '  "current_position": 1|2|3...' . "\n" .
                '  "main_competitors": ["domain1.com", "domain2.com", "domain3.com"],' . "\n" .
                '  "competitor_advantages": ["konkrét előny1", "konkrét előny2", "konkrét előny3"],' . "\n" .
-               '  "improvement_areas": ["konkrét javítási terület1", "konkrét javítási terület2", "konkrét javítási terület3"],' . "\n" .
                '  "target_position": 5,' . "\n" .
                '  "estimated_timeframe": "2-3 hónap",' . "\n" .
-               '  "quick_wins": ["azonnal megvalósítható javítás1", "azonnal megvalósítható javítás2"],' . "\n" .
                '  "detailed_analysis": "Itt írd le részletesen az elemzést tiszta szövegként, magyarázd el a pozíció okait és a javítási stratégiát. Ez egy összefüggő bekezdés legyen, NE tartalmazzon JSON kódot vagy egyéb formázást."' . "\n" .
                '}' . "\n" .
                '```';
