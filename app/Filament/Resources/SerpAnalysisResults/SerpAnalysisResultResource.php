@@ -19,6 +19,8 @@ class SerpAnalysisResultResource extends Resource
 {
     protected static ?string $model = SerpAnalysisResult::class;
 
+    protected static ?string $tenantOwnershipRelationshipName = 'project';
+
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoTools;
 
     protected static ?int $navigationSort = 2;

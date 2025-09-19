@@ -60,6 +60,11 @@ class Project extends Model
         return $this->hasMany(NotificationPreference::class);
     }
 
+    public function serpAnalysisResults(): HasMany
+    {
+        return $this->hasMany(SerpAnalysisResult::class);
+    }
+
     #[Scope]
     protected function withKeywordCount(Builder $builder): void
     {
