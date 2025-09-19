@@ -368,4 +368,255 @@ class GoogleAnalytics4Service extends BaseApiService
 
         return new Collection($processedData);
     }
+
+    /**
+     * Get comprehensive GA4 data for debugging and analysis
+     */
+    public function getAllGA4Data(Carbon $startDate = null, Carbon $endDate = null): array
+    {
+        try {
+            $client = $this->getClient();
+            $propertyId = $this->getCredential('property_id');
+
+            if (!$client instanceof BetaAnalyticsDataClient || !$propertyId) {
+                throw new Exception('GA4 client or property ID not configured');
+            }
+
+            $startDate = $startDate ?? Carbon::now()->subDays(30);
+            $endDate = $endDate ?? Carbon::now();
+
+            $data = [
+                'overview' => $this->getOverviewData($client, $propertyId, $startDate, $endDate),
+                'traffic_sources' => $this->getTrafficSourcesData($client, $propertyId, $startDate, $endDate),
+                'top_pages' => $this->getTopPagesData($client, $propertyId, $startDate, $endDate),
+                'user_demographics' => $this->getUserDemographicsData($client, $propertyId, $startDate, $endDate),
+                'device_data' => $this->getDeviceData($client, $propertyId, $startDate, $endDate),
+                'conversion_data' => $this->getConversionData($client, $propertyId, $startDate, $endDate),
+                'real_time' => $this->getRealTimeData($client, $propertyId),
+            ];
+
+            return $data;
+        } catch (Exception $exception) {
+            Log::error('GA4 getAllData error', [
+                'error' => $exception->getMessage(),
+                'start_date' => $startDate?->format('Y-m-d'),
+                'end_date' => $endDate?->format('Y-m-d'),
+            ]);
+
+            throw $exception;
+        }
+    }
+
+    private function getOverviewData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty('properties/' . $propertyId)
+            ->setDateRanges([
+                new DateRange([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]),
+            ])
+            ->setMetrics([
+                new Metric(['name' => 'sessions']),
+                new Metric(['name' => 'activeUsers']),
+                new Metric(['name' => 'totalUsers']),
+                new Metric(['name' => 'newUsers']),
+                new Metric(['name' => 'bounceRate']),
+                new Metric(['name' => 'averageSessionDuration']),
+                new Metric(['name' => 'screenPageViews']),
+                new Metric(['name' => 'conversions']),
+            ]);
+
+        $response = $client->runReport($request);
+        return $this->processGA4Data($response)->first() ?? [];
+    }
+
+    private function getTrafficSourcesData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty('properties/' . $propertyId)
+            ->setDateRanges([
+                new DateRange([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]),
+            ])
+            ->setDimensions([
+                new Dimension(['name' => 'sessionDefaultChannelGroup']),
+                new Dimension(['name' => 'sessionSourceMedium']),
+            ])
+            ->setMetrics([
+                new Metric(['name' => 'sessions']),
+                new Metric(['name' => 'activeUsers']),
+                new Metric(['name' => 'bounceRate']),
+                new Metric(['name' => 'conversions']),
+            ])
+            ->setOrderBys([
+                new OrderBy([
+                    'metric' => new MetricOrderBy(['metric_name' => 'sessions']),
+                    'desc' => true,
+                ]),
+            ])
+            ->setLimit(20);
+
+        $response = $client->runReport($request);
+        return $this->processGA4Data($response)->toArray();
+    }
+
+    private function getTopPagesData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty('properties/' . $propertyId)
+            ->setDateRanges([
+                new DateRange([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]),
+            ])
+            ->setDimensions([
+                new Dimension(['name' => 'pagePath']),
+                new Dimension(['name' => 'pageTitle']),
+            ])
+            ->setMetrics([
+                new Metric(['name' => 'screenPageViews']),
+                new Metric(['name' => 'sessions']),
+                new Metric(['name' => 'averageSessionDuration']),
+                new Metric(['name' => 'bounceRate']),
+            ])
+            ->setOrderBys([
+                new OrderBy([
+                    'metric' => new MetricOrderBy(['metric_name' => 'screenPageViews']),
+                    'desc' => true,
+                ]),
+            ])
+            ->setLimit(20);
+
+        $response = $client->runReport($request);
+        return $this->processGA4Data($response)->toArray();
+    }
+
+    private function getUserDemographicsData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty('properties/' . $propertyId)
+            ->setDateRanges([
+                new DateRange([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]),
+            ])
+            ->setDimensions([
+                new Dimension(['name' => 'country']),
+                new Dimension(['name' => 'city']),
+                new Dimension(['name' => 'language']),
+            ])
+            ->setMetrics([
+                new Metric(['name' => 'activeUsers']),
+                new Metric(['name' => 'sessions']),
+                new Metric(['name' => 'screenPageViews']),
+            ])
+            ->setOrderBys([
+                new OrderBy([
+                    'metric' => new MetricOrderBy(['metric_name' => 'activeUsers']),
+                    'desc' => true,
+                ]),
+            ])
+            ->setLimit(15);
+
+        $response = $client->runReport($request);
+        return $this->processGA4Data($response)->toArray();
+    }
+
+    private function getDeviceData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty('properties/' . $propertyId)
+            ->setDateRanges([
+                new DateRange([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]),
+            ])
+            ->setDimensions([
+                new Dimension(['name' => 'deviceCategory']),
+                new Dimension(['name' => 'operatingSystem']),
+                new Dimension(['name' => 'browser']),
+            ])
+            ->setMetrics([
+                new Metric(['name' => 'activeUsers']),
+                new Metric(['name' => 'sessions']),
+                new Metric(['name' => 'bounceRate']),
+                new Metric(['name' => 'averageSessionDuration']),
+            ])
+            ->setOrderBys([
+                new OrderBy([
+                    'metric' => new MetricOrderBy(['metric_name' => 'sessions']),
+                    'desc' => true,
+                ]),
+            ])
+            ->setLimit(15);
+
+        $response = $client->runReport($request);
+        return $this->processGA4Data($response)->toArray();
+    }
+
+    private function getConversionData(BetaAnalyticsDataClient $client, string $propertyId, Carbon $startDate, Carbon $endDate): array
+    {
+        $request = (new RunReportRequest())
+            ->setProperty('properties/' . $propertyId)
+            ->setDateRanges([
+                new DateRange([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]),
+            ])
+            ->setDimensions([
+                new Dimension(['name' => 'eventName']),
+            ])
+            ->setMetrics([
+                new Metric(['name' => 'eventCount']),
+                new Metric(['name' => 'conversions']),
+                new Metric(['name' => 'totalRevenue']),
+            ])
+            ->setOrderBys([
+                new OrderBy([
+                    'metric' => new MetricOrderBy(['metric_name' => 'eventCount']),
+                    'desc' => true,
+                ]),
+            ])
+            ->setLimit(10);
+
+        $response = $client->runReport($request);
+        return $this->processGA4Data($response)->toArray();
+    }
+
+    private function getRealTimeData(BetaAnalyticsDataClient $client, string $propertyId): array
+    {
+        try {
+            // Real-time data requires different approach
+            $request = (new RunReportRequest())
+                ->setProperty('properties/' . $propertyId)
+                ->setDateRanges([
+                    new DateRange([
+                        'start_date' => 'today',
+                        'end_date' => 'today',
+                    ]),
+                ])
+                ->setMetrics([
+                    new Metric(['name' => 'activeUsers']),
+                    new Metric(['name' => 'screenPageViews']),
+                ])
+                ->setDimensions([
+                    new Dimension(['name' => 'country']),
+                ])
+                ->setLimit(5);
+
+            $response = $client->runReport($request);
+            return $this->processGA4Data($response)->toArray();
+        } catch (Exception $exception) {
+            Log::warning('GA4 real-time data not available', ['error' => $exception->getMessage()]);
+            return [];
+        }
+    }
 }

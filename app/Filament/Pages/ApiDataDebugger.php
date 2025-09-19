@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use App\Services\Api\GoogleAnalytics4Service;
 use App\Services\GoogleSearchConsoleService;
 use BackedEnum;
 use Exception;
@@ -13,7 +14,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Google\Analytics\Data\V1beta\BetaAnalyticsDataClient;
+use Google\Analytics\Data\V1beta\Client\BetaAnalyticsDataClient;
 use Google\Analytics\Data\V1beta\DateRange;
 use Google\Analytics\Data\V1beta\Dimension;
 use Google\Analytics\Data\V1beta\Metric;
@@ -258,146 +259,28 @@ class ApiDataDebugger extends Page
             }
 
             $manager = ApiServiceManager::forProject($project);
-            $analytics = $manager->getGoogleAnalytics();
+            /** @var GoogleAnalytics4Service $analytics */
+            $analytics = $manager->getGoogleAnalytics4();
 
             if (! $analytics->isConfigured()) {
-                throw new Exception('Google Analytics not configured for this project');
+                throw new Exception('Google Analytics 4 not configured for this project');
             }
 
-            // Get property ID from project settings
-            $propertyId = $project->google_analytics_property_id ?? null;
+            // Use the comprehensive data fetching method
+            $startDate = Carbon::parse($data['startDate']);
+            $endDate = Carbon::parse($data['endDate']);
 
-            if (! $propertyId) {
-                throw new Exception('Google Analytics Property ID not set for this project');
-            }
-
-            // Direct API call for raw data
-            $credentialsPath = config('services.google.credentials_path');
-            if (! $credentialsPath) {
-                throw new Exception('Google credentials not configured');
-            }
-
-            $client = new BetaAnalyticsDataClient([
-                'credentials' => base_path($credentialsPath),
-            ]);
-
-            $request = new RunReportRequest([
-                'property' => 'properties/' . $propertyId,
-                'date_ranges' => [
-                    new DateRange([
-                        'start_date' => Carbon::parse($data['startDate'])->format('Y-m-d'),
-                        'end_date' => Carbon::parse($data['endDate'])->format('Y-m-d'),
-                    ]),
-                ],
-                'dimensions' => [
-                    new Dimension(['name' => 'date']),
-                    new Dimension(['name' => 'sessionSource']),
-                    new Dimension(['name' => 'sessionMedium']),
-                    new Dimension(['name' => 'deviceCategory']),
-                    new Dimension(['name' => 'country']),
-                    new Dimension(['name' => 'pagePath']),
-                ],
-                'metrics' => [
-                    new Metric(['name' => 'sessions']),
-                    new Metric(['name' => 'totalUsers']),
-                    new Metric(['name' => 'newUsers']),
-                    new Metric(['name' => 'bounceRate']),
-                    new Metric(['name' => 'averageSessionDuration']),
-                    new Metric(['name' => 'screenPageViews']),
-                    new Metric(['name' => 'conversions']),
-                    new Metric(['name' => 'totalRevenue']),
-                ],
-                'limit' => 100,
-            ]);
-
-            $response = $client->runReport($request);
-
-            $this->analyticsData = [
-                'metadata' => [
-                    'property_id' => $propertyId,
-                    'start_date' => $data['startDate'],
-                    'end_date' => $data['endDate'],
-                    'dimension_headers' => [],
-                    'metric_headers' => [],
-                    'total_rows' => $response->getRowCount(),
-                    'sampling_metadata' => null,
-                ],
-                'totals' => [],
-                'rows' => [],
-                'raw_api_response' => [
-                    'property_quota' => $response->getPropertyQuota() ? [
-                        'tokens_per_day' => $response->getPropertyQuota()->getTokensPerDay()?->getValue(),
-                        'tokens_per_hour' => $response->getPropertyQuota()->getTokensPerHour()?->getValue(),
-                        'concurrent_requests' => $response->getPropertyQuota()->getConcurrentRequests()?->getValue(),
-                        'server_errors_per_project_per_hour' => $response->getPropertyQuota()->getServerErrorsPerProjectPerHour()?->getValue(),
-                    ] : null,
-                    'kind' => $response->getKind(),
-                ]
-            ];
-
-            // Process dimension headers
-            foreach ($response->getDimensionHeaders() as $header) {
-                $this->analyticsData['metadata']['dimension_headers'][] = $header->getName();
-            }
-
-            // Process metric headers
-            foreach ($response->getMetricHeaders() as $header) {
-                $this->analyticsData['metadata']['metric_headers'][] = [
-                    'name' => $header->getName(),
-                    'type' => $header->getType(),
-                ];
-            }
-
-            // Process sampling metadata if available
-            if ($response->getMetadata() && $response->getMetadata()->getSamplingMetadatas()) {
-                $samplingData = [];
-                foreach ($response->getMetadata()->getSamplingMetadatas() as $sampling) {
-                    $samplingData[] = [
-                        'samples_read_count' => $sampling->getSamplesReadCount(),
-                        'sampling_space_size' => $sampling->getSamplingSpaceSize(),
-                    ];
-                }
-                $this->analyticsData['metadata']['sampling_metadata'] = $samplingData;
-            }
-
-            // Process totals
-            foreach ($response->getTotals() as $total) {
-                $totalData = [];
-                foreach ($total->getMetricValues() as $index => $value) {
-                    $metricName = $this->analyticsData['metadata']['metric_headers'][$index]['name'] ?? 'unknown';
-                    $totalData[$metricName] = $value->getValue();
-                }
-                $this->analyticsData['totals'][] = $totalData;
-            }
-
-            // Process rows
-            foreach ($response->getRows() as $row) {
-                $rowData = [
-                    'dimensions' => [],
-                    'metrics' => []
-                ];
-
-                foreach ($row->getDimensionValues() as $index => $value) {
-                    $dimensionName = $this->analyticsData['metadata']['dimension_headers'][$index] ?? 'unknown';
-                    $rowData['dimensions'][$dimensionName] = $value->getValue();
-                }
-
-                foreach ($row->getMetricValues() as $index => $value) {
-                    $metricName = $this->analyticsData['metadata']['metric_headers'][$index]['name'] ?? 'unknown';
-                    $rowData['metrics'][$metricName] = $value->getValue();
-                }
-
-                $this->analyticsData['rows'][] = $rowData;
-            }
-
+            $this->analyticsData = $analytics->getAllGA4Data($startDate, $endDate);
             $this->selectedService = 'analytics';
 
             Notification::make()
-                ->title('Analytics data fetched successfully')
-                ->body(sprintf('Fetched %d rows from property %s', count($this->analyticsData['rows']), $propertyId))
+                ->title('Google Analytics 4 Data Successfully Fetched')
+                ->body(sprintf('Fetched comprehensive GA4 data for date range %s to %s.',
+                    $data['startDate'],
+                    $data['endDate']
+                ))
                 ->success()
                 ->send();
-
         } catch (ApiException $exception) {
             $this->errorMessage = 'Analytics API Error: ' . $exception->getMessage();
             Log::error('Analytics Debug API Error: ' . $exception->getMessage());
