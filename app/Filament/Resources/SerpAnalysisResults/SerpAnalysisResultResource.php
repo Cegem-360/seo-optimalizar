@@ -10,18 +10,14 @@ use App\Filament\Resources\SerpAnalysisResults\Schemas\SerpAnalysisResultForm;
 use App\Filament\Resources\SerpAnalysisResults\Schemas\SerpAnalysisResultInfolist;
 use App\Filament\Resources\SerpAnalysisResults\Tables\SerpAnalysisResultsTable;
 use App\Models\SerpAnalysisResult;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
 class SerpAnalysisResultResource extends Resource
 {
     protected static ?string $model = SerpAnalysisResult::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::MagnifyingGlassCircle;
 
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoTools;
 

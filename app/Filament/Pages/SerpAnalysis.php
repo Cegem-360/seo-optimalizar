@@ -6,7 +6,6 @@ use App\Models\Keyword;
 use App\Models\Project;
 use App\Models\SerpAnalysisResult;
 use App\Services\Api\ApiServiceManager;
-use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -15,7 +14,6 @@ use Filament\Pages\Page;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use UnitEnum;
 
@@ -25,8 +23,6 @@ use UnitEnum;
 class SerpAnalysis extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::MagnifyingGlassCircle;
 
     protected string $view = 'filament.pages.serp-analysis';
 
