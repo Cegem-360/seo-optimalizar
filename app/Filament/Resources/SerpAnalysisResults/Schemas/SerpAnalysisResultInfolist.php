@@ -76,29 +76,7 @@ class SerpAnalysisResultInfolist
                             ->valueLabel('Előny'),
                     ])
                     ->columns(3),
-                Section::make('Organikus találatok')
-                    ->schema([
-                        KeyValueEntry::make('organic_results')
-                            ->label('SERP eredmények')
-                            ->keyLabel('Pozíció')
-                            ->valueLabel('Cím és URL')
-                            ->formatStateUsing(function ($state) {
-                                if (! is_array($state)) {
-                                    return [];
-                                }
 
-                                $formatted = [];
-                                foreach ($state as $result) {
-                                    $position = $result['position'] ?? 'N/A';
-                                    $title = $result['title'] ?? 'Nincs cím';
-                                    $link = $result['link'] ?? '';
-                                    $formatted["#$position"] = "$title ($link)";
-                                }
-
-                                return $formatted;
-                            })
-                            ->columnSpanFull(),
-                    ]),
             ]);
     }
 }
