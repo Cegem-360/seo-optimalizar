@@ -141,7 +141,7 @@ class GeminiApiService extends BaseApiService
             // Lekérjük a többi versenytársat is
             $competitors = $this->getCompetitorsForKeyword($keyword);
 
-            $prompt = $this->buildPositionAnalysisPrompt($keyword->keyword, $currentPosition, $url, $competitors);
+            $prompt = $this->buildPositionAnalysisPrompt($keyword->keyword, $url);
 
             $client = new Client();
             $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
@@ -358,31 +358,28 @@ class GeminiApiService extends BaseApiService
         ]);
     }
 
-    private function buildPositionAnalysisPrompt(string $keyword, $position, string $url, array $competitors): string
+    private function buildPositionAnalysisPrompt(string $keyword, string $url): string
     {
-        $competitorsList = '';
-        foreach (array_slice($competitors, 0, 20) as $comp) {
-            $competitorsList .= sprintf('Pozíció %s: %s%s', $comp['position'], $comp['domain'], PHP_EOL);
-        }
 
-        $positionText = is_numeric($position) ? $position . '. helyen' : 'nincs rankingben';
-
-        return "Elemezd a következő kulcsszó pozícióját és versenytársait!\n\n" .
+        return "Végezz webes keresést és elemzést a következő kulcsszó aktuális pozíciójáról!\n\n" .
                "Kulcsszó: '{$keyword}'\n" .
-               sprintf('Jelenlegi pozíció: %s%s', $positionText, PHP_EOL) .
-               "URL: {$url}\n\n" .
-               "Top 20 versenytárs:\n{$competitorsList}\n\n" .
-               "Kérlek válaszolj a következő kérdésekre:\n" .
-               "1. Milyen a jelenlegi pozíció értékelése? (kiváló/jó/közepes/gyenge/kritikus)\n" .
-               "2. Kik a fő versenytársak és miért ők vannak előrébb?\n" .
-               "3. Milyen tartalmi vagy technikai előnyük van a versenytársaknak?\n" .
-               "4. Mit kell javítani a jobb pozícióért?\n" .
-               "5. Reális célpozíció és időtáv\n\n" .
+               "Elemzendő URL: {$url}\n\n" .
+               "FELADAT: \n" .
+               "1. Indíts saját webes keresést a '{$keyword}' kulcsszóra!\n" .
+               "2. Azonosítsd a TOP 10-20 találatot és versenytársakat a keresési eredmények alapján!\n" .
+               "3. Határozd meg az '{$url}' aktuális pozícióját a valós keresési eredményekben!\n" .
+               "4. Elemezd a versenytársak előnyeit és hátrányait!\n\n" .
+               "Válaszolj a következő kérdésekre a saját webes keresésed alapján:\n" .
+               "1. Mi az URL valós pozíciója és annak értékelése? (kiváló/jó/közepes/gyenge/kritikus)\n" .
+               "2. Kik a TOP versenytársak a TE keresésed alapján és miért ők vannak előrébb?\n" .
+               "3. Milyen tartalmi vagy technikai előnyöket találtál a versenytársaknál?\n" .
+               "4. Mit kell javítani az aktuális piaci helyzetben a jobb pozícióért?\n" .
+               "5. Reális célpozíció és időtáv az általad talált versenyhelyzet alapján\n\n" .
                "Válaszod JSON formátumban add meg (a detailed_analysis mező legyen tiszta szöveg, NE tartalmazzon JSON-t vagy kód blokkokat):\n" .
                '```json' . "\n" .
                '{' . "\n" .
                '  "position_rating": "kiváló|jó|közepes|gyenge|kritikus",' . "\n" .
-               '  "current_position": ' . (is_numeric($position) ? $position : 'null') . ',' . "\n" .
+               '  "current_position": 1|2|3...' . "\n" .
                '  "main_competitors": ["domain1.com", "domain2.com", "domain3.com"],' . "\n" .
                '  "competitor_advantages": ["konkrét előny1", "konkrét előny2", "konkrét előny3"],' . "\n" .
                '  "improvement_areas": ["konkrét javítási terület1", "konkrét javítási terület2", "konkrét javítási terület3"],' . "\n" .
