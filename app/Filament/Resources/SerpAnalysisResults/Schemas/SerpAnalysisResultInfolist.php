@@ -66,7 +66,7 @@ class SerpAnalysisResultInfolist
                             ->keyLabel('Sorszám')
                             ->valueLabel('Előny'),
                     ])
-                    ->columns(2),
+                    ->columns(1),
 
                 Section::make('AI elemzés')
                     ->schema([
