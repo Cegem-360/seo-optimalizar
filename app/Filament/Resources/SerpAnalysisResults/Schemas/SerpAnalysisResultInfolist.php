@@ -54,7 +54,15 @@ class SerpAnalysisResultInfolist
                     ])
                     ->columns(4),
 
+                Section::make('AI elemzés')
+                    ->schema([
+                        TextEntry::make('ai_analysis')
+                            ->label('Részletes elemzés')
+                            ->prose()
+                            ->columnSpanFull(),
+                    ]),
                 Section::make('Versenytársak')
+                    ->columnSpanFull()
                     ->schema([
                         KeyValueEntry::make('analysis_data.main_competitors')
                             ->label('Fő versenytársak')
@@ -66,16 +74,7 @@ class SerpAnalysisResultInfolist
                             ->keyLabel('Sorszám')
                             ->valueLabel('Előny'),
                     ])
-                    ->columns(1),
-
-                Section::make('AI elemzés')
-                    ->schema([
-                        TextEntry::make('ai_analysis')
-                            ->label('Részletes elemzés')
-                            ->prose()
-                            ->columnSpanFull(),
-                    ]),
-
+                    ->columns(3),
                 Section::make('Organikus találatok')
                     ->schema([
                         KeyValueEntry::make('organic_results')
