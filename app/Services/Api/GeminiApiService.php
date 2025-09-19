@@ -360,31 +360,37 @@ class GeminiApiService extends BaseApiService
 
     private function buildPositionAnalysisPrompt(string $keyword, string $url): string
     {
-
         return "Végezz webes keresést és elemzést a következő kulcsszó aktuális pozíciójáról!\n\n" .
                "Kulcsszó: '{$keyword}'\n" .
                "Elemzendő URL: {$url}\n\n" .
                "FELADAT: \n" .
                "1. Indíts saját webes keresést a '{$keyword}' kulcsszóra!\n" .
-               "2. Azonosítsd a TOP 10-20 találatot és versenytársakat a keresési eredmények alapján!\n" .
-               "3. Határozd meg az '{$url}' aktuális pozícióját a valós keresési eredményekben!\n" .
-               "4. Elemezd a versenytársak előnyeit és hátrányait!\n\n" .
+               "2. Azonosítsd a TOP 100 találatot a keresési eredményekben!\n" .
+               "3. Határozd meg PONTOSAN az '{$url}' aktuális pozícióját!\n" .
+               "4. Ha nem található az első 100-ban, akkor a current_position legyen null!\n" .
+               "5. Elemezd a TOP 10-20 versenytársat részletesen!\n\n" .
+               "FONTOS SZABÁLYOK:\n" .
+               "- Ha az URL nincs az első 100 találatban, a current_position KÖTELEZŐEN null legyen!\n" .
+               "- Ne adj meg pozíciót, ha nem találod az URL-t a keresési eredményekben!\n" .
+               "- A detailed_analysis-ben mindig írd le, hogy hányadik helyen találtad az URL-t, vagy hogy nem találtad!\n\n" .
                "Válaszolj a következő kérdésekre a saját webes keresésed alapján:\n" .
-               "1. Mi az URL valós pozíciója és annak értékelése? (kiváló/jó/közepes/gyenge/kritikus)\n" .
-               "2. Kik a TOP versenytársak a TE keresésed alapján és miért ők vannak előrébb?\n" .
-               "3. Milyen tartalmi vagy technikai előnyöket találtál a versenytársaknál?\n" .
-               "4. Mit kell javítani az aktuális piaci helyzetben a jobb pozícióért?\n" .
-               "5. Reális célpozíció és időtáv az általad talált versenyhelyzet alapján\n\n" .
-               "Válaszod JSON formátumban add meg (a detailed_analysis mező legyen tiszta szöveg, NE tartalmazzon JSON-t vagy kód blokkokat):\n" .
+               "1. Mi az URL PONTOS pozíciója? (null ha nincs az első 100-ban)\n" .
+               "2. Kik a TOP 10 versenytárs a keresésed alapján?\n" .
+               "3. Milyen előnyöket azonosítasz a versenytársaknál?\n" .
+               "4. Mit kell javítani a jobb pozícióért?\n" .
+               "5. Reális célpozíció és időtáv\n\n" .
+               "Válaszod JSON formátumban add meg:\n" .
                '```json' . "\n" .
                '{' . "\n" .
                '  "position_rating": "kiváló|jó|közepes|gyenge|kritikus",' . "\n" .
-               '  "current_position": 1|2|3...' . "\n" .
+               '  "current_position": null vagy konkrét szám (1-100),' . "\n" .
                '  "main_competitors": ["domain1.com", "domain2.com", "domain3.com"],' . "\n" .
                '  "competitor_advantages": ["konkrét előny1", "konkrét előny2", "konkrét előny3"],' . "\n" .
+               '  "improvement_areas": ["konkrét javítási terület1", "konkrét javítási terület2"],' . "\n" .
                '  "target_position": 5,' . "\n" .
                '  "estimated_timeframe": "2-3 hónap",' . "\n" .
-               '  "detailed_analysis": "Itt írd le részletesen az elemzést tiszta szövegként, magyarázd el a pozíció okait és a javítási stratégiát. Ez egy összefüggő bekezdés legyen, NE tartalmazzon JSON kódot vagy egyéb formázást."' . "\n" .
+               '  "quick_wins": ["gyors javítás1", "gyors javítás2"],' . "\n" .
+               '  "detailed_analysis": "Részletes elemzés. KÖTELEZŐEN írd le: Hányadik helyen találtad az URL-t (vagy hogy nem találtad). Magyarázd el a pozíció okait és a javítási stratégiát."' . "\n" .
                '}' . "\n" .
                '```';
     }
