@@ -65,6 +65,11 @@ class Project extends Model
         return $this->hasMany(SerpAnalysisResult::class);
     }
 
+    public function searchConsoleRankings(): HasMany
+    {
+        return $this->hasMany(SearchConsoleRanking::class);
+    }
+
     #[Scope]
     protected function withKeywordCount(Builder $builder): void
     {
