@@ -55,6 +55,7 @@ class SerpAnalysisResultInfolist
                     ->columns(4),
 
                 Section::make('AI elemzés')
+                    ->columnSpanFull()
                     ->schema([
                         TextEntry::make('ai_analysis')
                             ->label('Részletes elemzés')
