@@ -170,50 +170,89 @@
             <div class="space-y-6">
                 {{-- Data Structure Overview --}}
                 <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">GA4 Adatok Struktúrája</h3>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 lg:grid-cols-2">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">GA4 Adatok Struktúrája és Első Értékek</h3>
+                    <div class="grid grid-cols-1 gap-4">
                         @foreach ($analyticsData as $category => $data)
                             <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                <h4 class="font-medium text-gray-900 dark:text-white mb-2">{{ ucwords(str_replace('_', ' ', $category)) }}</h4>
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3 text-lg">{{ ucwords(str_replace('_', ' ', $category)) }}</h4>
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
                                     @if(is_array($data))
                                         {{-- Ha ez egy egyszerű numerikus tömb (mint a traffic_sources, top_pages) --}}
                                         @if(array_keys($data) === range(0, count($data) - 1))
-                                            <div class="space-y-2">
-                                                <div class="text-xs text-gray-500">Tömbben {{ count($data) }} elem van</div>
-                                                @if(count($data) > 0)
-                                                    <div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs">
-                                                        <div class="font-medium text-blue-800 dark:text-blue-300 mb-1">Első elem szerkezete:</div>
-                                                        @if(is_array($data[0]))
-                                                            @foreach ($data[0] as $key => $value)
-                                                                <div class="flex justify-between">
-                                                                    <span class="font-mono">{{ $key }}:</span>
-                                                                    <span class="text-blue-600 dark:text-blue-400">
-                                                                        @if(is_array($value))
-                                                                            [{{ implode(', ', array_slice(array_keys($value), 0, 3)) }}{{ count($value) > 3 ? '...' : '' }}]
-                                                                        @else
-                                                                            {{ gettype($value) }}
-                                                                        @endif
-                                                                    </span>
+                                            <div class="space-y-3">
+                                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Összesen {{ count($data) }} elem van a tömbben
+                                                </div>
+                                                @if(count($data) > 0 && is_array($data[0]))
+                                                    <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+                                                        <div class="font-medium text-blue-800 dark:text-blue-300 mb-2">Első elem példa adatokkal:</div>
+                                                        @foreach ($data[0] as $section => $sectionData)
+                                                            <div class="mb-3 pl-2">
+                                                                <div class="font-mono text-xs text-blue-700 dark:text-blue-400 mb-1 font-semibold">
+                                                                    {{ $section }}:
                                                                 </div>
-                                                            @endforeach
-                                                        @else
-                                                            <span>{{ gettype($data[0]) }}</span>
-                                                        @endif
+                                                                @if(is_array($sectionData))
+                                                                    <div class="pl-4 space-y-1">
+                                                                        @foreach ($sectionData as $key => $value)
+                                                                            <div class="flex justify-between text-xs">
+                                                                                <span class="font-mono text-gray-600 dark:text-gray-400">{{ $key }}:</span>
+                                                                                <span class="text-blue-600 dark:text-blue-300 font-medium">
+                                                                                    @if(is_numeric($value))
+                                                                                        {{ number_format($value, is_float($value) ? 2 : 0) }}
+                                                                                    @elseif(is_string($value))
+                                                                                        "{{ Str::limit($value, 50) }}"
+                                                                                    @elseif(is_bool($value))
+                                                                                        {{ $value ? 'true' : 'false' }}
+                                                                                    @elseif(is_null($value))
+                                                                                        null
+                                                                                    @elseif(is_array($value))
+                                                                                        [{{ count($value) }} elem]
+                                                                                    @else
+                                                                                        {{ gettype($value) }}
+                                                                                    @endif
+                                                                                </span>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @else
+                                                                    <div class="pl-4 text-xs">
+                                                                        <span class="text-blue-600 dark:text-blue-300">
+                                                                            @if(is_numeric($sectionData))
+                                                                                {{ number_format($sectionData, is_float($sectionData) ? 2 : 0) }}
+                                                                            @elseif(is_string($sectionData))
+                                                                                "{{ Str::limit($sectionData, 50) }}"
+                                                                            @else
+                                                                                {{ json_encode($sectionData) }}
+                                                                            @endif
+                                                                        </span>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
                                                     </div>
                                                 @endif
                                             </div>
                                         @else
                                             {{-- Ha ez egy asszociatív tömb (mint az overview) --}}
-                                            <div class="space-y-1">
+                                            <div class="space-y-2">
                                                 @foreach ($data as $key => $value)
-                                                    <div class="flex justify-between">
-                                                        <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ $key }}</span>
-                                                        @if(is_array($value))
-                                                            <span class="text-gray-500">(tömb: {{ count($value) }} elem)</span>
-                                                        @else
-                                                            <span class="text-gray-500">({{ gettype($value) }})</span>
-                                                        @endif
+                                                    <div class="flex justify-between items-center">
+                                                        <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">{{ $key }}</span>
+                                                        <span class="text-sm font-medium">
+                                                            @if(is_array($value))
+                                                                <span class="text-gray-500">[tömb: {{ count($value) }} elem]</span>
+                                                            @elseif(is_numeric($value))
+                                                                <span class="text-green-600 dark:text-green-400">{{ number_format($value, is_float($value) ? 2 : 0) }}</span>
+                                                            @elseif(is_string($value))
+                                                                <span class="text-blue-600 dark:text-blue-400">"{{ Str::limit($value, 30) }}"</span>
+                                                            @elseif(is_bool($value))
+                                                                <span class="text-purple-600 dark:text-purple-400">{{ $value ? 'true' : 'false' }}</span>
+                                                            @elseif(is_null($value))
+                                                                <span class="text-gray-400">null</span>
+                                                            @else
+                                                                <span class="text-gray-500">({{ gettype($value) }})</span>
+                                                            @endif
+                                                        </span>
                                                     </div>
                                                 @endforeach
                                             </div>
