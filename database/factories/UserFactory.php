@@ -4,8 +4,7 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Hashing\BcryptHasher;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -19,17 +18,6 @@ class UserFactory extends Factory
     protected static ?string $password = null;
 
     /**
-     * Create a new factory instance.
-     *
-     * @param  int|null  $count
-     * @param  string|null  $connection
-     */
-    public function __construct($count, $connection, ?bool $expandRelationships, array $excludeRelationships, private readonly BcryptHasher $bcryptHasher, ?Collection $states = null, ?Collection $has = null, ?Collection $for = null, ?Collection $afterMaking = null, ?Collection $afterCreating = null, ?Collection $recycle = null)
-    {
-        parent::__construct($count, $states, $has, $for, $afterMaking, $afterCreating, $connection, $recycle, $expandRelationships, $excludeRelationships);
-    }
-
-    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -40,7 +28,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= $this->bcryptHasher->make('password'),
+            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Keyword;
 use App\Models\Project;
+use App\Models\SerpAnalysisResult;
 use App\Services\Api\ApiServiceManager;
 use BackedEnum;
 use Exception;
@@ -155,11 +156,37 @@ class SerpAnalysis extends Page implements HasSchemas
                 $analysis = $gemini->analyzeKeywordWithPosition($keyword, $latestRanking);
 
                 if ($analysis !== null && $analysis !== []) {
+                    // Mentés az adatbázisba
+                    $serpResult = SerpAnalysisResult::create([
+                        'project_id' => $project->id,
+                        'keyword_id' => $keyword->id,
+                        'search_id' => $analysis['search_metadata']['id'] ?? null,
+                        'organic_results' => $analysis['organic_results'] ?? [],
+                        'serp_metrics' => [
+                            'total_results' => $analysis['search_metadata']['total_results'] ?? null,
+                            'search_time' => $analysis['search_metadata']['time_taken_displayed'] ?? null,
+                            'device' => $analysis['search_metadata']['device'] ?? 'desktop',
+                            'location' => $analysis['search_metadata']['google_domain'] ?? null,
+                        ],
+                        'analysis_data' => [
+                            'position_rating' => $analysis['position_rating'] ?? null,
+                            'current_position' => $analysis['current_position'] ?? $latestRanking->position ?? null,
+                            'main_competitors' => $analysis['main_competitors'] ?? [],
+                            'competitor_advantages' => $analysis['competitor_advantages'] ?? [],
+                            'improvement_areas' => $analysis['improvement_areas'] ?? [],
+                            'target_position' => $analysis['target_position'] ?? null,
+                            'estimated_timeframe' => $analysis['estimated_timeframe'] ?? null,
+                            'quick_wins' => $analysis['quick_wins'] ?? [],
+                        ],
+                        'ai_analysis' => $analysis['detailed_analysis'] ?? null,
+                    ]);
+
                     $this->analysisResults[] = [
                         'keyword' => $keyword->keyword,
                         'current_position' => $latestRanking->position ?? null,
                         'checked_at' => $latestRanking->checked_at ?? null,
                         'analysis' => $analysis,
+                        'saved_id' => $serpResult->id,
                     ];
                 }
 

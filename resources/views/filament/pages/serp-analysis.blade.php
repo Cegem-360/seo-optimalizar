@@ -93,21 +93,31 @@
                                 <!-- Értékelés kártya -->
                                 @if (isset($analysis['position_rating']))
                                     <div
-                                        class="bg-gradient-to-br 
-                                        @if ($analysis['position_rating'] == 'kiváló') from-green-50 to-emerald-100 border-green-300
-                                        @elseif($analysis['position_rating'] == 'jó') from-blue-50 to-sky-100 border-blue-300
-                                        @elseif($analysis['position_rating'] == 'közepes') from-amber-50 to-yellow-100 border-amber-300
-                                        @elseif($analysis['position_rating'] == 'gyenge') from-orange-50 to-red-100 border-orange-300
-                                        @else from-gray-50 to-slate-100 border-gray-300 @endif
-                                        border-2 rounded-2xl p-5 relative overflow-hidden">
-                                        <div
-                                            class="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 
-                                            @if ($analysis['position_rating'] == 'kiváló') bg-green-200
-                                            @elseif($analysis['position_rating'] == 'jó') bg-blue-200
-                                            @elseif($analysis['position_rating'] == 'közepes') bg-amber-200
-                                            @elseif($analysis['position_rating'] == 'gyenge') bg-orange-200
-                                            @else bg-gray-200 @endif
-                                            rounded-full opacity-20">
+                                        x-data="{
+                                            rating: '{{ $analysis['position_rating'] }}',
+                                            getClasses() {
+                                                const baseClasses = 'bg-gradient-to-br border-2 rounded-2xl p-5 relative overflow-hidden ';
+                                                const ratingClasses = {
+                                                    'kiváló': 'from-green-50 to-emerald-100 border-green-300',
+                                                    'jó': 'from-blue-50 to-sky-100 border-blue-300',
+                                                    'közepes': 'from-amber-50 to-yellow-100 border-amber-300',
+                                                    'gyenge': 'from-orange-50 to-red-100 border-orange-300'
+                                                };
+                                                return baseClasses + (ratingClasses[this.rating] || 'from-gray-50 to-slate-100 border-gray-300');
+                                            },
+                                            getBubbleClasses() {
+                                                const baseClasses = 'absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 rounded-full opacity-20 ';
+                                                const bubbleColors = {
+                                                    'kiváló': 'bg-green-200',
+                                                    'jó': 'bg-blue-200',
+                                                    'közepes': 'bg-amber-200',
+                                                    'gyenge': 'bg-orange-200'
+                                                };
+                                                return baseClasses + (bubbleColors[this.rating] || 'bg-gray-200');
+                                            }
+                                        }"
+                                        :class="getClasses()">
+                                        <div :class="getBubbleClasses()">
                                         </div>
                                         <div class="relative">
                                             <p
