@@ -167,7 +167,7 @@ class SerpAnalysis extends Page implements HasSchemas
                         ],
                         'analysis_data' => [
                             'position_rating' => $analysis['position_rating'] ?? null,
-                            'current_position' => $analysis['current_position'] ?? $latestRanking->position ?? null,
+                            'current_position' => $analysis['current_position'] ?? null,
                             'main_competitors' => $analysis['main_competitors'] ?? [],
                             'competitor_advantages' => $analysis['competitor_advantages'] ?? [],
                             'improvement_areas' => $analysis['improvement_areas'] ?? [],
@@ -180,7 +180,7 @@ class SerpAnalysis extends Page implements HasSchemas
 
                     $this->analysisResults[] = [
                         'keyword' => $keyword->keyword,
-                        'current_position' => $latestRanking->position ?? null,
+                        'current_position' => $analysis['current_position'] ?? null,
                         'checked_at' => $latestRanking->checked_at ?? null,
                         'analysis' => $analysis,
                         'saved_id' => $serpResult->id,
