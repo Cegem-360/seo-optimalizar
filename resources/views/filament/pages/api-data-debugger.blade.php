@@ -168,176 +168,178 @@
         {{-- Analytics Data --}}
         @if ($selectedService === 'analytics' && $analyticsData)
             <div class="space-y-6">
-                {{-- Overview Data --}}
-                @if(!empty($analyticsData['overview']))
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Analytics Overview</h3>
-                        @if(!empty($analyticsData['overview']['totals']))
-                            <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-4">
-                                @foreach ($analyticsData['overview']['totals'][0] ?? [] as $metric => $value)
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            {{ ucwords(str_replace('_', ' ', $metric)) }}</dt>
-                                        <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-200">
-                                            {{ number_format($value) }}
-                                        </dd>
-                                    </div>
-                                @endforeach
-                            </dl>
-                        @endif
-                    </div>
-                @endif
-
-                {{-- Traffic Sources --}}
-                @if(!empty($analyticsData['traffic_sources']['rows']))
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Traffic Sources</h3>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Source</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Medium</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sessions</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Users</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    @foreach (array_slice($analyticsData['traffic_sources']['rows'], 0, 10) as $row)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ $row['dimensions']['sessionSource'] ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ $row['dimensions']['sessionMedium'] ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['sessions'] ?? 0) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['totalUsers'] ?? 0) }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Top Pages --}}
-                @if(!empty($analyticsData['top_pages']['rows']))
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Top Pages</h3>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Page</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Page Views</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sessions</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Users</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    @foreach (array_slice($analyticsData['top_pages']['rows'], 0, 10) as $row)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ Str::limit($row['dimensions']['pagePath'] ?? 'N/A', 50) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['screenPageViews'] ?? 0) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['sessions'] ?? 0) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['totalUsers'] ?? 0) }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Device Data --}}
-                @if(!empty($analyticsData['device_data']['rows']))
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Device Categories</h3>
-                        <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-3">
-                            @foreach ($analyticsData['device_data']['rows'] as $row)
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        {{ ucfirst($row['dimensions']['deviceCategory'] ?? 'Unknown') }}</dt>
-                                    <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-200">
-                                        {{ number_format($row['metrics']['sessions'] ?? 0) }} sessions
-                                    </dd>
+                {{-- Data Structure Overview --}}
+                <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">GA4 Adatok Struktúrája</h3>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach ($analyticsData as $category => $data)
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-2">{{ ucwords(str_replace('_', ' ', $category)) }}</h4>
+                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    @if(is_array($data))
+                                        <div class="space-y-1">
+                                            @foreach ($data as $key => $value)
+                                                <div>
+                                                    <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ $key }}</span>
+                                                    @if($key === 'rows' && is_array($value))
+                                                        <span class="text-gray-500">({{ count($value) }} sorok)</span>
+                                                    @elseif($key === 'totals' && is_array($value))
+                                                        <span class="text-gray-500">({{ count($value) }} összegzés)</span>
+                                                    @elseif(is_array($value))
+                                                        <span class="text-gray-500">(tömb: {{ count($value) }} elem)</span>
+                                                    @else
+                                                        <span class="text-gray-500">({{ gettype($value) }})</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-gray-500">{{ gettype($data) }}</span>
+                                    @endif
                                 </div>
-                            @endforeach
-                        </dl>
+                            </div>
+                        @endforeach
                     </div>
-                @endif
+                </div>
 
-                {{-- User Demographics --}}
-                @if(!empty($analyticsData['user_demographics']['rows']))
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">User Demographics (Top Countries)</h3>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Country</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sessions</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Users</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    @foreach (array_slice($analyticsData['user_demographics']['rows'], 0, 10) as $row)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ $row['dimensions']['country'] ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['sessions'] ?? 0) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {{ number_format($row['metrics']['totalUsers'] ?? 0) }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endif
+                {{-- Detailed Category Analysis --}}
+                @foreach ($analyticsData as $category => $categoryData)
+                    @if(is_array($categoryData) && !empty($categoryData))
+                        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                                {{ ucwords(str_replace('_', ' ', $category)) }} - Részletes Adatok
+                            </h3>
 
-                {{-- Real-time Data --}}
-                @if(!empty($analyticsData['real_time']['rows']))
-                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Real-time Activity</h3>
-                        @if(!empty($analyticsData['real_time']['totals']))
-                            <div class="mb-4">
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-                                    @foreach ($analyticsData['real_time']['totals'][0] ?? [] as $metric => $value)
-                                        <div>
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                {{ ucwords(str_replace('_', ' ', $metric)) }}</dt>
-                                            <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-200">
-                                                {{ number_format($value) }}
-                                            </dd>
+                            {{-- Totals if available --}}
+                            @if(isset($categoryData['totals']) && is_array($categoryData['totals']))
+                                <div class="mb-6">
+                                    <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Összegzések</h4>
+                                    @foreach ($categoryData['totals'] as $totalIndex => $total)
+                                        <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                            <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Összegzés #{{ $totalIndex + 1 }}</h5>
+                                            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                                                @if(is_array($total))
+                                                    @foreach ($total as $metric => $value)
+                                                        <div>
+                                                            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $metric }}</dt>
+                                                            <dd class="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-200">
+                                                                {{ is_numeric($value) ? number_format($value) : $value }}
+                                                            </dd>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            </dl>
                                         </div>
                                     @endforeach
-                                </dl>
-                            </div>
-                        @endif
-                    </div>
-                @endif
+                                </div>
+                            @endif
+
+                            {{-- Rows if available --}}
+                            @if(isset($categoryData['rows']) && is_array($categoryData['rows']) && count($categoryData['rows']) > 0)
+                                <div class="mb-6">
+                                    <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                        Adatsorok ({{ count($categoryData['rows']) }} db) - Első 5 sor megjelenítve
+                                    </h4>
+
+                                    {{-- Show structure of first row --}}
+                                    @if(isset($categoryData['rows'][0]))
+                                        @php $firstRow = $categoryData['rows'][0]; @endphp
+                                        <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                                            <h5 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Első sor szerkezete:</h5>
+                                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                @foreach ($firstRow as $key => $value)
+                                                    <div class="text-xs">
+                                                        <span class="font-mono bg-blue-100 dark:bg-blue-800 px-1 rounded">{{ $key }}</span>
+                                                        @if(is_array($value))
+                                                            <span class="text-blue-600 dark:text-blue-400">
+                                                                ({{ count($value) }} elem: {{ implode(', ', array_keys($value)) }})
+                                                            </span>
+                                                        @else
+                                                            <span class="text-blue-600 dark:text-blue-400">({{ gettype($value) }})</span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    {{-- Display first 5 rows in detail --}}
+                                    @foreach (array_slice($categoryData['rows'], 0, 5) as $rowIndex => $row)
+                                        <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border">
+                                            <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Sor #{{ $rowIndex + 1 }}</h5>
+
+                                            @if(is_array($row))
+                                                @foreach ($row as $section => $sectionData)
+                                                    <div class="mb-3">
+                                                        <h6 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{{ $section }}</h6>
+                                                        @if(is_array($sectionData))
+                                                            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                                                                @foreach ($sectionData as $key => $value)
+                                                                    <div>
+                                                                        <dt class="text-xs text-gray-400 font-mono">{{ $key }}</dt>
+                                                                        <dd class="text-sm text-gray-900 dark:text-gray-200 font-medium">
+                                                                            @if(is_numeric($value) && $value > 1000)
+                                                                                {{ number_format($value) }}
+                                                                            @else
+                                                                                {{ Str::limit((string)$value, 30) }}
+                                                                            @endif
+                                                                        </dd>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        @else
+                                                            <span class="text-sm text-gray-600 dark:text-gray-300">{{ $sectionData }}</span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    @endforeach
+
+                                    @if(count($categoryData['rows']) > 5)
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+                                            ... és még {{ count($categoryData['rows']) - 5 }} sor (lásd a teljes JSON-t lent)
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Other properties --}}
+                            @php
+                                $otherKeys = array_diff(array_keys($categoryData), ['totals', 'rows']);
+                            @endphp
+                            @if(!empty($otherKeys))
+                                <div>
+                                    <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Egyéb Tulajdonságok</h4>
+                                    <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        @foreach ($otherKeys as $key)
+                                            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{{ $key }}</dt>
+                                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-200">
+                                                    @if(is_array($categoryData[$key]))
+                                                        <pre class="text-xs bg-gray-100 dark:bg-gray-600 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($categoryData[$key], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                    @else
+                                                        {{ $categoryData[$key] }}
+                                                    @endif
+                                                </dd>
+                                            </div>
+                                        @endforeach
+                                    </dl>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                @endforeach
 
                 {{-- Complete Raw JSON Data --}}
                 <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Complete GA4 Raw JSON Data</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Teljes GA4 Raw JSON Adatok</h3>
+                    <div class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                        <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                            <strong>Figyelem:</strong> Ez a teljes, feldolgozatlan JSON adat a Google Analytics 4 API-ból.
+                            Itt láthatod pontosan, milyen struktúrában és nevekkel érkeznek az adatok.
+                        </p>
+                    </div>
                     <pre class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto text-xs text-gray-800 dark:text-gray-200"><code>{{ json_encode($analyticsData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</code></pre>
                 </div>
             </div>
