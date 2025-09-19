@@ -10,7 +10,7 @@ use Filament\Widgets\Widget;
 
 class RankingsDateRangeWidget extends Widget
 {
-    protected static string $view = 'filament.resources.rankings.widgets.date-range-widget';
+    protected string $view = 'filament.resources.rankings.widgets.date-range-widget';
 
     protected int|string|array $columnSpan = 'full';
 
