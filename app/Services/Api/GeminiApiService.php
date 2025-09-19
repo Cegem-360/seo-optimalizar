@@ -136,12 +136,17 @@ class GeminiApiService extends BaseApiService
 
             // Építsük fel a SERP adatokat a pozíció elemzéshez
             $currentPosition = $latestRanking->position ?? 'Nincs adat';
-            $url = $latestRanking->url ?? $this->project->url;
+
+            // Domain kibontása a projekt URL-ből (univerzális kereséshez)
+            $projectDomain = parse_url($this->project->url, PHP_URL_HOST);
+            if ($projectDomain && str_starts_with($projectDomain, 'www.')) {
+                $projectDomain = substr($projectDomain, 4);
+            }
 
             // Lekérjük a többi versenytársat is
             $competitors = $this->getCompetitorsForKeyword($keyword);
 
-            $prompt = $this->buildPositionAnalysisPrompt($keyword->keyword, $url);
+            $prompt = $this->buildPositionAnalysisPrompt(keyword: $keyword->keyword, domain: $projectDomain);
 
             $client = new Client();
             $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
@@ -358,23 +363,25 @@ class GeminiApiService extends BaseApiService
         ]);
     }
 
-    private function buildPositionAnalysisPrompt(string $keyword, string $url): string
+    private function buildPositionAnalysisPrompt(string $keyword, string $domain): string
     {
         return "Végezz webes keresést és elemzést a következő kulcsszó aktuális pozíciójáról!\n\n" .
                "Kulcsszó: '{$keyword}'\n" .
-               "Elemzendő URL: {$url}\n\n" .
+               "Elemzendő domain: {$domain} (BÁRMILYEN aloldallal, pl: {$domain}/* )\n\n" .
                "FELADAT: \n" .
                "1. Indíts saját webes keresést a '{$keyword}' kulcsszóra!\n" .
                "2. Azonosítsd a TOP 100 találatot a keresési eredményekben!\n" .
-               "3. Határozd meg PONTOSAN az '{$url}' aktuális pozícióját!\n" .
-               "4. Ha nem található az első 100-ban, akkor a current_position legyen null!\n" .
-               "5. Elemezd a TOP 10-20 versenytársat részletesen!\n\n" .
+               "3. Keresd meg a '{$domain}' domainről származó BÁRMILYEN oldalt/aloldalt!\n" .
+               "4. Ha van találat a '{$domain}' domainről (pl. {$domain}/xyz vagy www.{$domain}/abc), írd le a pozícióját!\n" .
+               "5. Ha nem található SEMMILYEN {$domain} oldal az első 100-ban, akkor a current_position legyen null!\n" .
+               "6. Elemezd a TOP 10-20 versenytársat részletesen!\n\n" .
                "FONTOS SZABÁLYOK:\n" .
-               "- Ha az URL nincs az első 100 találatban, a current_position KÖTELEZŐEN null legyen!\n" .
-               "- Ne adj meg pozíciót, ha nem találod az URL-t a keresési eredményekben!\n" .
-               "- A detailed_analysis-ben mindig írd le, hogy hányadik helyen találtad az URL-t, vagy hogy nem találtad!\n\n" .
+               "- Univerzálisan keresd a '{$domain}' domaint: {$domain}, www.{$domain}, {$domain}/any-page, stb.\n" .
+               "- Ha BÁRMILYEN {$domain} aloldal nincs az első 100 találatban, a current_position KÖTELEZŐEN null legyen!\n" .
+               "- Ne adj meg pozíciót, ha nem találsz SEMMILYEN {$domain} oldalt a keresési eredményekben!\n" .
+               "- A detailed_analysis-ben mindig írd le, hogy melyik {$domain} oldalt találtad és hányadik helyen, vagy hogy nem találtál semmit!\n\n" .
                "Válaszolj a következő kérdésekre a saját webes keresésed alapján:\n" .
-               "1. Mi az URL PONTOS pozíciója? (null ha nincs az első 100-ban)\n" .
+               "1. Mi a '{$domain}' domain PONTOS pozíciója? (null ha nincs az első 100-ban)\n" .
                "2. Kik a TOP 10 versenytárs a keresésed alapján?\n" .
                "3. Milyen előnyöket azonosítasz a versenytársaknál?\n" .
                "4. Mit kell javítani a jobb pozícióért?\n" .
@@ -510,12 +517,18 @@ class GeminiApiService extends BaseApiService
                 ->get();
 
             if ($rankings->isEmpty()) {
+                // Domain kibontása univerzális kereséshez
+                $projectDomain = parse_url($this->project->url, PHP_URL_HOST);
+                if ($projectDomain && str_starts_with($projectDomain, 'www.')) {
+                    $projectDomain = substr($projectDomain, 4);
+                }
+
                 // Ha nincs ranking adat, készítsünk dummy adatot teszteléshez
                 return [
                     'organic_results' => [
                         [
                             'title' => 'Példa eredmény 1 - ' . $keyword->keyword,
-                            'link' => $this->project->url,
+                            'link' => 'https://' . $projectDomain . '/page1',
                             'snippet' => 'Ez egy példa leírás a ' . $keyword->keyword . ' kulcsszóhoz.',
                             'position' => 1,
                         ],
@@ -529,6 +542,11 @@ class GeminiApiService extends BaseApiService
                     'search_metadata' => [
                         'keyword' => $keyword->keyword,
                         'location' => $keyword->geo_target ?: 'Hungary',
+                        'id' => 'search_' . uniqid(),
+                        'total_results' => rand(100000, 5000000),
+                        'time_taken_displayed' => round(rand(20, 80) / 100, 2) . ' seconds',
+                        'device' => 'desktop',
+                        'google_domain' => 'google.com',
                     ],
                 ];
             }
@@ -550,6 +568,11 @@ class GeminiApiService extends BaseApiService
                 'search_metadata' => [
                     'keyword' => $keyword->keyword,
                     'location' => $keyword->geo_target ?: 'Hungary',
+                    'id' => 'search_' . uniqid(),
+                    'total_results' => rand(100000, 5000000),
+                    'time_taken_displayed' => round(rand(20, 80) / 100, 2) . ' seconds',
+                    'device' => 'desktop',
+                    'google_domain' => 'google.com',
                 ],
             ];
         } catch (Exception) {

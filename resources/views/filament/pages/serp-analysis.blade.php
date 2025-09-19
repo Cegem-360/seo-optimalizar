@@ -92,31 +92,29 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 <!-- Értékelés kártya -->
                                 @if (isset($analysis['position_rating']))
-                                    <div
-                                        x-data="{
-                                            rating: '{{ $analysis['position_rating'] }}',
-                                            getClasses() {
-                                                const baseClasses = 'bg-gradient-to-br border-2 rounded-2xl p-5 relative overflow-hidden ';
-                                                const ratingClasses = {
-                                                    'kiváló': 'from-green-50 to-emerald-100 border-green-300',
-                                                    'jó': 'from-blue-50 to-sky-100 border-blue-300',
-                                                    'közepes': 'from-amber-50 to-yellow-100 border-amber-300',
-                                                    'gyenge': 'from-orange-50 to-red-100 border-orange-300'
-                                                };
-                                                return baseClasses + (ratingClasses[this.rating] || 'from-gray-50 to-slate-100 border-gray-300');
-                                            },
-                                            getBubbleClasses() {
-                                                const baseClasses = 'absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 rounded-full opacity-20 ';
-                                                const bubbleColors = {
-                                                    'kiváló': 'bg-green-200',
-                                                    'jó': 'bg-blue-200',
-                                                    'közepes': 'bg-amber-200',
-                                                    'gyenge': 'bg-orange-200'
-                                                };
-                                                return baseClasses + (bubbleColors[this.rating] || 'bg-gray-200');
-                                            }
-                                        }"
-                                        :class="getClasses()">
+                                    <div x-data="{
+                                        rating: '{{ $analysis['position_rating'] }}',
+                                        getClasses() {
+                                            const baseClasses = 'bg-gradient-to-br border-2 rounded-2xl p-5 relative overflow-hidden ';
+                                            const ratingClasses = {
+                                                'kiváló': 'from-green-50 to-emerald-100 border-green-300',
+                                                'jó': 'from-blue-50 to-sky-100 border-blue-300',
+                                                'közepes': 'from-amber-50 to-yellow-100 border-amber-300',
+                                                'gyenge': 'from-orange-50 to-red-100 border-orange-300'
+                                            };
+                                            return baseClasses + (ratingClasses[this.rating] || 'from-gray-50 to-slate-100 border-gray-300');
+                                        },
+                                        getBubbleClasses() {
+                                            const baseClasses = 'absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 rounded-full opacity-20 ';
+                                            const bubbleColors = {
+                                                'kiváló': 'bg-green-200',
+                                                'jó': 'bg-blue-200',
+                                                'közepes': 'bg-amber-200',
+                                                'gyenge': 'bg-orange-200'
+                                            };
+                                            return baseClasses + (bubbleColors[this.rating] || 'bg-gray-200');
+                                        }
+                                    }" :class="getClasses()">
                                         <div :class="getBubbleClasses()">
                                         </div>
                                         <div class="relative">
@@ -240,88 +238,6 @@
                                 @endif
 
                                 <!-- Gyors javítások -->
-                                @if (!empty($analysis['quick_wins']))
-                                    <details class="group" open>
-                                        <summary
-                                            class="flex items-center justify-between cursor-pointer bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-4 hover:border-emerald-300 transition">
-                                            <div class="flex items-center">
-                                                <div
-                                                    class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                                                    <svg class="w-6 h-6 text-emerald-500" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-bold text-gray-800">Gyors javítások</h4>
-                                                    <p class="text-xs text-gray-600">Azonnal megvalósítható</p>
-                                                </div>
-                                            </div>
-                                            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </summary>
-                                        <div class="mt-4 pl-16 pr-4 pb-4">
-                                            <ul class="space-y-2">
-                                                @foreach ($analysis['quick_wins'] as $win)
-                                                    <li class="flex items-start">
-                                                        <svg class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5"
-                                                            fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z">
-                                                            </path>
-                                                        </svg>
-                                                        <span class="text-sm text-gray-700">{{ $win }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </details>
-                                @endif
-
-                                <!-- Fejlesztési területek -->
-                                @if (!empty($analysis['improvement_areas']))
-                                    <details class="group">
-                                        <summary
-                                            class="flex items-center justify-between cursor-pointer bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 hover:border-blue-300 transition">
-                                            <div class="flex items-center">
-                                                <div
-                                                    class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                                                    <svg class="w-6 h-6 text-blue-500" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                                                        </path>
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-bold text-gray-800">Fejlesztési területek</h4>
-                                                    <p class="text-xs text-gray-600">Hosszabb távú teendők</p>
-                                                </div>
-                                            </div>
-                                            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </summary>
-                                        <div class="mt-4 pl-16 pr-4 pb-4">
-                                            <ul class="space-y-2">
-                                                @foreach ($analysis['improvement_areas'] as $area)
-                                                    <li class="flex items-start">
-                                                        <span
-                                                            class="inline-block w-2 h-2 bg-blue-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
-                                                        <span class="text-sm text-gray-700">{{ $area }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </details>
-                                @endif
 
                                 <!-- Részletes elemzés -->
                                 @if (!empty($analysis['detailed_analysis']))
@@ -330,8 +246,8 @@
                                         <div class="flex items-center mb-4">
                                             <div
                                                 class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mr-3">
-                                                <svg class="w-6 h-6 text-gray-600" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
