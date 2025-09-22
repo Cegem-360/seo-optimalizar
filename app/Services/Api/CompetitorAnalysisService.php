@@ -16,8 +16,6 @@ class CompetitorAnalysisService
 {
     private readonly Client $client;
 
-    private readonly PageSpeedService $pageSpeedService;
-
     private ?GeminiApiService $geminiApiService = null;
 
     public function __construct(?Project $project = null, ?Repository $repository = null)
@@ -28,8 +26,6 @@ class CompetitorAnalysisService
         } catch (Exception) {
             $apiKey = '';
         }
-
-        $this->pageSpeedService = new PageSpeedService($apiKey, $repository);
         if ($project instanceof Project) {
             $this->geminiApiService = new GeminiApiService($project);
         }
