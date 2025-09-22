@@ -2,13 +2,9 @@
 
 namespace App\Services\Api;
 
-use App\Models\Keyword;
-use App\Models\PageSpeedAnalysis;
-use App\Models\Project;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Support\Facades\Log;
 
 class PageSpeedService
 {
@@ -33,109 +29,6 @@ class PageSpeedService
         }
 
         $this->client = new Client();
-    }
-
-    public function analyzeUrl(string $url, string $strategy = 'desktop', ?Project $project = null, ?Keyword $keyword = null): ?PageSpeedAnalysis
-    {
-        try {
-            if (empty($this->apiKey)) {
-                Log::warning('PageSpeed API key is missing');
-
-                return null;
-            }
-
-            $response = $this->client->get($this->baseUrl, [
-                'query' => [
-                    'url' => $url,
-                    'key' => $this->apiKey,
-                    'strategy' => $strategy,
-                    'category' => ['performance', 'accessibility', 'best-practices', 'seo'],
-                ],
-            ]);
-
-            if ($response->getStatusCode() !== 200) {
-                return null;
-            }
-
-            $data = json_decode($response->getBody()->getContents(), true);
-
-            return $this->savePageSpeedAnalysis($data, $url, $strategy, $project, $keyword);
-        } catch (Exception $exception) {
-            Log::error('PageSpeed analysis failed', [
-                'url' => $url,
-                'error' => $exception->getMessage(),
-            ]);
-
-            return null;
-        }
-    }
-
-    private function savePageSpeedAnalysis(array $data, string $url, string $strategy, ?Project $project, ?Keyword $keyword): PageSpeedAnalysis
-    {
-        $lighthouseResult = $data['lighthouseResult'] ?? [];
-        $audits = $lighthouseResult['audits'] ?? [];
-        $categories = $lighthouseResult['categories'] ?? [];
-
-        // Core Web Vitals
-        $metrics = $this->extractCoreWebVitals($audits);
-
-        // Resource breakdown
-        $resourceBreakdown = $this->extractResourceBreakdown($audits);
-
-        // Opportunities and diagnostics
-        $opportunities = $this->extractOpportunities($audits);
-        $diagnostics = $this->extractDiagnostics($audits);
-
-        // Images analysis
-        $imageAnalysis = $this->extractImageAnalysis($audits);
-
-        return PageSpeedAnalysis::query()->create([
-            'project_id' => $project?->id,
-            'keyword_id' => $keyword?->id,
-            'tested_url' => $url,
-            'device_type' => $strategy,
-
-            // Core Web Vitals
-            'lcp' => $metrics['lcp'],
-            'fid' => $metrics['fid'],
-            'cls' => $metrics['cls'],
-            'fcp' => $metrics['fcp'],
-            'inp' => $metrics['inp'],
-            'ttfb' => $metrics['ttfb'],
-
-            // Scores
-            'performance_score' => isset($categories['performance']) ? round($categories['performance']['score'] * 100) : null,
-            'accessibility_score' => isset($categories['accessibility']) ? round($categories['accessibility']['score'] * 100) : null,
-            'best_practices_score' => isset($categories['best-practices']) ? round($categories['best-practices']['score'] * 100) : null,
-            'seo_score' => isset($categories['seo']) ? round($categories['seo']['score'] * 100) : null,
-
-            // Page metrics
-            'total_page_size' => $audits['total-byte-weight']['numericValue'] ?? null,
-            'total_requests' => $audits['network-requests']['details']['items'] ?? null ? count($audits['network-requests']['details']['items']) : null,
-            'load_time' => isset($audits['interactive']) ? $audits['interactive']['numericValue'] / 1000 : null,
-
-            // Resource details
-            'resource_breakdown' => $resourceBreakdown,
-            'third_party_resources' => $this->extractThirdPartyResources($audits),
-
-            // Improvements
-            'opportunities' => $opportunities,
-            'diagnostics' => $diagnostics,
-
-            // Images
-            'images_count' => $imageAnalysis['total_images'],
-            'unoptimized_images' => $imageAnalysis['unoptimized_images'],
-            'images_without_alt' => $imageAnalysis['images_without_alt'],
-
-            // Render blocking
-            'render_blocking_resources' => isset($audits['render-blocking-resources']['details']['items']) ? count($audits['render-blocking-resources']['details']['items']) : 0,
-            'unused_css_bytes' => $audits['unused-css-rules']['wastedBytes'] ?? 0,
-            'unused_js_bytes' => $audits['unused-javascript']['wastedBytes'] ?? 0,
-
-            'analysis_source' => 'pagespeed',
-            'analyzed_at' => now(),
-            'raw_response' => $data,
-        ]);
     }
 
     private function extractCoreWebVitals(array $audits): array

@@ -62,11 +62,6 @@ class Keyword extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function rankings(): HasMany
-    {
-        return $this->hasMany(Ranking::class);
-    }
-
     public function seoAnalyses(): HasMany
     {
         return $this->hasMany(SeoAnalysis::class);
@@ -75,11 +70,6 @@ class Keyword extends Model
     public function competitorAnalyses(): HasMany
     {
         return $this->hasMany(CompetitorAnalysis::class);
-    }
-
-    public function pageSpeedAnalyses(): HasMany
-    {
-        return $this->hasMany(PageSpeedAnalysis::class);
     }
 
     public function latestRanking(): BelongsTo

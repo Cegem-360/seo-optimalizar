@@ -271,12 +271,8 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CompetitorAnalysis> $competitorAnalyses
  * @property-read int|null $competitor_analyses_count
- * @property-read \App\Models\Ranking|null $latestRanking
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PageSpeedAnalysis> $pageSpeedAnalyses
- * @property-read int|null $page_speed_analyses_count
+ * @property-read \App\Models\SearchConsoleRanking|null $latestRanking
  * @property-read \App\Models\Project $project
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Ranking> $rankings
- * @property-read int|null $rankings_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SeoAnalysis> $seoAnalyses
  * @property-read int|null $seo_analyses_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Keyword byCategory(string $category)
@@ -349,86 +345,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationPreference whereUserId($value)
  */
 	class NotificationPreference extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property int $project_id
- * @property int|null $keyword_id
- * @property string $tested_url
- * @property string $device_type
- * @property float|null $lcp
- * @property float|null $fid
- * @property float|null $cls
- * @property float|null $fcp
- * @property float|null $inp
- * @property float|null $ttfb
- * @property int|null $performance_score
- * @property int|null $accessibility_score
- * @property int|null $best_practices_score
- * @property int|null $seo_score
- * @property int|null $total_page_size
- * @property int|null $total_requests
- * @property float|null $load_time
- * @property array<array-key, mixed>|null $resource_breakdown
- * @property array<array-key, mixed>|null $third_party_resources
- * @property array<array-key, mixed>|null $opportunities
- * @property array<array-key, mixed>|null $diagnostics
- * @property int|null $images_count
- * @property int|null $unoptimized_images
- * @property int|null $images_without_alt
- * @property int|null $render_blocking_resources
- * @property int|null $unused_css_bytes
- * @property int|null $unused_js_bytes
- * @property string $analysis_source
- * @property \Illuminate\Support\Carbon $analyzed_at
- * @property array<array-key, mixed>|null $raw_response
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string $core_web_vitals_status
- * @property-read string $formatted_page_size
- * @property-read \App\Models\Keyword|null $keyword
- * @property-read string $performance_color
- * @property-read \App\Models\Project $project
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereAccessibilityScore($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereAnalysisSource($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereAnalyzedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereBestPracticesScore($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereCls($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereDeviceType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereDiagnostics($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereFcp($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereFid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereImagesCount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereImagesWithoutAlt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereInp($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereKeywordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereLcp($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereLoadTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereOpportunities($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis wherePerformanceScore($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereProjectId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereRawResponse($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereRenderBlockingResources($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereResourceBreakdown($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereSeoScore($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTestedUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereThirdPartyResources($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTotalPageSize($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTotalRequests($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereTtfb($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUnoptimizedImages($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUnusedCssBytes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUnusedJsBytes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PageSpeedAnalysis whereUpdatedAt($value)
- */
-	class PageSpeedAnalysis extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -512,10 +428,12 @@ namespace App\Models{
  * @property-read int|null $notification_preferences_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PageSpeedResult> $pageSpeedResults
  * @property-read int|null $page_speed_results_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Ranking> $rankings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SearchConsoleRanking> $rankings
  * @property-read int|null $rankings_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Report> $reports
- * @property-read int|null $reports_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SearchConsoleRanking> $searchConsoleRankings
+ * @property-read int|null $search_console_rankings_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SerpAnalysisResult> $serpAnalysisResults
+ * @property-read int|null $serp_analysis_results_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  * @property-read int|null $users_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project active()
@@ -537,79 +455,74 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
- * @property int $keyword_id
- * @property int|null $position
- * @property int|null $previous_position
- * @property string|null $url
- * @property bool $featured_snippet
- * @property array<array-key, mixed>|null $serp_features
- * @property \Illuminate\Support\Carbon $checked_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Keyword $keyword
- * @property-read int|null $position_change
- * @property-read string $position_trend
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking declined()
- * @method static \Database\Factories\RankingFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking improved()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking recentlyChecked(int $days = 7)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking topTen()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking topThree()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereCheckedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereFeaturedSnippet($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereKeywordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking wherePosition($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking wherePreviousPosition($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereSerpFeatures($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ranking whereUrl($value)
- */
-	class Ranking extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
  * @property int $project_id
- * @property string $title
- * @property string $type
- * @property \Illuminate\Support\Carbon $period_start
- * @property \Illuminate\Support\Carbon $period_end
- * @property array<array-key, mixed>|null $data
- * @property string|null $file_path
- * @property \Illuminate\Support\Carbon|null $generated_at
- * @property string $status
+ * @property int|null $keyword_id
+ * @property string $query
+ * @property string $page
+ * @property string $country
+ * @property string $device
+ * @property numeric $position
+ * @property numeric|null $previous_position
+ * @property int|null $position_change
+ * @property int $clicks
+ * @property int $impressions
+ * @property numeric $ctr
+ * @property \Illuminate\Support\Carbon $date_from
+ * @property \Illuminate\Support\Carbon $date_to
+ * @property int $days_count
+ * @property int|null $previous_clicks
+ * @property int|null $previous_impressions
+ * @property numeric|null $previous_ctr
+ * @property numeric|null $clicks_change_percent
+ * @property numeric|null $impressions_change_percent
+ * @property array<array-key, mixed>|null $raw_data
+ * @property \Illuminate\Support\Carbon $fetched_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string $formatted_period
+ * @property-read string $clicks_trend
+ * @property-read string $date_range
+ * @property-read \App\Models\Keyword|null $keyword
+ * @property-read string $position_trend
  * @property-read \App\Models\Project $project
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report byType(string $type)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report completed()
- * @method static \Database\Factories\ReportFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report pending()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report recent(int $days = 30)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereFilePath($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereGeneratedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report wherePeriodEnd($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report wherePeriodStart($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereProjectId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Report whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking byCountry(string $country)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking byDevice(string $device)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking currentPeriod()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking dateRange($from, $to)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking declined()
+ * @method static \Database\Factories\SearchConsoleRankingFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking improved()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking topPositions(int $limit = 10)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereClicks($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereClicksChangePercent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereCountry($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereCtr($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereDateFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereDateTo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereDaysCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereDevice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereFetchedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereImpressions($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereImpressionsChangePercent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereKeywordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePositionChange($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePreviousClicks($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePreviousCtr($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePreviousImpressions($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking wherePreviousPosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereProjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereQuery($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereRawData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SearchConsoleRanking withClicks()
  */
-	class Report extends \Eloquent {}
+	class SearchConsoleRanking extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -669,6 +582,38 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SeoAnalysis whereUpdatedAt($value)
  */
 	class SeoAnalysis extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property int $keyword_id
+ * @property string|null $search_id
+ * @property array<array-key, mixed> $organic_results
+ * @property array<array-key, mixed> $serp_metrics
+ * @property array<array-key, mixed> $analysis_data
+ * @property string|null $ai_analysis
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Keyword $keyword
+ * @property-read \App\Models\Project $project
+ * @method static \Database\Factories\SerpAnalysisResultFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereAiAnalysis($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereAnalysisData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereKeywordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereOrganicResults($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereProjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereSearchId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereSerpMetrics($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SerpAnalysisResult whereUpdatedAt($value)
+ */
+	class SerpAnalysisResult extends \Eloquent {}
 }
 
 namespace App\Models{

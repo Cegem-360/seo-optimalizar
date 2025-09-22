@@ -4,7 +4,6 @@ namespace App\Services\Api;
 
 use App\Models\CompetitorAnalysis;
 use App\Models\Keyword;
-use App\Models\PageSpeedAnalysis;
 use App\Models\Project;
 use Exception;
 use GuzzleHttp\Client;
@@ -75,10 +74,6 @@ class CompetitorAnalysisService
             // 3. Tartalom elemzés
             $contentMetrics = $this->analyzeContent($url);
             $analysis = array_merge($analysis, $contentMetrics);
-
-            // 4. PageSpeed elemzés
-            $speedMetrics = $this->analyzePageSpeed($url);
-            $analysis = array_merge($analysis, $speedMetrics);
 
             return CompetitorAnalysis::query()->create($analysis);
         } catch (Exception $exception) {
@@ -288,22 +283,6 @@ class CompetitorAnalysisService
                 'has_schema_markup' => false,
             ];
         }
-    }
-
-    private function analyzePageSpeed(string $url): array
-    {
-        // PageSpeed elemzés (ha van API kulcs)
-        $pageSpeedAnalysis = $this->pageSpeedService->analyzeUrl($url, 'desktop');
-
-        if ($pageSpeedAnalysis instanceof PageSpeedAnalysis) {
-            return [
-                'page_speed_score' => $pageSpeedAnalysis->performance_score,
-            ];
-        }
-
-        return [
-            'page_speed_score' => null,
-        ];
     }
 
     // Segéd metódusok
