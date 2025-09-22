@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoogleAdsService
 {
-    public function storeGoogleAdsReport(Project $project, array $googleAdsData, Carbon $reportDate = null): GoogleAdsReport
+    public function storeGoogleAdsReport(Project $project, array $googleAdsData, ?Carbon $reportDate = null): GoogleAdsReport
     {
         $reportDate = $reportDate ?? Carbon::today();
 
