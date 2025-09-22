@@ -52,18 +52,9 @@ class KeywordsTable
                     ->numeric()
                     ->sortable(),
 
-                TextColumn::make('difficulty_score')
-                    ->numeric()
-                    ->sortable(),
-
                 TextColumn::make('geo_target')
                     ->badge()
                     ->color('primary'),
-
-                TextColumn::make('rankings_count')
-                    ->counts('rankings')
-                    ->badge()
-                    ->color('secondary'),
 
                 TextColumn::make('created_at')
                     ->dateTime()

@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Keyword;
+use App\Models\Project;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +15,8 @@ return new class() extends Migration
     {
         Schema::create('search_console_rankings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('keyword_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignIdFor(Project::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Keyword::class)->nullable()->constrained()->nullOnDelete();
 
             // Search Console specifikus adatok
             $table->string('query');

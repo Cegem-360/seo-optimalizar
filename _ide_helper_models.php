@@ -49,32 +49,30 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * @method static Builder<static>|ApiConfig newModelQuery()
- * @method static Builder<static>|ApiConfig newQuery()
- * @method static Builder<static>|ApiConfig query()
- * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiConfig newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiConfig newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiConfig query()
  */
 	class ApiConfig extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * @property-read Project|null $project
- * @property array<string, mixed> $credentials
- * @method static ApiCredentialFactory factory($count = null, $state = [])
- * @method static Builder<static>|ApiCredential newModelQuery()
- * @method static Builder<static>|ApiCredential newQuery()
- * @method static Builder<static>|ApiCredential query()
- * @mixin Model
  * @property int $id
  * @property int $project_id
  * @property string $service
+ * @property array<array-key, mixed> $credentials
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $last_used_at
  * @property string|null $service_account_file
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Project $project
  * @property-read mixed $service_account_json
+ * @method static \Database\Factories\ApiCredentialFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiCredential newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiCredential newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiCredential query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiCredential whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiCredential whereCredentials($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ApiCredential whereId($value)

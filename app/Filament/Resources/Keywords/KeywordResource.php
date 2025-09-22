@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Keywords;
 
 use App\Enums\NavigationGroups;
-use App\Filament\Resources\Keywords\KeywordResource\RelationManagers\RankingsRelationManager;
 use App\Filament\Resources\Keywords\Pages\CreateKeyword;
 use App\Filament\Resources\Keywords\Pages\EditKeyword;
 use App\Filament\Resources\Keywords\Pages\ListKeywords;
@@ -21,8 +20,6 @@ use UnitEnum;
 class KeywordResource extends Resource
 {
     protected static ?string $model = Keyword::class;
-
-    /*     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMagnifyingGlass; */
 
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoManagement;
 
@@ -53,7 +50,7 @@ class KeywordResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RankingsRelationManager::class,
+
         ];
     }
 

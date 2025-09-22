@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +20,7 @@ return new class() extends Migration
             $blueprint->timestamp('email_verified_at')->nullable();
             $blueprint->string('password');
             $blueprint->rememberToken();
-            $blueprint->foreignId('latest_project_id')->nullable()->constrained('projects')->nullOnDelete();
+            $blueprint->foreignIdFor(Project::class, 'latest_project_id')->nullable()->constrained('projects')->nullOnDelete();
             $blueprint->timestamps();
         });
 
@@ -30,7 +32,7 @@ return new class() extends Migration
 
         Schema::create('sessions', function (Blueprint $blueprint): void {
             $blueprint->string('id')->primary();
-            $blueprint->foreignId('user_id')->nullable()->index();
+            $blueprint->foreignIdFor(User::class)->nullable()->index();
             $blueprint->string('ip_address', 45)->nullable();
             $blueprint->text('user_agent')->nullable();
             $blueprint->longText('payload');

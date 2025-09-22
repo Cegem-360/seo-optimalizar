@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Keyword;
 use App\Models\Project;
+use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -29,11 +30,7 @@ class KeywordPerformanceWidget extends BaseWidget
                 }
 
                 return Keyword::query()
-                    ->where('project_id', $tenant->id)
-                    ->whereHas('rankings')
-                    ->withAvg('rankings', 'position')
-                    ->withCount('rankings')
-                    ->orderBy('rankings_avg_position', 'asc');
+                    ->where('project_id', $tenant->id);
             })
             ->columns([
                 TextColumn::make('keyword')
@@ -59,7 +56,7 @@ class KeywordPerformanceWidget extends BaseWidget
                 TextColumn::make('latest_position')
                     ->label('Current Position')
                     ->getStateUsing(function ($record) {
-                        $latestRanking = $record->rankings()
+                        $latestRanking = SearchConsoleRanking::where('keyword_id', $record->id)
                             ->orderBy('fetched_at', 'desc')
                             ->first();
 
@@ -76,11 +73,11 @@ class KeywordPerformanceWidget extends BaseWidget
                 TextColumn::make('position_change')
                     ->label('Change (7d)')
                     ->getStateUsing(function ($record): string {
-                        $latest = $record->rankings()
+                        $latest = SearchConsoleRanking::where('keyword_id', $record->id)
                             ->orderBy('fetched_at', 'desc')
                             ->first();
 
-                        $weekAgo = $record->rankings()
+                        $weekAgo = SearchConsoleRanking::where('keyword_id', $record->id)
                             ->where('fetched_at', '<=', now()->subDays(7))
                             ->orderBy('fetched_at', 'desc')
                             ->first();

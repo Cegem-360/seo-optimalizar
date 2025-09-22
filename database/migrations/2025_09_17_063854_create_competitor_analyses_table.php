@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Keyword;
+use App\Models\Project;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +15,8 @@ return new class() extends Migration
     {
         Schema::create('competitor_analyses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('keyword_id')->constrained()->onDelete('cascade');
-            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->foreignIdFor(Keyword::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Project::class)->constrained()->cascadeOnDelete();
 
             // Versenytárs adatok
             $table->string('competitor_domain');

@@ -146,9 +146,7 @@ class SerpAnalysis extends Page implements HasSchemas
                 $this->currentKeyword = $keyword->keyword;
 
                 // Lekérjük a legfrissebb pozíció adatokat
-                $latestRanking = $keyword->rankings()
-                    ->orderBy('fetched_at', 'desc')
-                    ->first();
+                $latestRanking = $keyword->latestRanking()->first();
 
                 $analysis = $gemini->analyzeKeywordWithPosition($keyword, $latestRanking);
 

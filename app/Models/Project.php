@@ -30,11 +30,6 @@ class Project extends Model
         return $this->hasMany(Keyword::class);
     }
 
-    public function reports(): HasMany
-    {
-        return $this->hasMany(Report::class);
-    }
-
     public function rankings(): HasManyThrough
     {
         return $this->hasManyThrough(SearchConsoleRanking::class, Keyword::class);

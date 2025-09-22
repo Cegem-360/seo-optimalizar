@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Keyword;
+use App\Models\Project;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +15,8 @@ return new class() extends Migration
     {
         Schema::create('serp_analysis_results', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('project_id');
-            $table->unsignedBigInteger('keyword_id');
+            $table->foreignIdFor(Project::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Keyword::class)->constrained()->cascadeOnDelete();
             $table->string('search_id')->nullable();
             $table->json('organic_results');
             $table->json('serp_metrics');
@@ -22,8 +24,6 @@ return new class() extends Migration
             $table->text('ai_analysis')->nullable();
             $table->timestamps();
 
-            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-            $table->foreign('keyword_id')->references('id')->on('keywords')->onDelete('cascade');
             $table->index(['project_id', 'keyword_id']);
         });
     }

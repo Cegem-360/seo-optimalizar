@@ -3,6 +3,7 @@
 namespace App\Services\Api;
 
 use App\Models\Keyword;
+use App\Models\SearchConsoleRanking;
 use App\Models\SeoAnalysis;
 use Exception;
 use GuzzleHttp\Client;
@@ -303,7 +304,7 @@ class GeminiApiService extends BaseApiService
         $competitors = [];
 
         // Az összes ranking lekérése erre a kulcsszóra
-        $allRankings = $keyword->rankings()
+        $allRankings = SearchConsoleRanking::where('keyword_id', $keyword->id)
             ->orderBy('position', 'asc')
             ->limit(30)
             ->get();
@@ -312,8 +313,8 @@ class GeminiApiService extends BaseApiService
         foreach ($allRankings as $allRanking) {
             $competitors[] = [
                 'position' => $allRanking->position,
-                'url' => $allRanking->url,
-                'domain' => parse_url((string) $allRanking->url, PHP_URL_HOST),
+                'url' => $allRanking->page,
+                'domain' => parse_url((string) $allRanking->page, PHP_URL_HOST),
             ];
         }
 

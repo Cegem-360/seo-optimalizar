@@ -5,6 +5,7 @@ namespace App\Services\Api;
 use App\Models\CompetitorAnalysis;
 use App\Models\Keyword;
 use App\Models\Project;
+use App\Models\SearchConsoleRanking;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Config\Repository;
@@ -112,8 +113,8 @@ class CompetitorAnalysisService
     {
         try {
             // Először próbáljuk a valós ranking adatokból
-            $rankings = $keyword->rankings()
-                ->whereNotNull('url')
+            $rankings = SearchConsoleRanking::where('keyword_id', $keyword->id)
+                ->whereNotNull('page')
                 ->orderBy('position')
                 ->limit($limit)
                 ->get();
@@ -121,11 +122,11 @@ class CompetitorAnalysisService
             $existingCompetitors = [];
             /** @var Ranking $ranking */
             foreach ($rankings as $ranking) {
-                $domain = parse_url((string) $ranking->url, PHP_URL_HOST);
+                $domain = parse_url((string) $ranking->page, PHP_URL_HOST);
                 if ($domain) {
                     $existingCompetitors[] = [
                         'domain' => $domain,
-                        'url' => $ranking->url,
+                        'url' => $ranking->page,
                         'position' => $ranking->position,
                     ];
                 }
@@ -164,8 +165,8 @@ class CompetitorAnalysisService
     private function getTopCompetitorDomains(Keyword $keyword, int $limit): array
     {
         // Először próbáljuk a valós ranking adatokból
-        $rankings = $keyword->rankings()
-            ->whereNotNull('url')
+        $rankings = SearchConsoleRanking::where('keyword_id', $keyword->id)
+            ->whereNotNull('page')
             ->orderBy('position')
             ->limit($limit)
             ->get();
@@ -173,11 +174,11 @@ class CompetitorAnalysisService
         $competitors = [];
         /** @var Ranking $ranking */
         foreach ($rankings as $ranking) {
-            $domain = parse_url((string) $ranking->url, PHP_URL_HOST);
+            $domain = parse_url((string) $ranking->page, PHP_URL_HOST);
             if ($domain) {
                 $competitors[] = [
                     'domain' => $domain,
-                    'url' => $ranking->url,
+                    'url' => $ranking->page,
                 ];
             }
         }
