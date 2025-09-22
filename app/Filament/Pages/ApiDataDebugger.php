@@ -154,8 +154,8 @@ class ApiDataDebugger extends Page
                         ->label('Keyword Limit')
                         ->numeric()
                         ->default(10)
-                        ->min(1)
-                        ->max(20)
+                        ->minValue(1)
+                        ->maxValue(20)
                         ->helperText('Maximum number of keywords to test (to avoid rate limits)'),
                 ])
                 ->action(function (array $data): void {
