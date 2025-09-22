@@ -96,10 +96,10 @@ class AnalyticsReportsTable
                     ->preload(),
 
                 Filter::make('date_range')
-                    ->form([
-                        \Filament\Schemas\Components\DatePicker::make('from')
+                    ->schema([
+                        \Filament\Forms\Components\DatePicker::make('from')
                             ->label('From Date'),
-                        \Filament\Schemas\Components\DatePicker::make('until')
+                        \Filament\Forms\Components\DatePicker::make('until')
                             ->label('Until Date'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {

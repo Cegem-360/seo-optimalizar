@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AnalyticsReports;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\AnalyticsReports\Pages\CreateAnalyticsReport;
 use App\Filament\Resources\AnalyticsReports\Pages\EditAnalyticsReport;
 use App\Filament\Resources\AnalyticsReports\Pages\ListAnalyticsReports;
@@ -9,17 +10,14 @@ use App\Filament\Resources\AnalyticsReports\Pages\ViewAnalyticsReport;
 use App\Filament\Resources\AnalyticsReports\Schemas\AnalyticsReportForm;
 use App\Filament\Resources\AnalyticsReports\Tables\AnalyticsReportsTable;
 use App\Models\AnalyticsReport;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class AnalyticsReportResource extends Resource
 {
     protected static ?string $model = AnalyticsReport::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlineChartBar;
 
     protected static ?string $navigationLabel = 'Analytics Reports';
 
@@ -27,7 +25,7 @@ class AnalyticsReportResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Analytics Reports';
 
-    protected static ?string $navigationGroup = 'Analytics';
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Analytics;
 
     protected static ?int $navigationSort = 10;
 
