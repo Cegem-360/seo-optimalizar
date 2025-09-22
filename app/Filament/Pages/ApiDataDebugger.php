@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use App\Services\Api\GoogleAdsApiService;
@@ -12,6 +13,7 @@ use Exception;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -112,17 +114,49 @@ class ApiDataDebugger extends Page
                 ->fillForm([
                     'startDate' => Carbon::now()->subDays(7),
                     'endDate' => Carbon::now(),
-                    'keyword' => 'seo',
+                    'limit' => 10,
+                    'use_project_keywords' => true,
                 ])
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start Date'),
                     DatePicker::make('endDate')
                         ->label('End Date'),
-                    TextInput::make('keyword')
-                        ->label('Test Keyword')
-                        ->placeholder('Enter a keyword to test (optional)')
-                        ->helperText('If empty, will use default test keywords: seo, marketing, google ads'),
+                    Select::make('use_project_keywords')
+                        ->label('Data Source')
+                        ->options([
+                            true => 'Use Project Keywords',
+                            false => 'Use Custom Keywords',
+                        ])
+                        ->default(true)
+                        ->reactive(),
+                    Select::make('keywords')
+                        ->label('Select Keywords from Project')
+                        ->options(function () {
+                            $project = Filament::getTenant();
+                            if (!$project instanceof Project) {
+                                return [];
+                            }
+                            return $project->keywords()
+                                ->pluck('keyword', 'keyword')
+                                ->toArray();
+                        })
+                        ->multiple()
+                        ->searchable()
+                        ->visible(fn ($get) => $get('use_project_keywords') === true)
+                        ->helperText('Select keywords from your project to test (max 10 recommended)'),
+                    TextInput::make('custom_keywords')
+                        ->label('Custom Keywords')
+                        ->placeholder('Enter keywords separated by commas (e.g. seo, marketing, ads)')
+                        ->visible(fn ($get) => $get('use_project_keywords') === false)
+                        ->helperText('Enter custom keywords separated by commas'),
+                    TextInput::make('limit')
+                        ->label('Keyword Limit')
+                        ->numeric()
+                        ->default(10)
+                        ->min(1)
+                        ->max(20)
+                        ->helperText('Maximum number of keywords to test (to avoid rate limits)'),
                 ])
                 ->action(function (array $data): void {
                     $this->fetchGoogleAdsData($data);
@@ -325,6 +359,8 @@ class ApiDataDebugger extends Page
                     'end_date' => $data['endDate'] ?? null,
                     'fetched_at' => now()->toIso8601String(),
                     'connection_status' => $connectionStatus,
+                    'keyword_source' => ($data['use_project_keywords'] ?? true) ? 'project_keywords' : 'custom_keywords',
+                    'keyword_limit' => (int) ($data['limit'] ?? 10),
                 ],
             ];
 
@@ -342,10 +378,8 @@ class ApiDataDebugger extends Page
                     'note' => 'Using mock data for demonstration purposes',
                 ];
 
-                // Provide mock data for demonstration
-                $testKeywords = isset($data['keyword']) && !empty($data['keyword'])
-                    ? [$data['keyword']]
-                    : ['seo', 'marketing', 'google ads'];
+                // Get keywords from form data
+                $testKeywords = $this->getKeywordsFromData($data, $project);
 
                 $mockKeywordData = [];
                 $mockHistoricalData = [];
@@ -405,10 +439,8 @@ class ApiDataDebugger extends Page
                     'FR' => 'France',
                 ];
             } else {
-                // Fetch sample keyword data for testing
-                $testKeywords = isset($data['keyword']) && !empty($data['keyword'])
-                    ? [$data['keyword']]
-                    : ['seo', 'marketing', 'google ads'];
+                // Get keywords from form data
+                $testKeywords = $this->getKeywordsFromData($data, $project);
 
                 $keywordData = [];
                 $historicalData = [];
@@ -471,6 +503,45 @@ class ApiDataDebugger extends Page
                 ->body($exception->getMessage())
                 ->danger()
                 ->send();
+        }
+    }
+
+    /**
+     * Get keywords array from form data, either from project keywords or custom input
+     */
+    private function getKeywordsFromData(array $data, Project $project): array
+    {
+        $limit = (int) ($data['limit'] ?? 10);
+
+        if (($data['use_project_keywords'] ?? true) === true) {
+            // Use project keywords
+            if (!empty($data['keywords'])) {
+                // User selected specific keywords
+                $keywords = array_slice($data['keywords'], 0, $limit);
+            } else {
+                // Use random keywords from project
+                $keywords = $project->keywords()
+                    ->inRandomOrder()
+                    ->limit($limit)
+                    ->pluck('keyword')
+                    ->toArray();
+            }
+
+            // Fallback to default if no project keywords
+            if (empty($keywords)) {
+                return ['seo', 'marketing', 'google ads'];
+            }
+
+            return $keywords;
+        } else {
+            // Use custom keywords from text input
+            if (!empty($data['custom_keywords'])) {
+                $keywords = array_map('trim', explode(',', $data['custom_keywords']));
+                return array_slice(array_filter($keywords), 0, $limit);
+            }
+
+            // Fallback to default
+            return ['seo', 'marketing', 'google ads'];
         }
     }
 }
