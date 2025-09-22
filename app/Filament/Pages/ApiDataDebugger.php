@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
+use App\Services\Api\GoogleAdsApiService;
 use App\Services\Api\GoogleAnalytics4Service;
 use App\Services\GoogleSearchConsoleService;
 use BackedEnum;
@@ -111,14 +112,17 @@ class ApiDataDebugger extends Page
                 ->fillForm([
                     'startDate' => Carbon::now()->subDays(7),
                     'endDate' => Carbon::now(),
+                    'keyword' => 'seo',
                 ])
                 ->schema([
                     DatePicker::make('startDate')
-                        ->label('Start Date')
-                        ->required(),
+                        ->label('Start Date'),
                     DatePicker::make('endDate')
-                        ->label('End Date')
-                        ->required(),
+                        ->label('End Date'),
+                    TextInput::make('keyword')
+                        ->label('Test Keyword')
+                        ->placeholder('Enter a keyword to test (optional)')
+                        ->helperText('If empty, will use default test keywords: seo, marketing, google ads'),
                 ])
                 ->action(function (array $data): void {
                     $this->fetchGoogleAdsData($data);
@@ -307,22 +311,156 @@ class ApiDataDebugger extends Page
                 throw new Exception('No project selected');
             }
 
-            // For now, show placeholder
-            $this->googleAdsData = [
+            // Initialize Google Ads service
+            $googleAdsService = new GoogleAdsApiService($project);
+
+            // Test connection first
+            $connectionStatus = $googleAdsService->testConnection();
+
+            $debugData = [
                 'metadata' => [
-                    'status' => 'Google Ads API integration pending',
                     'project' => $project->name,
-                    'start_date' => $data['startDate'],
-                    'end_date' => $data['endDate'],
+                    'service' => 'google_ads',
+                    'start_date' => $data['startDate'] ?? null,
+                    'end_date' => $data['endDate'] ?? null,
+                    'fetched_at' => now()->toIso8601String(),
+                    'connection_status' => $connectionStatus,
                 ],
-                'note' => 'Google Ads API requires additional OAuth setup and customer ID configuration.',
             ];
 
+            if (!$connectionStatus) {
+                $debugData['error'] = 'Google Ads API not configured or connection failed';
+                $debugData['configuration_status'] = [
+                    'has_credentials' => false,
+                    'required_fields' => [
+                        'client_id',
+                        'client_secret',
+                        'refresh_token',
+                        'developer_token',
+                        'customer_id'
+                    ],
+                    'note' => 'Using mock data for demonstration purposes',
+                ];
+
+                // Provide mock data for demonstration
+                $testKeywords = isset($data['keyword']) && !empty($data['keyword'])
+                    ? [$data['keyword']]
+                    : ['seo', 'marketing', 'google ads'];
+
+                $mockKeywordData = [];
+                $mockHistoricalData = [];
+
+                foreach ($testKeywords as $keyword) {
+                    $mockKeywordData[$keyword] = [
+                        'keyword' => $keyword,
+                        'search_volume' => rand(1000, 50000),
+                        'competition' => round(rand(10, 90) / 100, 2),
+                        'low_bid' => round(rand(50, 300) / 100, 2),
+                        'high_bid' => round(rand(300, 1000) / 100, 2),
+                        'difficulty' => rand(20, 85),
+                    ];
+
+                    $monthlyVolumes = [];
+                    for ($i = 11; $i >= 0; $i--) {
+                        $date = now()->subMonths($i);
+                        $monthlyVolumes[] = [
+                            'year' => $date->year,
+                            'month' => $date->month,
+                            'monthly_searches' => rand(800, 60000),
+                        ];
+                    }
+
+                    $mockHistoricalData[$keyword] = [
+                        'keyword' => $keyword,
+                        'avg_monthly_searches' => rand(1000, 50000),
+                        'competition' => round(rand(10, 90) / 100, 2),
+                        'competition_index' => rand(20, 80),
+                        'low_top_of_page_bid_micros' => rand(500000, 3000000),
+                        'high_top_of_page_bid_micros' => rand(3000000, 10000000),
+                        'low_top_of_page_bid' => round(rand(50, 300) / 100, 2),
+                        'high_top_of_page_bid' => round(rand(300, 1000) / 100, 2),
+                        'monthly_search_volumes' => $monthlyVolumes,
+                    ];
+                }
+
+                $debugData['mock_data'] = true;
+                $debugData['keyword_data'] = $mockKeywordData;
+                $debugData['historical_metrics'] = $mockHistoricalData;
+                $debugData['bulk_results'] = $mockKeywordData;
+
+                // Add statistics
+                $debugData['statistics'] = [
+                    'keywords_tested' => count($testKeywords),
+                    'successful_fetches' => count($mockKeywordData),
+                    'historical_fetches' => count($mockHistoricalData),
+                    'bulk_fetches' => count($mockKeywordData),
+                ];
+
+                // Add available geo targets
+                $debugData['available_geo_targets'] = [
+                    'HU' => 'Hungary',
+                    'US' => 'United States',
+                    'UK' => 'United Kingdom',
+                    'DE' => 'Germany',
+                    'FR' => 'France',
+                ];
+            } else {
+                // Fetch sample keyword data for testing
+                $testKeywords = isset($data['keyword']) && !empty($data['keyword'])
+                    ? [$data['keyword']]
+                    : ['seo', 'marketing', 'google ads'];
+
+                $keywordData = [];
+                $historicalData = [];
+                $bulkData = [];
+
+                foreach ($testKeywords as $keyword) {
+                    // Get regular keyword data
+                    $kwData = $googleAdsService->getKeywordData($keyword, 'HU');
+                    if ($kwData) {
+                        $keywordData[$keyword] = $kwData;
+                    }
+
+                    // Get historical metrics
+                    $histData = $googleAdsService->getHistoricalMetrics($keyword, 'HU');
+                    if ($histData) {
+                        $historicalData[$keyword] = $histData;
+                    }
+                }
+
+                // Also test bulk operation with a few keywords
+                $bulkKeywords = collect($testKeywords);
+                $bulkResults = $googleAdsService->bulkGetKeywordData($bulkKeywords, 'HU');
+
+                $debugData['keyword_data'] = $keywordData;
+                $debugData['historical_metrics'] = $historicalData;
+                $debugData['bulk_results'] = $bulkResults;
+
+                // Add statistics
+                $debugData['statistics'] = [
+                    'keywords_tested' => count($testKeywords),
+                    'successful_fetches' => count($keywordData),
+                    'historical_fetches' => count($historicalData),
+                    'bulk_fetches' => count($bulkResults),
+                ];
+
+                // Add available geo targets
+                $debugData['available_geo_targets'] = [
+                    'HU' => 'Hungary',
+                    'US' => 'United States',
+                    'UK' => 'United Kingdom',
+                    'DE' => 'Germany',
+                    'FR' => 'France',
+                ];
+            }
+
+            $this->googleAdsData = $debugData;
             $this->selectedService = 'google_ads';
 
             Notification::make()
-                ->title('Google Ads data status checked')
-                ->success()
+                ->title($connectionStatus ? 'Google Ads data fetched successfully' : 'Google Ads not configured')
+                ->when($connectionStatus, fn($notification) => $notification->success())
+                ->when(!$connectionStatus, fn($notification) => $notification->warning())
                 ->send();
         } catch (Exception $exception) {
             $this->errorMessage = 'Google Ads Error: ' . $exception->getMessage();
