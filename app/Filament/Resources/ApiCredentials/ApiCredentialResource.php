@@ -20,8 +20,6 @@ class ApiCredentialResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $tenantOwnershipRelationshipName = 'project';
-
     public static function form(Schema $schema): Schema
     {
         return ApiCredentialForm::configure($schema);

@@ -29,8 +29,6 @@ class SeoAnalysisResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $tenantOwnershipRelationshipName = 'project';
-
     public static function getEloquentQuery(): Builder
     {
         $builder = parent::getEloquentQuery();

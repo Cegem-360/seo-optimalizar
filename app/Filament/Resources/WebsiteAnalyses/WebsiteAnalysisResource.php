@@ -27,8 +27,6 @@ class WebsiteAnalysisResource extends Resource
 
     protected static ?string $navigationLabel = 'Weboldal elemzések';
 
-    protected static ?string $tenantOwnershipRelationshipName = 'project';
-
     protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoManagement;
 
     protected static ?int $navigationSort = 10;

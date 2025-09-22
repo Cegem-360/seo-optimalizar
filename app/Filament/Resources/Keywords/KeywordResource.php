@@ -28,8 +28,6 @@ class KeywordResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $tenantOwnershipRelationshipName = 'project';
-
     public static function getEloquentQuery(): Builder
     {
         $builder = parent::getEloquentQuery();

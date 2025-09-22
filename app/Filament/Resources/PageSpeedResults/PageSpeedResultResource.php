@@ -32,8 +32,6 @@ class PageSpeedResultResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
-    protected static ?string $tenantOwnershipRelationshipName = 'project';
-
     public static function form(Schema $schema): Schema
     {
         return PageSpeedResultForm::configure($schema);

@@ -26,6 +26,7 @@ class CompetitorAnalysisService
         } catch (Exception) {
             $apiKey = '';
         }
+
         if ($project instanceof Project) {
             $this->geminiApiService = new GeminiApiService($project);
         }

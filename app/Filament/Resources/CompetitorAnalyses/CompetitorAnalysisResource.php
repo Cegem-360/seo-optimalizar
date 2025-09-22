@@ -32,8 +32,6 @@ class CompetitorAnalysisResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $tenantOwnershipRelationshipName = 'project';
-
     public static function getEloquentQuery(): Builder
     {
         $builder = parent::getEloquentQuery();

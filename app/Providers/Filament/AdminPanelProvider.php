@@ -37,7 +37,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->tenant(Project::class, ownershipRelationship: 'projects')
+            ->profile()
+            ->tenant(Project::class, ownershipRelationship: 'project')
             ->tenantRegistration(RegisterProject::class)
             ->colors([
                 'primary' => Color::Amber,

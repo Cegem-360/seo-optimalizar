@@ -2,6 +2,4 @@
 
 namespace App\Services\Api;
 
-class PageSpeedService
-{
-}
+class PageSpeedService {}
