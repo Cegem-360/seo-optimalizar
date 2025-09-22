@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\ApiCredential;
 use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
@@ -348,8 +349,11 @@ class ApiDataDebugger extends Page
             // Initialize Google Ads service
             $googleAdsService = new GoogleAdsApiService($project);
 
-            // Test connection first
+            // Test connection and check credentials
             $connectionStatus = $googleAdsService->testConnection();
+
+            // Additional credential check
+            $credentialsExist = $this->checkGoogleAdsCredentials($project);
 
             $debugData = [
                 'metadata' => [
@@ -359,12 +363,14 @@ class ApiDataDebugger extends Page
                     'end_date' => $data['endDate'] ?? null,
                     'fetched_at' => now()->toIso8601String(),
                     'connection_status' => $connectionStatus,
+                    'credentials_exist' => $credentialsExist,
+                    'actual_status' => $connectionStatus && $credentialsExist,
                     'keyword_source' => ($data['use_project_keywords'] ?? true) ? 'project_keywords' : 'custom_keywords',
                     'keyword_limit' => (int) ($data['limit'] ?? 10),
                 ],
             ];
 
-            if (!$connectionStatus) {
+            if (!$connectionStatus || !$credentialsExist) {
                 $debugData['error'] = 'Google Ads API not configured or connection failed';
                 $debugData['configuration_status'] = [
                     'has_credentials' => false,
@@ -489,10 +495,17 @@ class ApiDataDebugger extends Page
             $this->googleAdsData = $debugData;
             $this->selectedService = 'google_ads';
 
+            $actuallyWorking = $connectionStatus && $credentialsExist;
+
             Notification::make()
-                ->title($connectionStatus ? 'Google Ads data fetched successfully' : 'Google Ads not configured')
-                ->when($connectionStatus, fn($notification) => $notification->success())
-                ->when(!$connectionStatus, fn($notification) => $notification->warning())
+                ->title($actuallyWorking ? 'Google Ads data fetched successfully' : 'Google Ads not properly configured')
+                ->body($actuallyWorking
+                    ? 'All API calls completed successfully'
+                    : (!$credentialsExist
+                        ? 'Missing Google Ads API credentials'
+                        : 'Connection test failed'))
+                ->when($actuallyWorking, fn($notification) => $notification->success())
+                ->when(!$actuallyWorking, fn($notification) => $notification->warning())
                 ->send();
         } catch (Exception $exception) {
             $this->errorMessage = 'Google Ads Error: ' . $exception->getMessage();
@@ -543,5 +556,35 @@ class ApiDataDebugger extends Page
             // Fallback to default
             return ['seo', 'marketing', 'google ads'];
         }
+    }
+
+    /**
+     * Check if Google Ads credentials exist and are complete
+     */
+    private function checkGoogleAdsCredentials(Project $project): bool
+    {
+        $credential = ApiCredential::where('project_id', $project->id)
+            ->where('service', 'google_ads')
+            ->first();
+
+        if (!$credential) {
+            return false;
+        }
+
+        $requiredFields = [
+            'client_id',
+            'client_secret',
+            'refresh_token',
+            'developer_token',
+            'customer_id'
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (empty($credential->$field)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
