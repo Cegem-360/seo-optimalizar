@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use App\Services\Api\GoogleAdsApiService;
 use App\Services\Api\GoogleAnalytics4Service;
+use App\Services\GoogleAdsService;
 use App\Services\GoogleSearchConsoleService;
 use BackedEnum;
 use Exception;
@@ -117,6 +118,7 @@ class ApiDataDebugger extends Page
                     'endDate' => Carbon::now(),
                     'limit' => 10,
                     'use_project_keywords' => true,
+                    'save_to_database' => false,
                 ])
                 ->schema([
                     DatePicker::make('startDate')
@@ -158,6 +160,14 @@ class ApiDataDebugger extends Page
                         ->minValue(1)
                         ->maxValue(20)
                         ->helperText('Maximum number of keywords to test (to avoid rate limits)'),
+                    Select::make('save_to_database')
+                        ->label('Save to Database')
+                        ->options([
+                            false => 'No - Debug Only',
+                            true => 'Yes - Save Report',
+                        ])
+                        ->default(false)
+                        ->helperText('Whether to save the fetched data as a Google Ads report'),
                 ])
                 ->action(function (array $data): void {
                     $this->fetchGoogleAdsData($data);
@@ -496,6 +506,30 @@ class ApiDataDebugger extends Page
             $this->selectedService = 'google_ads';
 
             $actuallyWorking = $connectionStatus && $credentialsExist;
+
+            // Save to database if requested
+            if ($data['save_to_database'] ?? false) {
+                try {
+                    $googleAdsService = app(GoogleAdsService::class);
+                    $reportDate = Carbon::today();
+
+                    $report = $googleAdsService->storeGoogleAdsReport($project, $debugData, $reportDate);
+
+                    Notification::make()
+                        ->title('Google Ads data saved to database')
+                        ->body(sprintf('Report saved for %s with %d keywords', $reportDate->format('Y-m-d'), count($debugData['keyword_data'] ?? [])))
+                        ->success()
+                        ->send();
+                } catch (Exception $e) {
+                    Log::error('Failed to save Google Ads report: ' . $e->getMessage());
+
+                    Notification::make()
+                        ->title('Failed to save Google Ads data')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
+                }
+            }
 
             Notification::make()
                 ->title($actuallyWorking ? 'Google Ads data fetched successfully' : 'Google Ads not properly configured')
