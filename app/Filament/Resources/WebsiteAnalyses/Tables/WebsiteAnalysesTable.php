@@ -230,7 +230,7 @@ class WebsiteAnalysesTable
                             ->required(),
                     ])
                     ->action(function (array $data): void {
-                        $websiteAnalysisService = (new Application())->make(WebsiteAnalysisService::class);
+                        $websiteAnalysisService = new WebsiteAnalysisService();
 
                         try {
                             $project = Filament::getTenant();
