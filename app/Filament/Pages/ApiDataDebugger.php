@@ -8,7 +8,7 @@ use App\Models\ApiCredential;
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use App\Services\Api\GoogleAdsApiService;
-use App\Services\Api\GoogleAnalytics4Service;
+use App\Services\Api\GoogleAnalyticsService;
 use App\Services\GoogleAdsService;
 use App\Services\GoogleSearchConsoleService;
 use BackedEnum;
@@ -305,7 +305,7 @@ class ApiDataDebugger extends Page
             }
 
             $manager = ApiServiceManager::forProject($project);
-            /** @var GoogleAnalytics4Service $analytics */
+            /** @var GoogleAnalyticsService $analytics */
             $analytics = $manager->getGoogleAnalytics4();
 
             if (! $analytics->isConfigured()) {

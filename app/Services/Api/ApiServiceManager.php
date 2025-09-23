@@ -28,8 +28,7 @@ class ApiServiceManager
     {
         return match ($serviceName) {
             'google_search_console' => new GoogleSearchConsoleService($this->project),
-            'google_analytics' => new GoogleAnalyticsService($this->project),
-            'google_analytics_4' => new GoogleAnalytics4Service($this->project),
+            'google_analytics_4' => new GoogleAnalyticsService($this->project),
             'google_pagespeed_insights' => new PageSpeedInsightsService($this->project),
             'google_ads' => new GoogleAdsApiService($this->project),
             'gemini' => new GeminiApiService($this->project),
@@ -45,17 +44,9 @@ class ApiServiceManager
         return $baseApiService;
     }
 
-    public function getGoogleAnalytics(): GoogleAnalyticsService
+    public function getGoogleAnalytics4(): GoogleAnalyticsService
     {
         /** @var GoogleAnalyticsService $baseApiService */
-        $baseApiService = $this->getService('google_analytics');
-
-        return $baseApiService;
-    }
-
-    public function getGoogleAnalytics4(): GoogleAnalytics4Service
-    {
-        /** @var GoogleAnalytics4Service $baseApiService */
         $baseApiService = $this->getService('google_analytics_4');
 
         return $baseApiService;

@@ -34,7 +34,7 @@ class ListPageSpeedResults extends ListRecords
                 ->modalHeading('Run PageSpeed Analysis')
                 ->modalDescription('Choose the analysis strategy for your site.')
                 ->modalSubmitActionLabel('Run Analysis')
-                ->form([
+                ->schema([
                     Select::make('strategy')
                         ->label('Analysis Strategy')
                         ->options([

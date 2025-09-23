@@ -260,23 +260,6 @@ class WebsiteAnalysisService
         return $sectionNames[$key] ?? ucfirst(str_replace('_', ' ', $key));
     }
 
-    private function getStructureInfo(mixed $data): array
-    {
-        if (is_array($data)) {
-            return [
-                'type' => 'array',
-                'count' => count($data),
-                'keys' => array_keys($data),
-                'is_associative' => array_keys($data) !== range(0, count($data) - 1),
-            ];
-        }
-
-        return [
-            'type' => gettype($data),
-            'value' => is_scalar($data) ? $data : 'non-scalar',
-        ];
-    }
-
     /**
      * Run AI analysis using the specified provider
      */

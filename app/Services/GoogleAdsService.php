@@ -28,9 +28,6 @@ class GoogleAdsService
             'raw_data' => $googleAdsData,
         ]);
 
-        $keywordCount = count($googleAdsData['keyword_data'] ?? []);
-        $successfulFetches = $googleAdsData['statistics']['successful_fetches'] ?? 0;
-
         return $googleAdsReport;
     }
 

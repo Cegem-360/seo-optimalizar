@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Api;
 
 use App\Models\Keyword;
+use App\Models\SearchConsoleRanking;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;

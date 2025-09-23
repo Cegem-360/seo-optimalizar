@@ -10,7 +10,6 @@ use App\Models\Project;
 use App\Models\SearchConsoleRanking;
 use Exception;
 use GuzzleHttp\Client;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +21,7 @@ class CompetitorAnalysisService
 
     private ?GeminiApiService $geminiApiService = null;
 
-    public function __construct(?Project $project = null, ?Repository $repository = null)
+    public function __construct(?Project $project = null)
     {
         $this->client = new Client();
         try {
@@ -542,7 +541,7 @@ class CompetitorAnalysisService
 
                 // Market insights mentése a konkurens elemzésekhez
                 if (isset($decoded['market_insights'])) {
-                    $this->saveMarketInsights($decoded['market_insights']);
+                    $this->saveMarketInsights();
                 }
 
                 return $competitors;
@@ -580,16 +579,7 @@ class CompetitorAnalysisService
         return $merged;
     }
 
-    private function saveMarketInsights(array $insights): void
-    {
-        try {
-            // Itt később menthetjük az insights-okat egy külön táblába ha szükséges
-        } catch (Exception $exception) {
-            Log::error('Failed to save market insights', [
-                'error' => $exception->getMessage(),
-            ]);
-        }
-    }
+    private function saveMarketInsights(): void {}
 
     public function analyzeCompetitorWithAi(string $competitorUrl, string $projectUrl, Keyword $keyword): ?array
     {

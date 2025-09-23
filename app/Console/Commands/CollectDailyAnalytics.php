@@ -6,7 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Services\AnalyticsService;
-use App\Services\Api\GoogleAnalytics4Service;
+use App\Services\Api\GoogleAnalyticsService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
@@ -97,15 +97,15 @@ class CollectDailyAnalytics extends Command
     {
         try {
             // Initialize the GA4 service for the project
-            $googleAnalytics4Service = new GoogleAnalytics4Service($project);
+            $googleAnalyticsService = new GoogleAnalyticsService($project);
 
             // Check if GA4 is configured for this project
-            if ($googleAnalytics4Service->testConnection()) {
+            if ($googleAnalyticsService->testConnection()) {
                 $this->info(sprintf('Fetching Google Analytics data for project %s on %s', $project->id, $date->toDateString()));
 
                 // Fetch all GA4 data for the specified date
                 // For single day data, we use the same date for start and end
-                $analyticsData = $googleAnalytics4Service->getAllGA4Data($date, $date);
+                $analyticsData = $googleAnalyticsService->getAllGA4Data($date, $date);
 
                 // The GA4 service returns the data in the correct format already
                 return $analyticsData;

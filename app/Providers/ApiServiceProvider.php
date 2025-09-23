@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Services\Api\ApiServiceManager;
-use App\Services\Api\GoogleAnalyticsService;
 use App\Services\Api\GoogleSearchConsoleService;
 use App\Services\Api\PageSpeedInsightsService;
 use Illuminate\Contracts\Foundation\Application;
@@ -32,8 +31,6 @@ class ApiServiceProvider extends ServiceProvider
     {
         // Register API services as singletons within project context
         $this->app->bind(GoogleSearchConsoleService::class, fn ($app, $parameters): GoogleSearchConsoleService => new GoogleSearchConsoleService($parameters['project']));
-
-        $this->app->bind(GoogleAnalyticsService::class, fn ($app, $parameters): GoogleAnalyticsService => new GoogleAnalyticsService($parameters['project']));
 
         $this->app->bind(PageSpeedInsightsService::class, fn ($app, $parameters): PageSpeedInsightsService => new PageSpeedInsightsService($parameters['project']));
 
