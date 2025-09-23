@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\GoogleAdsReports\Tables;
 
 use Filament\Actions\BulkActionGroup;
@@ -28,21 +30,21 @@ class GoogleAdsReportsTable
 
                 TextColumn::make('keyword_count')
                     ->label('Keywords')
-                    ->getStateUsing(fn($record) => count($record->keyword_data ?? []))
+                    ->getStateUsing(fn ($record): int => count($record->keyword_data ?? []))
                     ->badge()
                     ->color('primary'),
 
                 TextColumn::make('successful_fetches')
                     ->label('Successful')
-                    ->getStateUsing(fn($record) => $record->statistics['successful_fetches'] ?? 0)
+                    ->getStateUsing(fn ($record) => $record->statistics['successful_fetches'] ?? 0)
                     ->badge()
                     ->color('success'),
 
                 TextColumn::make('connection_status')
                     ->label('Source')
-                    ->getStateUsing(fn($record) => $record->metadata['actual_status'] ?? false ? 'API' : 'Mock')
+                    ->getStateUsing(fn ($record): string => $record->metadata['actual_status'] ?? false ? 'API' : 'Mock')
                     ->badge()
-                    ->color(fn(string $state): string => $state === 'API' ? 'success' : 'warning'),
+                    ->color(fn (string $state): string => $state === 'API' ? 'success' : 'warning'),
 
                 TextColumn::make('created_at')
                     ->label('Created')

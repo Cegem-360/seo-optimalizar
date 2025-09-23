@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Api;
 
 use App\Models\Keyword;
@@ -304,7 +306,7 @@ class GeminiApiService extends BaseApiService
         $competitors = [];
 
         // Az összes ranking lekérése erre a kulcsszóra
-        $allRankings = SearchConsoleRanking::where('keyword_id', $keyword->id)
+        $allRankings = SearchConsoleRanking::query()->where('keyword_id', $keyword->id)
             ->orderBy('position', 'asc')
             ->limit(30)
             ->get();

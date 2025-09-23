@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Pages;
 
 use App\Models\Project;
 use App\Services\Api\GoogleAdsApiService;
 use App\Services\GoogleAdsService;
 use BackedEnum;
+use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -14,7 +17,6 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Artisan;
-use Carbon\Carbon;
 
 class ManualSync extends Page
 {
@@ -117,10 +119,10 @@ class ManualSync extends Page
                         $this->testApiConnections();
                     }),
             ])
-            ->label('More Actions')
-            ->icon(Heroicon::EllipsisVertical)
-            ->button()
-            ->color('gray'),
+                ->label('More Actions')
+                ->icon(Heroicon::EllipsisVertical)
+                ->button()
+                ->color('gray'),
 
             Action::make('clearResults')
                 ->label('Clear')
@@ -412,7 +414,7 @@ class ManualSync extends Page
             $this->syncResults[] = [
                 'operation' => 'Google Analytics Sync',
                 'status' => 'info',
-                'message' => "Starting Google Analytics data collection for last {$days} days...",
+                'message' => sprintf('Starting Google Analytics data collection for last %d days...', $days),
                 'output' => '',
                 'timestamp' => now()->format('H:i:s'),
             ];
@@ -435,7 +437,7 @@ class ManualSync extends Page
                         $this->syncResults[] = [
                             'operation' => 'Analytics Collection',
                             'status' => 'success',
-                            'message' => "Successfully collected data for {$date}",
+                            'message' => 'Successfully collected data for ' . $date,
                             'output' => '',
                             'timestamp' => now()->format('H:i:s'),
                         ];
@@ -444,7 +446,7 @@ class ManualSync extends Page
                         $this->syncResults[] = [
                             'operation' => 'Analytics Collection',
                             'status' => 'warning',
-                            'message' => "Issues collecting data for {$date}",
+                            'message' => 'Issues collecting data for ' . $date,
                             'output' => Artisan::output(),
                             'timestamp' => now()->format('H:i:s'),
                         ];
@@ -454,7 +456,7 @@ class ManualSync extends Page
                     $this->syncResults[] = [
                         'operation' => 'Analytics Collection',
                         'status' => 'error',
-                        'message' => "Error collecting data for {$date}: {$e->getMessage()}",
+                        'message' => sprintf('Error collecting data for %s: %s', $date, $e->getMessage()),
                         'output' => '',
                         'timestamp' => now()->format('H:i:s'),
                     ];
@@ -467,7 +469,7 @@ class ManualSync extends Page
             $this->syncResults[] = [
                 'operation' => 'Google Analytics Sync',
                 'status' => $errorCount === 0 ? 'success' : ($successCount > 0 ? 'warning' : 'error'),
-                'message' => "Analytics sync completed. Success: {$successCount}, Errors: {$errorCount}",
+                'message' => sprintf('Analytics sync completed. Success: %d, Errors: %d', $successCount, $errorCount),
                 'output' => '',
                 'timestamp' => now()->format('H:i:s'),
             ];
@@ -475,19 +477,19 @@ class ManualSync extends Page
             if ($errorCount === 0) {
                 Notification::make()
                     ->title('Google Analytics Data Synced')
-                    ->body("Successfully collected data for all {$days} days")
+                    ->body(sprintf('Successfully collected data for all %d days', $days))
                     ->success()
                     ->send();
             } elseif ($successCount > 0) {
                 Notification::make()
                     ->title('Google Analytics Sync Partial Success')
-                    ->body("Collected data for {$successCount} days, {$errorCount} failed")
+                    ->body(sprintf('Collected data for %d days, %d failed', $successCount, $errorCount))
                     ->warning()
                     ->send();
             } else {
                 Notification::make()
                     ->title('Google Analytics Sync Failed')
-                    ->body("Failed to collect data for the requested {$days} days")
+                    ->body(sprintf('Failed to collect data for the requested %d days', $days))
                     ->danger()
                     ->send();
             }
@@ -529,13 +531,13 @@ class ManualSync extends Page
             ];
 
             // Initialize Google Ads service
-            $googleAdsService = new GoogleAdsApiService($tenant);
+            $googleAdsApiService = new GoogleAdsApiService($tenant);
             $googleAdsReportService = app(GoogleAdsService::class);
 
             // Test connection
-            $connectionStatus = $googleAdsService->testConnection();
+            $connectionStatus = $googleAdsApiService->testConnection();
 
-            if (!$connectionStatus) {
+            if (! $connectionStatus) {
                 $this->syncResults[] = [
                     'operation' => 'Google Ads Data Sync',
                     'status' => 'warning',
@@ -578,22 +580,22 @@ class ManualSync extends Page
                 foreach ($keywords as $keyword) {
                     try {
                         // Get regular keyword data
-                        $kwData = $googleAdsService->getKeywordData($keyword, 'HU');
-                        if ($kwData) {
+                        $kwData = $googleAdsApiService->getKeywordData($keyword, 'HU');
+                        if ($kwData !== null && $kwData !== []) {
                             $keywordData[$keyword] = $kwData;
                             $successCount++;
                         }
 
                         // Get historical metrics
-                        $histData = $googleAdsService->getHistoricalMetrics($keyword, 'HU');
-                        if ($histData) {
+                        $histData = $googleAdsApiService->getHistoricalMetrics($keyword, 'HU');
+                        if ($histData !== null && $histData !== []) {
                             $historicalData[$keyword] = $histData;
                         }
                     } catch (Exception $e) {
                         $this->syncResults[] = [
                             'operation' => 'Google Ads Data Sync',
                             'status' => 'warning',
-                            'message' => "Failed to fetch data for keyword: {$keyword}",
+                            'message' => 'Failed to fetch data for keyword: ' . $keyword,
                             'output' => $e->getMessage(),
                             'timestamp' => now()->format('H:i:s'),
                         ];
@@ -601,18 +603,18 @@ class ManualSync extends Page
                 }
 
                 // Bulk operation
-                $bulkResults = $googleAdsService->bulkGetKeywordData(collect($keywords), 'HU');
+                $bulkResults = $googleAdsApiService->bulkGetKeywordData(collect($keywords), 'HU');
                 $bulkData = $bulkResults;
             } else {
                 // Mock data
                 foreach ($keywords as $keyword) {
                     $keywordData[$keyword] = [
                         'keyword' => $keyword,
-                        'search_volume' => rand(1000, 50000),
-                        'competition' => round(rand(10, 90) / 100, 2),
-                        'low_bid' => round(rand(50, 300) / 100, 2),
-                        'high_bid' => round(rand(300, 1000) / 100, 2),
-                        'difficulty' => rand(20, 85),
+                        'search_volume' => random_int(1000, 50000),
+                        'competition' => round(random_int(10, 90) / 100, 2),
+                        'low_bid' => round(random_int(50, 300) / 100, 2),
+                        'high_bid' => round(random_int(300, 1000) / 100, 2),
+                        'difficulty' => random_int(20, 85),
                     ];
 
                     $monthlyVolumes = [];
@@ -621,20 +623,21 @@ class ManualSync extends Page
                         $monthlyVolumes[] = [
                             'year' => $date->year,
                             'month' => $date->month,
-                            'monthly_searches' => rand(800, 60000),
+                            'monthly_searches' => random_int(800, 60000),
                         ];
                     }
 
                     $historicalData[$keyword] = [
                         'keyword' => $keyword,
-                        'avg_monthly_searches' => rand(1000, 50000),
-                        'competition' => round(rand(10, 90) / 100, 2),
-                        'competition_index' => rand(20, 80),
+                        'avg_monthly_searches' => random_int(1000, 50000),
+                        'competition' => round(random_int(10, 90) / 100, 2),
+                        'competition_index' => random_int(20, 80),
                         'monthly_search_volumes' => $monthlyVolumes,
                     ];
 
                     $successCount++;
                 }
+
                 $bulkData = $keywordData;
             }
 
@@ -654,8 +657,8 @@ class ManualSync extends Page
             $this->syncResults[] = [
                 'operation' => 'Google Ads Data Sync',
                 'status' => 'success',
-                'message' => "Google Ads report saved with {$successCount} keywords",
-                'output' => "Report ID: {$report->id}",
+                'message' => sprintf('Google Ads report saved with %d keywords', $successCount),
+                'output' => 'Report ID: ' . $report->id,
                 'timestamp' => now()->format('H:i:s'),
             ];
 
@@ -664,7 +667,6 @@ class ManualSync extends Page
                 ->body(sprintf('Successfully saved report with %d keywords', $successCount))
                 ->success()
                 ->send();
-
         } catch (Exception $exception) {
             $this->syncResults[] = [
                 'operation' => 'Google Ads Data Sync',

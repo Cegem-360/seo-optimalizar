@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Pages;
 
 use App\Models\ApiCredential;
-use App\Models\Keyword;
 use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use App\Services\Api\GoogleAdsApiService;
@@ -137,21 +138,22 @@ class ApiDataDebugger extends Page
                         ->label('Select Keywords from Project')
                         ->options(function () {
                             $project = Filament::getTenant();
-                            if (!$project instanceof Project) {
+                            if (! $project instanceof Project) {
                                 return [];
                             }
+
                             return $project->keywords()
                                 ->pluck('keyword', 'keyword')
                                 ->toArray();
                         })
                         ->multiple()
                         ->searchable()
-                        ->visible(fn ($get) => $get('use_project_keywords') === true)
+                        ->visible(fn ($get): bool => $get('use_project_keywords') === true)
                         ->helperText('Select keywords from your project to test (max 10 recommended)'),
                     TextInput::make('custom_keywords')
                         ->label('Custom Keywords')
                         ->placeholder('Enter keywords separated by commas (e.g. seo, marketing, ads)')
-                        ->visible(fn ($get) => $get('use_project_keywords') === false)
+                        ->visible(fn ($get): bool => $get('use_project_keywords') === false)
                         ->helperText('Enter custom keywords separated by commas'),
                     TextInput::make('limit')
                         ->label('Keyword Limit')
@@ -380,7 +382,7 @@ class ApiDataDebugger extends Page
                 ],
             ];
 
-            if (!$connectionStatus || !$credentialsExist) {
+            if (! $connectionStatus || ! $credentialsExist) {
                 $debugData['error'] = 'Google Ads API not configured or connection failed';
                 $debugData['configuration_status'] = [
                     'has_credentials' => false,
@@ -389,7 +391,7 @@ class ApiDataDebugger extends Page
                         'client_secret',
                         'refresh_token',
                         'developer_token',
-                        'customer_id'
+                        'customer_id',
                     ],
                     'note' => 'Using mock data for demonstration purposes',
                 ];
@@ -400,14 +402,14 @@ class ApiDataDebugger extends Page
                 $mockKeywordData = [];
                 $mockHistoricalData = [];
 
-                foreach ($testKeywords as $keyword) {
-                    $mockKeywordData[$keyword] = [
-                        'keyword' => $keyword,
-                        'search_volume' => rand(1000, 50000),
-                        'competition' => round(rand(10, 90) / 100, 2),
-                        'low_bid' => round(rand(50, 300) / 100, 2),
-                        'high_bid' => round(rand(300, 1000) / 100, 2),
-                        'difficulty' => rand(20, 85),
+                foreach ($testKeywords as $testKeyword) {
+                    $mockKeywordData[$testKeyword] = [
+                        'keyword' => $testKeyword,
+                        'search_volume' => random_int(1000, 50000),
+                        'competition' => round(random_int(10, 90) / 100, 2),
+                        'low_bid' => round(random_int(50, 300) / 100, 2),
+                        'high_bid' => round(random_int(300, 1000) / 100, 2),
+                        'difficulty' => random_int(20, 85),
                     ];
 
                     $monthlyVolumes = [];
@@ -416,19 +418,19 @@ class ApiDataDebugger extends Page
                         $monthlyVolumes[] = [
                             'year' => $date->year,
                             'month' => $date->month,
-                            'monthly_searches' => rand(800, 60000),
+                            'monthly_searches' => random_int(800, 60000),
                         ];
                     }
 
-                    $mockHistoricalData[$keyword] = [
-                        'keyword' => $keyword,
-                        'avg_monthly_searches' => rand(1000, 50000),
-                        'competition' => round(rand(10, 90) / 100, 2),
-                        'competition_index' => rand(20, 80),
-                        'low_top_of_page_bid_micros' => rand(500000, 3000000),
-                        'high_top_of_page_bid_micros' => rand(3000000, 10000000),
-                        'low_top_of_page_bid' => round(rand(50, 300) / 100, 2),
-                        'high_top_of_page_bid' => round(rand(300, 1000) / 100, 2),
+                    $mockHistoricalData[$testKeyword] = [
+                        'keyword' => $testKeyword,
+                        'avg_monthly_searches' => random_int(1000, 50000),
+                        'competition' => round(random_int(10, 90) / 100, 2),
+                        'competition_index' => random_int(20, 80),
+                        'low_top_of_page_bid_micros' => random_int(500000, 3000000),
+                        'high_top_of_page_bid_micros' => random_int(3000000, 10000000),
+                        'low_top_of_page_bid' => round(random_int(50, 300) / 100, 2),
+                        'high_top_of_page_bid' => round(random_int(300, 1000) / 100, 2),
                         'monthly_search_volumes' => $monthlyVolumes,
                     ];
                 }
@@ -462,17 +464,17 @@ class ApiDataDebugger extends Page
                 $historicalData = [];
                 $bulkData = [];
 
-                foreach ($testKeywords as $keyword) {
+                foreach ($testKeywords as $testKeyword) {
                     // Get regular keyword data
-                    $kwData = $googleAdsService->getKeywordData($keyword, 'HU');
-                    if ($kwData) {
-                        $keywordData[$keyword] = $kwData;
+                    $kwData = $googleAdsService->getKeywordData($testKeyword, 'HU');
+                    if ($kwData !== null && $kwData !== []) {
+                        $keywordData[$testKeyword] = $kwData;
                     }
 
                     // Get historical metrics
-                    $histData = $googleAdsService->getHistoricalMetrics($keyword, 'HU');
-                    if ($histData) {
-                        $historicalData[$keyword] = $histData;
+                    $histData = $googleAdsService->getHistoricalMetrics($testKeyword, 'HU');
+                    if ($histData !== null && $histData !== []) {
+                        $historicalData[$testKeyword] = $histData;
                     }
                 }
 
@@ -535,11 +537,11 @@ class ApiDataDebugger extends Page
                 ->title($actuallyWorking ? 'Google Ads data fetched successfully' : 'Google Ads not properly configured')
                 ->body($actuallyWorking
                     ? 'All API calls completed successfully'
-                    : (!$credentialsExist
-                        ? 'Missing Google Ads API credentials'
-                        : 'Connection test failed'))
-                ->when($actuallyWorking, fn($notification) => $notification->success())
-                ->when(!$actuallyWorking, fn($notification) => $notification->warning())
+                    : ($credentialsExist
+                        ? 'Connection test failed'
+                        : 'Missing Google Ads API credentials'))
+                ->when($actuallyWorking, fn ($notification): Notification => $notification->success())
+                ->unless($actuallyWorking, fn ($notification): Notification => $notification->warning())
                 ->send();
         } catch (Exception $exception) {
             $this->errorMessage = 'Google Ads Error: ' . $exception->getMessage();
@@ -562,7 +564,7 @@ class ApiDataDebugger extends Page
 
         if (($data['use_project_keywords'] ?? true) === true) {
             // Use project keywords
-            if (!empty($data['keywords'])) {
+            if (! empty($data['keywords'])) {
                 // User selected specific keywords
                 $keywords = array_slice($data['keywords'], 0, $limit);
             } else {
@@ -580,16 +582,17 @@ class ApiDataDebugger extends Page
             }
 
             return $keywords;
-        } else {
-            // Use custom keywords from text input
-            if (!empty($data['custom_keywords'])) {
-                $keywords = array_map('trim', explode(',', $data['custom_keywords']));
-                return array_slice(array_filter($keywords), 0, $limit);
-            }
-
-            // Fallback to default
-            return ['seo', 'marketing', 'google ads'];
         }
+
+        // Use custom keywords from text input
+        if (! empty($data['custom_keywords'])) {
+            $keywords = array_map('trim', explode(',', (string) $data['custom_keywords']));
+
+            return array_slice(array_filter($keywords), 0, $limit);
+        }
+
+        // Fallback to default
+        return ['seo', 'marketing', 'google ads'];
     }
 
     /**
@@ -597,11 +600,11 @@ class ApiDataDebugger extends Page
      */
     private function checkGoogleAdsCredentials(Project $project): bool
     {
-        $credential = ApiCredential::where('project_id', $project->id)
+        $credential = ApiCredential::query()->where('project_id', $project->id)
             ->where('service', 'google_ads')
             ->first();
 
-        if (!$credential) {
+        if (! $credential) {
             return false;
         }
 
@@ -610,11 +613,11 @@ class ApiDataDebugger extends Page
             'client_secret',
             'refresh_token',
             'developer_token',
-            'customer_id'
+            'customer_id',
         ];
 
-        foreach ($requiredFields as $field) {
-            if (empty($credential->$field)) {
+        foreach ($requiredFields as $requiredField) {
+            if (empty($credential->{$requiredField})) {
                 return false;
             }
         }

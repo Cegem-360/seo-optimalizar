@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Keyword;
 use App\Models\Project;
 use Illuminate\Database\Migrations\Migration;

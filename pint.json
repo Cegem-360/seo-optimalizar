@@ -1,6 +1,7 @@
 {
     "preset": "laravel",
     "rules": {
+        "declare_strict_types": true,
         "simplified_null_return": true,
         "braces": {
             "position_after_control_structures": "same",
@@ -13,7 +14,9 @@
         },
         "single_quote": true,
         "trailing_comma_in_multiline": {
-            "elements": ["arrays"]
+            "elements": [
+                "arrays"
+            ]
         },
         "visibility_required": true,
         "array_syntax": {
@@ -31,7 +34,10 @@
             ]
         },
         "no_spaces_around_offset": {
-            "positions": ["inside", "outside"]
+            "positions": [
+                "inside",
+                "outside"
+            ]
         },
         "ternary_operator_spaces": true,
         "trim_array_spaces": true

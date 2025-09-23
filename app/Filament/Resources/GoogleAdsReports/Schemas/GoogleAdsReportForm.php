@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\GoogleAdsReports\Schemas;
 
-use App\Models\Project;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -61,29 +60,29 @@ class GoogleAdsReportForm
                             ->label('Keyword Data (JSON)')
                             ->rows(10)
                             ->columnSpan('full')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
-                            ->dehydrateStateUsing(fn($state) => json_decode($state, true)),
+                            ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
+                            ->dehydrateStateUsing(fn ($state): mixed => json_decode((string) $state, true)),
 
                         Textarea::make('historical_metrics')
                             ->label('Historical Metrics (JSON)')
                             ->rows(10)
                             ->columnSpan('full')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
-                            ->dehydrateStateUsing(fn($state) => json_decode($state, true)),
+                            ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
+                            ->dehydrateStateUsing(fn ($state): mixed => json_decode((string) $state, true)),
 
                         Textarea::make('bulk_results')
                             ->label('Bulk Results (JSON)')
                             ->rows(10)
                             ->columnSpan('full')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
-                            ->dehydrateStateUsing(fn($state) => json_decode($state, true)),
+                            ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
+                            ->dehydrateStateUsing(fn ($state): mixed => json_decode((string) $state, true)),
 
                         Textarea::make('raw_data')
                             ->label('Complete Raw Data (JSON)')
                             ->rows(15)
                             ->columnSpan('full')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
-                            ->dehydrateStateUsing(fn($state) => json_decode($state, true)),
+                            ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
+                            ->dehydrateStateUsing(fn ($state): mixed => json_decode((string) $state, true)),
                     ])
                     ->collapsible()
                     ->collapsed(),

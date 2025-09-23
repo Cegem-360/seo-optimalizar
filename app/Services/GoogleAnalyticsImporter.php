@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Project;
 use Carbon\Carbon;
+use InvalidArgumentException;
 
 class GoogleAnalyticsImporter
 {
     public function __construct(
-        private AnalyticsService $analyticsService
+        private readonly AnalyticsService $analyticsService
     ) {}
 
     /**
      * Import the provided analytics data for a project
      */
-    public function importAnalyticsData(Project $project, array $analyticsData, Carbon $date = null): void
+    public function importAnalyticsData(Project $project, array $analyticsData, ?Carbon $date = null): void
     {
-        $date = $date ?? Carbon::yesterday();
+        $date ??= Carbon::yesterday();
 
         // Validate the data structure
         $this->validateAnalyticsData($analyticsData);
@@ -28,12 +31,12 @@ class GoogleAnalyticsImporter
     /**
      * Example method to import the JSON data you provided
      */
-    public function importFromJson(Project $project, string $jsonData, Carbon $date = null): void
+    public function importFromJson(Project $project, string $jsonData, ?Carbon $date = null): void
     {
         $data = json_decode($jsonData, true);
 
-        if (!$data) {
-            throw new \InvalidArgumentException('Invalid JSON data provided');
+        if (! $data) {
+            throw new InvalidArgumentException('Invalid JSON data provided');
         }
 
         $this->importAnalyticsData($project, $data, $date);
@@ -45,11 +48,10 @@ class GoogleAnalyticsImporter
     private function validateAnalyticsData(array $data): void
     {
         $requiredKeys = ['overview'];
-        $optionalKeys = ['traffic_sources', 'top_pages', 'user_demographics', 'device_data', 'conversion_data', 'real_time'];
 
-        foreach ($requiredKeys as $key) {
-            if (!isset($data[$key])) {
-                throw new \InvalidArgumentException("Missing required key: {$key}");
+        foreach ($requiredKeys as $requiredKey) {
+            if (! isset($data[$requiredKey])) {
+                throw new InvalidArgumentException('Missing required key: ' . $requiredKey);
             }
         }
 
@@ -57,9 +59,9 @@ class GoogleAnalyticsImporter
         $overview = $data['overview'];
         $overviewKeys = ['sessions', 'activeUsers', 'totalUsers', 'newUsers', 'bounceRate', 'averageSessionDuration', 'screenPageViews', 'conversions'];
 
-        foreach ($overviewKeys as $key) {
-            if (!isset($overview[$key])) {
-                throw new \InvalidArgumentException("Missing required overview key: {$key}");
+        foreach ($overviewKeys as $overviewKey) {
+            if (! isset($overview[$overviewKey])) {
+                throw new InvalidArgumentException('Missing required overview key: ' . $overviewKey);
             }
         }
     }

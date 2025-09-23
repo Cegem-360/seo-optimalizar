@@ -1,46 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\AnalyticsReport;
 use App\Models\Project;
 use Carbon\Carbon;
-use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 class AnalyticsService
 {
-    public function storeAnalyticsReport(Project $project, array $analyticsData, Carbon $reportDate = null): AnalyticsReport
+    public function storeAnalyticsReport(Project $project, array $analyticsData, ?Carbon $reportDate = null): AnalyticsReport
     {
-        $reportDate = $reportDate ?? Carbon::yesterday();
+        $reportDate ??= Carbon::yesterday();
 
         // Extract overview data
         $overview = $analyticsData['overview'] ?? [];
 
         // Create or update the analytics report
-        $report = AnalyticsReport::updateOrCreate(
-            [
-                'project_id' => $project->id,
-                'report_date' => $reportDate->toDateString(),
-            ],
-            [
-                'sessions' => $overview['sessions'] ?? 0,
-                'active_users' => $overview['activeUsers'] ?? 0,
-                'total_users' => $overview['totalUsers'] ?? 0,
-                'new_users' => $overview['newUsers'] ?? 0,
-                'bounce_rate' => $overview['bounceRate'] ?? 0,
-                'average_session_duration' => $overview['averageSessionDuration'] ?? 0,
-                'screen_page_views' => $overview['screenPageViews'] ?? 0,
-                'conversions' => $overview['conversions'] ?? 0,
-                'traffic_sources' => $analyticsData['traffic_sources'] ?? null,
-                'top_pages' => $analyticsData['top_pages'] ?? null,
-                'user_demographics' => $analyticsData['user_demographics'] ?? null,
-                'device_data' => $analyticsData['device_data'] ?? null,
-                'conversion_data' => $analyticsData['conversion_data'] ?? null,
-                'real_time' => $analyticsData['real_time'] ?? null,
-                'raw_data' => $analyticsData,
-            ]
-        );
+        $analyticsReport = AnalyticsReport::query()->updateOrCreate([
+            'project_id' => $project->id,
+            'report_date' => $reportDate->toDateString(),
+        ], [
+            'sessions' => $overview['sessions'] ?? 0,
+            'active_users' => $overview['activeUsers'] ?? 0,
+            'total_users' => $overview['totalUsers'] ?? 0,
+            'new_users' => $overview['newUsers'] ?? 0,
+            'bounce_rate' => $overview['bounceRate'] ?? 0,
+            'average_session_duration' => $overview['averageSessionDuration'] ?? 0,
+            'screen_page_views' => $overview['screenPageViews'] ?? 0,
+            'conversions' => $overview['conversions'] ?? 0,
+            'traffic_sources' => $analyticsData['traffic_sources'] ?? null,
+            'top_pages' => $analyticsData['top_pages'] ?? null,
+            'user_demographics' => $analyticsData['user_demographics'] ?? null,
+            'device_data' => $analyticsData['device_data'] ?? null,
+            'conversion_data' => $analyticsData['conversion_data'] ?? null,
+            'real_time' => $analyticsData['real_time'] ?? null,
+            'raw_data' => $analyticsData,
+        ]);
 
         Log::info('Analytics report stored', [
             'project_id' => $project->id,
@@ -49,19 +48,19 @@ class AnalyticsService
             'active_users' => $overview['activeUsers'] ?? 0,
         ]);
 
-        return $report;
+        return $analyticsReport;
     }
 
     public function getLatestReport(Project $project): ?AnalyticsReport
     {
-        return AnalyticsReport::where('project_id', $project->id)
+        return AnalyticsReport::query()->where('project_id', $project->id)
             ->orderByDesc('report_date')
             ->first();
     }
 
-    public function getReportsForDateRange(Project $project, Carbon $startDate, Carbon $endDate): \Illuminate\Database\Eloquent\Collection
+    public function getReportsForDateRange(Project $project, Carbon $startDate, Carbon $endDate): Collection
     {
-        return AnalyticsReport::where('project_id', $project->id)
+        return AnalyticsReport::query()->where('project_id', $project->id)
             ->whereBetween('report_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->orderBy('report_date')
             ->get();
@@ -83,7 +82,7 @@ class AnalyticsService
         ];
     }
 
-    private function calculateTrend(\Illuminate\Database\Eloquent\Collection $reports, string $metric): array
+    private function calculateTrend(Collection $reports, string $metric): array
     {
         $data = [];
         $previousValue = null;
@@ -114,10 +113,10 @@ class AnalyticsService
         $allPages = [];
 
         foreach ($reports as $report) {
-            if (!empty($report->top_pages)) {
+            if (! empty($report->top_pages)) {
                 foreach ($report->top_pages as $page) {
                     $path = $page['pagePath'] ?? '';
-                    if (!isset($allPages[$path])) {
+                    if (! isset($allPages[$path])) {
                         $allPages[$path] = [
                             'pagePath' => $path,
                             'pageTitle' => $page['pageTitle'] ?? '',
@@ -139,10 +138,10 @@ class AnalyticsService
         }
 
         // Calculate averages and sort by page views
-        foreach ($allPages as &$page) {
-            if ($page['days_count'] > 0) {
-                $page['avg_bounce_rate'] = round($page['avg_bounce_rate'] / $page['days_count'], 2);
-                $page['avg_session_duration'] = round($page['avg_session_duration'] / $page['days_count'], 2);
+        foreach ($allPages as &$allPage) {
+            if ($allPage['days_count'] > 0) {
+                $allPage['avg_bounce_rate'] = round($allPage['avg_bounce_rate'] / $allPage['days_count'], 2);
+                $allPage['avg_session_duration'] = round($allPage['avg_session_duration'] / $allPage['days_count'], 2);
             }
         }
 
@@ -162,10 +161,10 @@ class AnalyticsService
         $totalSessions = 0;
 
         foreach ($reports as $report) {
-            if (!empty($report->traffic_sources)) {
+            if (! empty($report->traffic_sources)) {
                 foreach ($report->traffic_sources as $source) {
                     $channel = $source['sessionDefaultChannelGroup'] ?? 'Unknown';
-                    if (!isset($sources[$channel])) {
+                    if (! isset($sources[$channel])) {
                         $sources[$channel] = [
                             'channel' => $channel,
                             'total_sessions' => 0,
@@ -192,6 +191,7 @@ class AnalyticsService
             if ($source['days_count'] > 0) {
                 $source['avg_bounce_rate'] = round($source['avg_bounce_rate'] / $source['days_count'], 2);
             }
+
             $source['percentage'] = $totalSessions > 0 ? round(($source['total_sessions'] / $totalSessions) * 100, 2) : 0;
         }
 

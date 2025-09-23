@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Api;
 
 use App\Models\CompetitorAnalysis;
@@ -113,7 +115,7 @@ class CompetitorAnalysisService
     {
         try {
             // Először próbáljuk a valós ranking adatokból
-            $rankings = SearchConsoleRanking::where('keyword_id', $keyword->id)
+            $rankings = SearchConsoleRanking::query()->where('keyword_id', $keyword->id)
                 ->whereNotNull('page')
                 ->orderBy('position')
                 ->limit($limit)
@@ -165,7 +167,7 @@ class CompetitorAnalysisService
     private function getTopCompetitorDomains(Keyword $keyword, int $limit): array
     {
         // Először próbáljuk a valós ranking adatokból
-        $rankings = SearchConsoleRanking::where('keyword_id', $keyword->id)
+        $rankings = SearchConsoleRanking::query()->where('keyword_id', $keyword->id)
             ->whereNotNull('page')
             ->orderBy('position')
             ->limit($limit)

@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\GoogleAdsReports;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\GoogleAdsReports\Pages\CreateGoogleAdsReport;
 use App\Filament\Resources\GoogleAdsReports\Pages\EditGoogleAdsReport;
 use App\Filament\Resources\GoogleAdsReports\Pages\ListGoogleAdsReports;
@@ -9,10 +12,8 @@ use App\Filament\Resources\GoogleAdsReports\Pages\ViewGoogleAdsReport;
 use App\Filament\Resources\GoogleAdsReports\Schemas\GoogleAdsReportForm;
 use App\Filament\Resources\GoogleAdsReports\Tables\GoogleAdsReportsTable;
 use App\Models\GoogleAdsReport;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -26,9 +27,7 @@ class GoogleAdsReportResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Google Ads Reports';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::CurrencyDollar;
-
-    protected static string|UnitEnum|null $navigationGroup = 'Analytics';
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Analytics;
 
     protected static ?int $navigationSort = 20;
 

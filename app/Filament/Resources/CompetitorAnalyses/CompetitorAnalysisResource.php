@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\CompetitorAnalyses;
 
+use App\Enums\NavigationGroups;
 use App\Filament\Resources\CompetitorAnalyses\Pages\CreateCompetitorAnalysis;
 use App\Filament\Resources\CompetitorAnalyses\Pages\EditCompetitorAnalysis;
 use App\Filament\Resources\CompetitorAnalyses\Pages\ListCompetitorAnalyses;
@@ -9,11 +12,9 @@ use App\Filament\Resources\CompetitorAnalyses\Schemas\CompetitorAnalysisForm;
 use App\Filament\Resources\CompetitorAnalyses\Tables\CompetitorAnalysesTable;
 use App\Models\CompetitorAnalysis;
 use App\Models\Project;
-use BackedEnum;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -22,9 +23,7 @@ class CompetitorAnalysisResource extends Resource
 {
     protected static ?string $model = CompetitorAnalysis::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-
-    protected static string|UnitEnum|null $navigationGroup = 'SEO Analytics';
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::Analytics;
 
     protected static ?string $modelLabel = 'Versenytárs elemzés';
 

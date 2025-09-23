@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Models\Keyword;
@@ -56,7 +58,7 @@ class KeywordPerformanceWidget extends BaseWidget
                 TextColumn::make('latest_position')
                     ->label('Current Position')
                     ->getStateUsing(function ($record) {
-                        $latestRanking = SearchConsoleRanking::where('keyword_id', $record->id)
+                        $latestRanking = SearchConsoleRanking::query()->where('keyword_id', $record->id)
                             ->orderBy('fetched_at', 'desc')
                             ->first();
 
@@ -73,11 +75,11 @@ class KeywordPerformanceWidget extends BaseWidget
                 TextColumn::make('position_change')
                     ->label('Change (7d)')
                     ->getStateUsing(function ($record): string {
-                        $latest = SearchConsoleRanking::where('keyword_id', $record->id)
+                        $latest = SearchConsoleRanking::query()->where('keyword_id', $record->id)
                             ->orderBy('fetched_at', 'desc')
                             ->first();
 
-                        $weekAgo = SearchConsoleRanking::where('keyword_id', $record->id)
+                        $weekAgo = SearchConsoleRanking::query()->where('keyword_id', $record->id)
                             ->where('fetched_at', '<=', now()->subDays(7))
                             ->orderBy('fetched_at', 'desc')
                             ->first();

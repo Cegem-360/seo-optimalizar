@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\SearchConsoleRankings\Pages;
 
 use App\Filament\Resources\SearchConsoleRankings\SearchConsoleRankingResource;

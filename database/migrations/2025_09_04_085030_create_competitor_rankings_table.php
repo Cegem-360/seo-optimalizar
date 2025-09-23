@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Competitor;
 use App\Models\Keyword;
 use Illuminate\Database\Migrations\Migration;

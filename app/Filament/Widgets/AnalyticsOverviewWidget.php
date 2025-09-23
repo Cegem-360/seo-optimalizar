@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Models\AnalyticsReport;
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -15,16 +16,16 @@ class AnalyticsOverviewWidget extends BaseWidget
     {
         $tenant = Filament::getTenant();
 
-        if (!$tenant instanceof Project) {
+        if (! $tenant instanceof Project) {
             return [];
         }
 
         // Get latest analytics report for the project
-        $latestReport = AnalyticsReport::where('project_id', $tenant->id)
+        $latestReport = AnalyticsReport::query()->where('project_id', $tenant->id)
             ->orderByDesc('report_date')
             ->first();
 
-        if (!$latestReport) {
+        if (! $latestReport) {
             return [
                 Stat::make('Analytics', 'No data available')
                     ->description('Start collecting analytics data')
@@ -33,7 +34,7 @@ class AnalyticsOverviewWidget extends BaseWidget
         }
 
         // Get previous report for comparison
-        $previousReport = AnalyticsReport::where('project_id', $tenant->id)
+        $previousReport = AnalyticsReport::query()->where('project_id', $tenant->id)
             ->where('report_date', '<', $latestReport->report_date)
             ->orderByDesc('report_date')
             ->first();
@@ -73,10 +74,11 @@ class AnalyticsOverviewWidget extends BaseWidget
 
         $change = $current - $previous;
         $changePercent = abs(($change / $previous) * 100);
-
         if ($change > 0) {
             return ($reverse ? 'Increased by ' : 'Increased by ') . number_format($changePercent, 1) . '%';
-        } elseif ($change < 0) {
+        }
+
+        if ($change < 0) {
             return ($reverse ? 'Decreased by ' : 'Decreased by ') . number_format($changePercent, 1) . '%';
         }
 
@@ -90,10 +92,11 @@ class AnalyticsOverviewWidget extends BaseWidget
         }
 
         $change = $current - $previous;
-
         if ($change > 0) {
             return $reverse ? 'heroicon-m-arrow-trending-down' : 'heroicon-m-arrow-trending-up';
-        } elseif ($change < 0) {
+        }
+
+        if ($change < 0) {
             return $reverse ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down';
         }
 
@@ -107,10 +110,11 @@ class AnalyticsOverviewWidget extends BaseWidget
         }
 
         $change = $current - $previous;
-
         if ($change > 0) {
             return $reverse ? 'danger' : 'success';
-        } elseif ($change < 0) {
+        }
+
+        if ($change < 0) {
             return $reverse ? 'success' : 'danger';
         }
 
@@ -119,7 +123,7 @@ class AnalyticsOverviewWidget extends BaseWidget
 
     private function getChartData(Project $project, string $metric): array
     {
-        $reports = AnalyticsReport::where('project_id', $project->id)
+        $reports = AnalyticsReport::query()->where('project_id', $project->id)
             ->orderBy('report_date')
             ->limit(7)
             ->get();
@@ -127,7 +131,7 @@ class AnalyticsOverviewWidget extends BaseWidget
         return $reports->pluck($metric)->toArray();
     }
 
-    public function getPollingInterval(): ?string
+    protected function getPollingInterval(): ?string
     {
         return '30s';
     }

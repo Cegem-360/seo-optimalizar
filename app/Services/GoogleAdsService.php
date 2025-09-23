@@ -1,34 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\GoogleAdsReport;
 use App\Models\Project;
 use Carbon\Carbon;
-use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 class GoogleAdsService
 {
     public function storeGoogleAdsReport(Project $project, array $googleAdsData, ?Carbon $reportDate = null): GoogleAdsReport
     {
-        $reportDate = $reportDate ?? Carbon::today();
+        $reportDate ??= Carbon::today();
 
         // Create or update the Google Ads report
-        $report = GoogleAdsReport::updateOrCreate(
-            [
-                'project_id' => $project->id,
-                'report_date' => $reportDate->toDateString(),
-            ],
-            [
-                'metadata' => $googleAdsData['metadata'] ?? null,
-                'keyword_data' => $googleAdsData['keyword_data'] ?? null,
-                'historical_metrics' => $googleAdsData['historical_metrics'] ?? null,
-                'bulk_results' => $googleAdsData['bulk_results'] ?? null,
-                'statistics' => $googleAdsData['statistics'] ?? null,
-                'raw_data' => $googleAdsData,
-            ]
-        );
+        $googleAdsReport = GoogleAdsReport::query()->updateOrCreate([
+            'project_id' => $project->id,
+            'report_date' => $reportDate->toDateString(),
+        ], [
+            'metadata' => $googleAdsData['metadata'] ?? null,
+            'keyword_data' => $googleAdsData['keyword_data'] ?? null,
+            'historical_metrics' => $googleAdsData['historical_metrics'] ?? null,
+            'bulk_results' => $googleAdsData['bulk_results'] ?? null,
+            'statistics' => $googleAdsData['statistics'] ?? null,
+            'raw_data' => $googleAdsData,
+        ]);
 
         $keywordCount = count($googleAdsData['keyword_data'] ?? []);
         $successfulFetches = $googleAdsData['statistics']['successful_fetches'] ?? 0;
@@ -40,19 +39,19 @@ class GoogleAdsService
             'successful_fetches' => $successfulFetches,
         ]);
 
-        return $report;
+        return $googleAdsReport;
     }
 
     public function getLatestReport(Project $project): ?GoogleAdsReport
     {
-        return GoogleAdsReport::where('project_id', $project->id)
+        return GoogleAdsReport::query()->where('project_id', $project->id)
             ->orderByDesc('report_date')
             ->first();
     }
 
-    public function getReportsForDateRange(Project $project, Carbon $startDate, Carbon $endDate): \Illuminate\Database\Eloquent\Collection
+    public function getReportsForDateRange(Project $project, Carbon $startDate, Carbon $endDate): Collection
     {
-        return GoogleAdsReport::where('project_id', $project->id)
+        return GoogleAdsReport::query()->where('project_id', $project->id)
             ->whereBetween('report_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->orderBy('report_date')
             ->get();
@@ -66,10 +65,10 @@ class GoogleAdsService
         $keywordAnalysis = [];
 
         foreach ($reports as $report) {
-            if (!empty($report->keyword_data)) {
+            if (! empty($report->keyword_data)) {
                 foreach ($report->keyword_data as $keyword) {
                     $keywordText = $keyword['keyword'] ?? '';
-                    if (!isset($keywordAnalysis[$keywordText])) {
+                    if (! isset($keywordAnalysis[$keywordText])) {
                         $keywordAnalysis[$keywordText] = [
                             'keyword' => $keywordText,
                             'avg_search_volume' => 0,
@@ -98,11 +97,11 @@ class GoogleAdsService
         }
 
         // Calculate averages
-        foreach ($keywordAnalysis as &$analysis) {
-            if ($analysis['reports_count'] > 0) {
-                $analysis['avg_search_volume'] = round($analysis['avg_search_volume'] / $analysis['reports_count']);
-                $analysis['avg_difficulty'] = round($analysis['avg_difficulty'] / $analysis['reports_count'], 2);
-                $analysis['avg_competition'] = round($analysis['avg_competition'] / $analysis['reports_count'], 2);
+        foreach ($keywordAnalysis as &$keywordAnalysi) {
+            if ($keywordAnalysi['reports_count'] > 0) {
+                $keywordAnalysi['avg_search_volume'] = round($keywordAnalysi['avg_search_volume'] / $keywordAnalysi['reports_count']);
+                $keywordAnalysi['avg_difficulty'] = round($keywordAnalysi['avg_difficulty'] / $keywordAnalysi['reports_count'], 2);
+                $keywordAnalysi['avg_competition'] = round($keywordAnalysi['avg_competition'] / $keywordAnalysi['reports_count'], 2);
             }
         }
 
@@ -117,14 +116,14 @@ class GoogleAdsService
     {
         $latestReport = $this->getLatestReport($project);
 
-        if (!$latestReport || empty($latestReport->historical_metrics)) {
+        if (! $latestReport instanceof GoogleAdsReport || empty($latestReport->historical_metrics)) {
             return [];
         }
 
         $trends = [];
 
         foreach ($latestReport->historical_metrics as $keyword => $metrics) {
-            if (!empty($metrics['monthly_data'])) {
+            if (! empty($metrics['monthly_data'])) {
                 $monthlyData = [];
                 foreach ($metrics['monthly_data'] as $month => $data) {
                     $monthlyData[] = [
@@ -161,10 +160,11 @@ class GoogleAdsService
 
         $recentAvg = collect($recent)->avg('search_volume');
         $earlierAvg = collect($earlier)->avg('search_volume');
-
         if ($recentAvg > $earlierAvg * 1.1) {
             return 'up';
-        } elseif ($recentAvg < $earlierAvg * 0.9) {
+        }
+
+        if ($recentAvg < $earlierAvg * 0.9) {
             return 'down';
         }
 
@@ -175,7 +175,7 @@ class GoogleAdsService
     {
         $latestReport = $this->getLatestReport($project);
 
-        if (!$latestReport) {
+        if (! $latestReport instanceof GoogleAdsReport) {
             return [
                 'total_keywords' => 0,
                 'avg_search_volume' => 0,

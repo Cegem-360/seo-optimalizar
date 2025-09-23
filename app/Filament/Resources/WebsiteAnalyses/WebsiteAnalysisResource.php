@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\WebsiteAnalyses;
 
 use App\Enums\NavigationGroups;
@@ -22,8 +24,6 @@ use UnitEnum;
 class WebsiteAnalysisResource extends Resource
 {
     protected static ?string $model = WebsiteAnalysis::class;
-
-    //  protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Weboldal elemzések';
 

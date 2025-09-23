@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\AnalyticsReports\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -54,7 +57,7 @@ class AnalyticsReportsTable
                     ->numeric(decimalPlaces: 1)
                     ->suffix('%')
                     ->sortable()
-                    ->color(fn ($state) => $state > 70 ? 'danger' : ($state > 50 ? 'warning' : 'success')),
+                    ->color(fn ($state): string => $state > 70 ? 'danger' : ($state > 50 ? 'warning' : 'success')),
 
                 TextColumn::make('average_session_duration')
                     ->label('Avg Duration')
@@ -78,7 +81,7 @@ class AnalyticsReportsTable
 
                 TextColumn::make('mobile_traffic_percentage')
                     ->label('Mobile %')
-                    ->getStateUsing(fn ($record) => round($record->getMobileTrafficPercentage(), 1))
+                    ->getStateUsing(fn ($record): float => round($record->getMobileTrafficPercentage(), 1))
                     ->suffix('%')
                     ->sortable(false)
                     ->toggleable(),
@@ -97,26 +100,24 @@ class AnalyticsReportsTable
 
                 Filter::make('date_range')
                     ->schema([
-                        \Filament\Forms\Components\DatePicker::make('from')
+                        DatePicker::make('from')
                             ->label('From Date'),
-                        \Filament\Forms\Components\DatePicker::make('until')
+                        DatePicker::make('until')
                             ->label('Until Date'),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('report_date', '>=', $date),
-                            )
-                            ->when(
-                                $data['until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('report_date', '<=', $date),
-                            );
-                    }),
+                    ->query(fn (Builder $builder, array $data): Builder => $builder
+                        ->when(
+                            $data['from'],
+                            fn (Builder $builder, $date): Builder => $builder->whereDate('report_date', '>=', $date),
+                        )
+                        ->when(
+                            $data['until'],
+                            fn (Builder $builder, $date): Builder => $builder->whereDate('report_date', '<=', $date),
+                        )),
 
                 Filter::make('high_traffic')
                     ->label('High Traffic Days')
-                    ->query(fn (Builder $query): Builder => $query->where('sessions', '>', 1000))
+                    ->query(fn (Builder $builder): Builder => $builder->where('sessions', '>', 1000))
                     ->toggle(),
             ])
             ->recordActions([
