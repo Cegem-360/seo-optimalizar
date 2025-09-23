@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Keyword;
 use App\Models\Project;
+use App\Models\SearchConsoleRanking;
 use App\Models\User;
 use App\Notifications\RankingChangeNotification;
 use Carbon\Carbon;
@@ -149,7 +150,6 @@ class GoogleSearchConsoleService
                 'difficulty_score' => null,
             ]);
 
-            // Get previous ranking for comparison
             /** @var SearchConsoleRanking|null $previousRanking */
             $previousRanking = $project->searchConsoleRankings()->where('query', $keyword->keyword)->latest('date_to')->first();
 
