@@ -339,10 +339,12 @@ class WebsiteAnalysisService
                 'openai' => 'OpenAI (GPT)',
                 'claude' => 'Anthropic Claude',
                 'ollama' => 'Ollama (Local)',
-                default => ucfirst((string) $activeCredential->service),
+                default => null,
             };
 
-            $providers[$activeCredential->service] = $providerName;
+            if ($providerName !== null) {
+                $providers[$activeCredential->service] = $providerName;
+            }
         }
 
         return $providers;
@@ -353,7 +355,7 @@ class WebsiteAnalysisService
         return match ($provider) {
             'openai' => 'gpt-4',
             'claude' => 'claude-3-opus',
-            'gemini' => 'gemini-1.5-flash',
+            'gemini' => 'gemini-2.0-flash',
             'ollama' => 'llama2',
             default => '',
         };
