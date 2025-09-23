@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Enums\NavigationGroups;
 use App\Models\Keyword;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -12,12 +13,15 @@ use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
+use UnitEnum;
 
 class HistoricalMetrics extends Page
 {
     protected string $view = 'filament.pages.historical-metrics';
 
     protected static BackedEnum|string|null $navigationIcon = Heroicon::ChartBar;
+
+    protected static string|UnitEnum|null $navigationGroup = NavigationGroups::SeoTools;
 
     protected static ?string $navigationLabel = 'Történeti Metrikák';
 

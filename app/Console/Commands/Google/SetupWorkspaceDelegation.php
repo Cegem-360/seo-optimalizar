@@ -57,7 +57,7 @@ class SetupWorkspaceDelegation extends Command
         $this->line('1. Go to: https://search.google.com/search-console');
         $this->line('2. For each property:');
         $this->line('   - Settings → Users and permissions');
-        $this->line("   - Add the email you're impersonating (not the service account)");
+        $this->line('   - Add the email you\'re impersonating (not the service account)');
         $this->line('   - Or add the service account email directly');
         $this->newLine();
 

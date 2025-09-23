@@ -2,12 +2,19 @@
 
 declare(strict_types=1);
 
+use Rector\CodeQuality\Rector\NullsafeMethodCall\CleanupUnneededNullsafeOperatorRector;
+use Rector\CodingStyle\Rector\FuncCall\ConsistentImplodeRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
+use Rector\Php70\Rector\If_\IfToSpaceshipRector;
+use Rector\Php70\Rector\Ternary\TernaryToSpaceshipRector;
+use Rector\Php70\Rector\Variable\WrapVariableVariableNameInCurlyBracesRector;
+use Rector\Php74\Rector\Assign\NullCoalescingOperatorRector;
 use Rector\Strict\Rector\Empty_\DisallowedEmptyRuleFixerRector;
+use Rector\Strict\Rector\Ternary\BooleanInTernaryOperatorRuleFixerRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 use RectorLaravel\Rector\MethodCall\AvoidNegatedCollectionFilterOrRejectRector;
 use RectorLaravel\Set\LaravelLevelSetList;
@@ -15,6 +22,7 @@ use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
     ->withImportNames(importShortClasses: true, removeUnusedImports: true)
+    ->withParallel()
     ->withPaths([
         __DIR__ . '/app',
         __DIR__ . '/routes',
@@ -56,6 +64,14 @@ return RectorConfig::configure()
         ],
         // Kizárjuk ezt a fájlt a facade-ról DI-ra konvertálásból
         __DIR__ . '/app/Filament/Resources/ApiCredentials/Schemas/ApiCredentialForm.php',
+        // Skip style-related Rector rules that conflict with Pint
+        CleanupUnneededNullsafeOperatorRector::class,
+        ConsistentImplodeRector::class,
+        IfToSpaceshipRector::class,
+        TernaryToSpaceshipRector::class,
+        WrapVariableVariableNameInCurlyBracesRector::class,
+        NullCoalescingOperatorRector::class,
+        BooleanInTernaryOperatorRuleFixerRector::class,
     ])
     ->withSets([
         LaravelLevelSetList::UP_TO_LARAVEL_120,
@@ -71,10 +87,10 @@ return RectorConfig::configure()
     ->withPreparedSets(
         deadCode: true,
         codeQuality: true,
-        codingStyle: true,
+        codingStyle: false,
         typeDeclarations: true,
         privatization: true,
-        naming: true,
+        naming: false,
         instanceOf: true,
         earlyReturn: true,
         strictBooleans: true,

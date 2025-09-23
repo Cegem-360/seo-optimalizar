@@ -119,12 +119,12 @@ class CompareSearchConsoleData extends Command
             // Check specific keyword if provided
             if ($keyword = $this->option('keyword')) {
                 $this->newLine();
-                $this->info(sprintf("Checking specific keyword: '%s'", $keyword));
+                $this->info(sprintf('Checking specific keyword: \'%s\'', $keyword));
 
                 $keywordData = $analytics->firstWhere('keys.0', $keyword);
 
                 if ($keywordData) {
-                    $this->info(sprintf("Found data for keyword '%s':", $keyword));
+                    $this->info(sprintf('Found data for keyword \'%s\':', $keyword));
                     $this->table(
                         ['Metric', 'Value'],
                         [
@@ -135,7 +135,7 @@ class CompareSearchConsoleData extends Command
                         ],
                     );
                 } else {
-                    $this->warn(sprintf("No data found for keyword '%s' in this date range.", $keyword));
+                    $this->warn(sprintf('No data found for keyword \'%s\' in this date range.', $keyword));
                 }
             }
 
@@ -157,7 +157,7 @@ class CompareSearchConsoleData extends Command
             $this->line('2. Select property: ' . $propertyUrl);
             $this->line('3. Go to Performance > Search results');
             $this->line(sprintf('4. Set date range: %s to %s', $startDate->format('Y-m-d'), $endDate->format('Y-m-d')));
-            $this->line("5. Check 'Queries' tab");
+            $this->line('5. Check \'Queries\' tab');
             $this->line('6. Compare the numbers with the API results above');
         } catch (Exception $exception) {
             $this->error('Error: ' . $exception->getMessage());

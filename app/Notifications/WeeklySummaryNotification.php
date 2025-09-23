@@ -35,7 +35,7 @@ class WeeklySummaryNotification extends Notification implements ShouldQueue
         $mailMessage = (new MailMessage())
             ->subject(sprintf('📊 Weekly SEO Summary: %s (%s - %s)', $this->project->name, $weekStart, $weekEnd))
             ->greeting(sprintf('Hello %s!', $notifiable->name))
-            ->line(sprintf("Here's your weekly SEO summary for **%s**", $this->project->name))
+            ->line(sprintf('Here\'s your weekly SEO summary for **%s**', $this->project->name))
             ->line(sprintf('**Week:** %s - %s', $weekStart, $weekEnd))
             ->line('---');
 
