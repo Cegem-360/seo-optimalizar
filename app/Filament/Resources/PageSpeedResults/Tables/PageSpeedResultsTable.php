@@ -7,7 +7,6 @@ namespace App\Filament\Resources\PageSpeedResults\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
@@ -24,8 +23,9 @@ class PageSpeedResultsTable
                     ->searchable()
                     ->limit(50),
 
-                BadgeColumn::make('strategy')
+                TextColumn::make('strategy')
                     ->label('Strategy')
+                    ->badge()
                     ->colors([
                         'primary' => 'mobile',
                         'secondary' => 'desktop',
@@ -33,29 +33,6 @@ class PageSpeedResultsTable
 
                 TextColumn::make('performance_score')
                     ->label('Performance')
-                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? $state . '/100' : 'N/A')
-                    ->badge()
-                    ->color(fn (?int $state): string => match (true) {
-                        $state >= 90 => 'success',
-                        $state >= 50 => 'warning',
-                        default => 'danger',
-                    })
-                    ->sortable(),
-
-                TextColumn::make('accessibility_score')
-                    ->label('Accessibility')
-                    ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? $state . '/100' : 'N/A')
-                    ->badge()
-                    ->color(fn (?int $state): string => match (true) {
-                        $state >= 90 => 'success',
-                        $state >= 50 => 'warning',
-                        default => 'danger',
-                    })
-                    ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('seo_score')
-                    ->label('SEO')
                     ->formatStateUsing(fn (?int $state): string => $state !== null && $state !== 0 ? $state . '/100' : 'N/A')
                     ->badge()
                     ->color(fn (?int $state): string => match (true) {
