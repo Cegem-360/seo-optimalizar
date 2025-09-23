@@ -178,6 +178,7 @@ class SearchConsoleRankingsTable
                     ->description(fn ($record) => $record->fetched_at?->diffForHumans()),
             ])
             ->defaultSort('position', 'asc')
+            ->defaultGroup('page')
             ->groups([
                 Group::make('page')
                     ->label('URL')
