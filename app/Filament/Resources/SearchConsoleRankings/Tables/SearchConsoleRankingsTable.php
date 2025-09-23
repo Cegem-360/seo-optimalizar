@@ -63,7 +63,7 @@ class SearchConsoleRankingsTable
                     ->summarize([
                         Average::make()
                             ->label('Avg Position')
-                            ->formatStateUsing(fn ($state): string => $state !== null ? number_format($state, 1) : '—'),
+                            ->formatStateUsing(fn ($state): string => $state !== null ? number_format((float) $state, 1) : '—'),
                     ]),
 
                 TextColumn::make('position_change')
@@ -101,26 +101,28 @@ class SearchConsoleRankingsTable
                     ->summarize([
                         Sum::make()
                             ->label('Total Clicks')
-                            ->formatStateUsing(fn ($state): string => number_format($state)),
+                            ->formatStateUsing(fn ($state): string => number_format((float) $state)),
                         Average::make()
                             ->label('Avg Clicks')
-                            ->formatStateUsing(fn ($state): string => number_format($state, 1)),
+                            ->formatStateUsing(fn ($state): string => number_format((float) $state, 1)),
                     ]),
 
                 TextColumn::make('clicks_change_percent')
                     ->label('Click Δ%')
                     ->sortable()
                     ->formatStateUsing(function ($state): string {
-                        if ($state === null) {
+                        if ($state === null || $state === '') {
                             return '-';
                         }
 
-                        return ($state > 0 ? '+' : '') . number_format($state, 1) . '%';
+                        $numericState = (float) $state;
+
+                        return ($numericState > 0 ? '+' : '') . number_format($numericState, 1) . '%';
                     })
                     ->color(fn ($state): string => match (true) {
-                        $state === null => 'gray',
-                        $state > 0 => 'success',
-                        $state < 0 => 'danger',
+                        $state === null || $state === '' => 'gray',
+                        (float) $state > 0 => 'success',
+                        (float) $state < 0 => 'danger',
                         default => 'gray',
                     }),
 
@@ -133,10 +135,10 @@ class SearchConsoleRankingsTable
                     ->summarize([
                         Sum::make()
                             ->label('Total Impressions')
-                            ->formatStateUsing(fn ($state): string => number_format($state)),
+                            ->formatStateUsing(fn ($state): string => number_format((float) $state)),
                         Average::make()
                             ->label('Avg Impressions')
-                            ->formatStateUsing(fn ($state): string => number_format($state, 1)),
+                            ->formatStateUsing(fn ($state): string => number_format((float) $state, 1)),
                     ]),
 
                 TextColumn::make('ctr')
@@ -153,7 +155,7 @@ class SearchConsoleRankingsTable
                     ->summarize([
                         Average::make()
                             ->label('Avg CTR')
-                            ->formatStateUsing(fn ($state): string => number_format($state * 100, 2) . '%'),
+                            ->formatStateUsing(fn ($state): string => number_format((float) $state * 100, 2) . '%'),
                     ]),
 
                 TextColumn::make('device')
