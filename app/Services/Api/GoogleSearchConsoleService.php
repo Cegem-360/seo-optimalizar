@@ -277,22 +277,12 @@ class GoogleSearchConsoleService extends BaseApiService
         $endDate ??= now()->subDays(1);
         $propertyUrl = $this->getCredential('property_url') ?? $this->project->url;
 
+        // Instead of using contains with |, let's get all data and filter it
         $payload = [
             'startDate' => $startDate->format('Y-m-d'),
             'endDate' => $endDate->format('Y-m-d'),
             'dimensions' => ['query'],
-            'dimensionFilterGroups' => [
-                [
-                    'filters' => [
-                        [
-                            'dimension' => 'query',
-                            'operator' => 'contains',
-                            'expression' => implode('|', $keywordStrings),
-                        ],
-                    ],
-                ],
-            ],
-            'rowLimit' => 1000,
+            'rowLimit' => 25000, // Increased limit to get more data
         ];
 
         Log::info('Google Search Console - Fetching keyword data', [
@@ -306,19 +296,28 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
 
+        $allRows = new Collection($data['rows'] ?? []);
+
+        // Filter the results to only include our keywords
+        $filteredRows = $allRows->filter(function ($row) use ($keywordStrings) {
+            $query = $row['keys'][0] ?? '';
+            return in_array($query, $keywordStrings, true);
+        });
+
         Log::debug('Google Search Console - Keyword data response', [
             'project_id' => $this->project->id,
-            'response_rows' => count($data['rows'] ?? []),
-            'detailed_results' => array_map(fn (array $row): array => [
+            'total_rows' => $allRows->count(),
+            'filtered_rows' => $filteredRows->count(),
+            'detailed_results' => $filteredRows->take(10)->map(fn (array $row): array => [
                 'keyword' => $row['keys'][0] ?? 'UNKNOWN',
                 'clicks' => $row['clicks'] ?? 0,
                 'impressions' => $row['impressions'] ?? 0,
                 'ctr' => $row['ctr'] ?? 0,
                 'position' => round($row['position'] ?? 0, 2),
-            ], array_slice($data['rows'] ?? [], 0, 10)), // First 10 for debugging
+            ])->toArray(),
         ]);
 
-        return new Collection($data['rows'] ?? []);
+        return $filteredRows;
     }
 
     public function syncKeywordRankings(): int
@@ -336,7 +335,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'keyword_count' => $keywords->count(),
         ]);
 
-        foreach ($keywords->chunk(50) as $chunkIndex => $keywordChunk) {
+        foreach ($keywords->chunk(10) as $chunkIndex => $keywordChunk) {
             Log::debug('Google Search Console - Processing keyword chunk', [
                 'project_id' => $this->project->id,
                 'chunk' => $chunkIndex + 1,
