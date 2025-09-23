@@ -277,12 +277,13 @@ class GoogleSearchConsoleService extends BaseApiService
         $endDate ??= now()->subDays(1);
         $propertyUrl = $this->getCredential('property_url') ?? $this->project->url;
 
-        // Instead of using contains with |, let's get all data and filter it
+        // Get aggregated data without date dimension for the period
         $payload = [
             'startDate' => $startDate->format('Y-m-d'),
             'endDate' => $endDate->format('Y-m-d'),
             'dimensions' => ['query', 'page'], // Add page dimension to get URLs
             'rowLimit' => 25000, // Increased limit to get more data
+            'aggregationType' => 'byPage', // Aggregate by page
         ];
 
         Log::info('Google Search Console - Fetching keyword data', [
@@ -332,7 +333,7 @@ class GoogleSearchConsoleService extends BaseApiService
         /** @var \Illuminate\Database\Eloquent\Collection<int, Keyword> $keywords */
         $keywords = $this->project->keywords()
             ->where('priority', 'high')
-            ->limit(10)
+            ->take(10)
             ->get();
 
         $synced = 0;
