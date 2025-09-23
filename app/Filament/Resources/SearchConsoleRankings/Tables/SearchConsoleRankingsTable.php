@@ -307,6 +307,7 @@ class SearchConsoleRankingsTable
                     DeleteBulkAction::make(),
                 ]),
             ])
+            ->reorderableColumns()
             ->emptyStateHeading('No Search Console data found')
             ->emptyStateDescription('Import or sync data from Google Search Console to see rankings here.')
             ->emptyStateIcon('heroicon-o-magnifying-glass-circle');
