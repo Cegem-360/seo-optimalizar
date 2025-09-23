@@ -91,7 +91,7 @@ class KeywordsTable
                     ->visible(fn ($record): bool => $record->priority !== 'high'),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('set_high_priority_bulk')
                         ->label('Kiemelt prioritás')
