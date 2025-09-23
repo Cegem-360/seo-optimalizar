@@ -8,7 +8,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Session\Store;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Filename
@@ -357,5 +356,4 @@ return [
     'post_migrate' => [
         // 'ide-helper:models --nowrite',
     ],
-
 ];

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -48,5 +47,4 @@ return [
             'client_secret' => env('GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET'),
         ],
     ],
-
 ];

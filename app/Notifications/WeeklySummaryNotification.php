@@ -19,7 +19,7 @@ class WeeklySummaryNotification extends Notification implements ShouldQueue
     public function __construct(
         public Project $project,
         public array $summaryData,
-        private readonly UrlGenerator $urlGenerator
+        private readonly UrlGenerator $urlGenerator,
     ) {}
 
     public function via(object $notifiable): array

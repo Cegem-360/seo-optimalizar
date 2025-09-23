@@ -27,7 +27,7 @@ class PageSpeedRecentResultsTable extends TableWidget
             ->query(fn (): Builder => PageSpeedResult::query()
                 ->forProject(Filament::getTenant() instanceof Project ? Filament::getTenant()->id : 0)
                 ->orderBy('analyzed_at', 'desc')
-                ->limit(10)
+                ->limit(10),
             )
             ->columns([
                 TextColumn::make('analyzed_at')

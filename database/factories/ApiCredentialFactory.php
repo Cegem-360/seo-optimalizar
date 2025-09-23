@@ -44,7 +44,7 @@ class ApiCredentialFactory extends Factory
             ],
             default => [
                 'api_key' => fake()->password(32),
-            ]
+            ],
         };
 
         return [

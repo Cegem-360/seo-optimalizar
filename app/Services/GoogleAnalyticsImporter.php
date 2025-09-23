@@ -11,7 +11,7 @@ use InvalidArgumentException;
 class GoogleAnalyticsImporter
 {
     public function __construct(
-        private readonly AnalyticsService $analyticsService
+        private readonly AnalyticsService $analyticsService,
     ) {}
 
     /**

@@ -17,7 +17,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
         public $ranking,
         public string $changeType,
         private readonly string $baseUrl,
-        private readonly array $channels = ['mail', 'database']
+        private readonly array $channels = ['mail', 'database'],
     ) {}
 
     public function via(object $notifiable): array
@@ -37,7 +37,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
             'dropped_out' => '⚠️ Ranking Drop Alert: ' . $keyword->keyword,
             'significant_improvement' => '📈 Significant Improvement: ' . $keyword->keyword,
             'significant_decline' => '📉 Significant Decline: ' . $keyword->keyword,
-            default => 'Ranking Update: ' . $keyword->keyword
+            default => 'Ranking Update: ' . $keyword->keyword,
         };
 
         $mailMessage = (new MailMessage())
@@ -97,7 +97,7 @@ class RankingChangeNotification extends Notification implements ShouldQueue
             'dropped_out' => 'Your keyword has dropped out of the first page. It might need some attention.',
             'significant_improvement' => 'Your keyword has shown significant improvement in rankings!',
             'significant_decline' => 'Your keyword has experienced a significant decline in rankings.',
-            default => 'Your keyword ranking has been updated.'
+            default => 'Your keyword ranking has been updated.',
         };
     }
 }

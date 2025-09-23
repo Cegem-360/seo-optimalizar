@@ -16,7 +16,7 @@ class ImportSearchConsoleDataJob implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        public Project $project
+        public Project $project,
     ) {}
 
     public function handle(GoogleSearchConsoleService $googleSearchConsoleService): void

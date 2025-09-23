@@ -19,7 +19,7 @@ class SyncGoogleSearchConsole extends Command
     protected $description = 'Sync Google Search Console data for projects';
 
     public function __construct(
-        private readonly GoogleSearchConsoleService $googleSearchConsoleService
+        private readonly GoogleSearchConsoleService $googleSearchConsoleService,
     ) {
         parent::__construct();
     }

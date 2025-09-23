@@ -100,7 +100,7 @@ class GoogleAnalytics4Service extends BaseApiService
 
             $serviceAccountCredentials = new ServiceAccountCredentials(
                 'https://www.googleapis.com/auth/analytics.readonly',
-                $credentials
+                $credentials,
             );
 
             $this->betaAnalyticsDataClient = new BetaAnalyticsDataClient([
@@ -158,7 +158,7 @@ class GoogleAnalytics4Service extends BaseApiService
                                 'value' => 'Organic Search',
                             ]),
                         ]),
-                    ])
+                    ]),
                 );
 
             $response = $client->runReport($request);
@@ -215,7 +215,7 @@ class GoogleAnalytics4Service extends BaseApiService
                                 'value' => 'Organic Search',
                             ]),
                         ]),
-                    ])
+                    ]),
                 )
                 ->setOrderBys([
                     new OrderBy([

@@ -78,7 +78,6 @@ class SerpAnalysisResultInfolist
                             ->valueLabel('Előny'),
                     ])
                     ->columns(3),
-
             ]);
     }
 }

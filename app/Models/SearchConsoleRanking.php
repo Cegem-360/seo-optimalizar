@@ -94,7 +94,7 @@ class SearchConsoleRanking extends Model
                 }
 
                 return 'stable';
-            }
+            },
         );
     }
 
@@ -115,7 +115,7 @@ class SearchConsoleRanking extends Model
                 }
 
                 return 'stable';
-            }
+            },
         );
     }
 
@@ -131,7 +131,7 @@ class SearchConsoleRanking extends Model
                 }
 
                 return sprintf('%s - %s', $from, $to);
-            }
+            },
         );
     }
 

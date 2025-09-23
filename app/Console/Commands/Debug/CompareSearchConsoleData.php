@@ -112,7 +112,7 @@ class CompareSearchConsoleData extends Command
                         'impressions' => $row['impressions'] ?? 0,
                         'ctr' => round(($row['ctr'] ?? 0) * 100, 2) . '%',
                         'position' => round($row['position'] ?? 0, 1),
-                    ])->toArray()
+                    ])->toArray(),
                 );
             }
 
@@ -132,7 +132,7 @@ class CompareSearchConsoleData extends Command
                             ['Impressions', $keywordData['impressions'] ?? 0],
                             ['CTR', round(($keywordData['ctr'] ?? 0) * 100, 2) . '%'],
                             ['Average Position', round($keywordData['position'] ?? 0, 1)],
-                        ]
+                        ],
                     );
                 } else {
                     $this->warn(sprintf("No data found for keyword '%s' in this date range.", $keyword));

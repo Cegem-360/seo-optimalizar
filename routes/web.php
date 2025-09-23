@@ -95,12 +95,12 @@ Route::get('/auth/google/callback', function (Request $request) {
             }
 
             return redirect('/admin/api-credentials')->with('success',
-                'Google Search Console successfully connected! You can now sync data from Search Console.'
+                'Google Search Console successfully connected! You can now sync data from Search Console.',
             );
         }
 
         return redirect('/admin')->with('warning',
-            'Credentials obtained but no project found. Refresh token: ' . $tokens['refresh_token']
+            'Credentials obtained but no project found. Refresh token: ' . $tokens['refresh_token'],
         );
     }
 

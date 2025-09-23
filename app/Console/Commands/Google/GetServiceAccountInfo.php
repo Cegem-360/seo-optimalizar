@@ -60,7 +60,7 @@ class GetServiceAccountInfo extends Command
                 ['Client ID (for delegation)', $json['client_id'] ?? 'N/A'],
                 ['Project ID', $json['project_id'] ?? 'N/A'],
                 ['Private Key ID', substr($json['private_key_id'] ?? '', 0, 20) . '...'],
-            ]
+            ],
         );
 
         $this->newLine();

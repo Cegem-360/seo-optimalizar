@@ -62,7 +62,7 @@ abstract class BaseApiService
 
         if (! $response->successful()) {
             throw new Exception(
-                sprintf('API request failed for %s: %d - %s', $this->serviceName, $response->status(), $response->body())
+                sprintf('API request failed for %s: %d - %s', $this->serviceName, $response->status(), $response->body()),
             );
         }
 

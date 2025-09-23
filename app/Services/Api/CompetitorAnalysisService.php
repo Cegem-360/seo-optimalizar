@@ -100,7 +100,7 @@ class CompetitorAnalysisService
                 $competitorData['url'],
                 $keyword,
                 $position + 1,
-                $competitorData // átadjuk az AI adatokat is
+                $competitorData, // átadjuk az AI adatokat is
             );
 
             if ($analysis instanceof CompetitorAnalysis) {
@@ -141,7 +141,7 @@ class CompetitorAnalysisService
                 $aiDiscoveredCompetitors = $this->discoverCompetitorsUsingAi(
                     $keyword,
                     $project,
-                    $existingCompetitors
+                    $existingCompetitors,
                 );
             }
 
@@ -149,7 +149,7 @@ class CompetitorAnalysisService
             $allCompetitors = $this->mergeCompetitorLists(
                 $existingCompetitors,
                 $aiDiscoveredCompetitors,
-                $limit
+                $limit,
             );
 
             return array_slice($allCompetitors, 0, $limit);
@@ -610,7 +610,7 @@ class CompetitorAnalysisService
                 $competitorUrl,
                 $projectUrl,
                 $competitorContent,
-                $projectContent
+                $projectContent,
             );
 
             $client = new Client();
@@ -693,7 +693,7 @@ class CompetitorAnalysisService
         string $competitorUrl,
         string $projectUrl,
         array $competitorContent,
-        array $projectContent
+        array $projectContent,
     ): string {
         return "Elemezd a következő két weboldalt SEO szempontból a '{$keyword}' kulcsszóra:\n\n" .
                sprintf('VERSENYTÁRS OLDAL: %s%s', $competitorUrl, PHP_EOL) .

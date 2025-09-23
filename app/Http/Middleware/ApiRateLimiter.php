@@ -44,7 +44,7 @@ class ApiRateLimiter
             $key,
             $limit['requests'],
             fn () => $next($request),
-            $this->getDecaySeconds($limit['per'])
+            $this->getDecaySeconds($limit['per']),
         );
 
         if (! $response) {

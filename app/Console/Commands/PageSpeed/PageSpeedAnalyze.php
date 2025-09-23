@@ -136,7 +136,7 @@ class PageSpeedAnalyze extends Command
         $color = match (true) {
             $score >= 90 => 'info',
             $score >= 50 => 'comment',
-            default => 'error'
+            default => 'error',
         };
 
         return sprintf('<%s>%d/100</%s>', $color, $score, $color);

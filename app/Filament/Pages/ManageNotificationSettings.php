@@ -217,7 +217,7 @@ class ManageNotificationSettings extends Page implements HasActions, HasSchemas
                 $testRanking,
                 'top3',
                 $this->repository->get('app.url'),
-                $channels
+                $channels,
             ));
 
             Notification::make()

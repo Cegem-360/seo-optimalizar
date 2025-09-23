@@ -277,7 +277,7 @@ class WebsiteAnalysisService
                 $response = $geminiApiService->analyzeWebsite(
                     $websiteAnalysis->url,
                     $websiteAnalysis->analysis_type,
-                    $prompt
+                    $prompt,
                 );
 
                 if ($response !== null && $response !== '' && $response !== '0') {

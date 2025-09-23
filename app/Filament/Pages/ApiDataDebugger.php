@@ -323,7 +323,7 @@ class ApiDataDebugger extends Page
                 ->title('Google Analytics 4 Data Successfully Fetched')
                 ->body(sprintf('Fetched comprehensive GA4 data for date range %s to %s.',
                     $data['startDate'],
-                    $data['endDate']
+                    $data['endDate'],
                 ))
                 ->success()
                 ->send();

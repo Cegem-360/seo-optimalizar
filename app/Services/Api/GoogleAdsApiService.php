@@ -58,7 +58,7 @@ class GoogleAdsApiService extends BaseApiService
                     ($clientSecret ? '' : 'client_secret ') .
                     ($refreshToken ? '' : 'refresh_token ') .
                     ($developerToken ? '' : 'developer_token ') .
-                    ($customerId ? '' : 'customer_id')
+                    ($customerId ? '' : 'customer_id'),
                 );
             }
 
@@ -99,7 +99,7 @@ class GoogleAdsApiService extends BaseApiService
             $generateKeywordIdeasRequest->setCustomerId($customerId);
             $generateKeywordIdeasRequest->setKeywordSeed(
                 (new KeywordSeed())
-                    ->setKeywords([$keyword])
+                    ->setKeywords([$keyword]),
             );
             $generateKeywordIdeasRequest->setKeywordPlanNetwork(KeywordPlanNetwork::GOOGLE_SEARCH);
 

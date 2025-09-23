@@ -62,7 +62,6 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_CODE_QUALITY,
         LaravelSetList::LARAVEL_ARRAY_STR_FUNCTION_TO_STATIC_CALL,
         LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
-        // LaravelSetList::LARAVEL_STATIC_TO_INJECTION,  // Kikapcsolva, mert a Storage facade jobb
         LaravelSetList::LARAVEL_ELOQUENT_MAGIC_METHOD_TO_QUERY_BUILDER,
     ])
     ->withPhpSets()
@@ -78,5 +77,5 @@ return RectorConfig::configure()
         naming: true,
         instanceOf: true,
         earlyReturn: true,
-        strictBooleans: true
+        strictBooleans: true,
     );

@@ -209,7 +209,7 @@ class ApiCredentialForm
                                             </ul>
                                         </div>
                                     ',
-                                    default => 'Add meg az API credentialeket kulcs-érték párok formájában.'
+                                    default => 'Add meg az API credentialeket kulcs-érték párok formájában.',
                                 });
                             })
                             ->default(function ($get): array {
@@ -235,7 +235,7 @@ class ApiCredentialForm
                                     'google_pagespeed_insights' => [
                                         'api_key' => '',
                                     ],
-                                    default => []
+                                    default => [],
                                 };
                             })
                             ->addActionLabel('Add Credential')

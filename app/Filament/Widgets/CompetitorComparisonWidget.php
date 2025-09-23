@@ -86,18 +86,18 @@ class CompetitorComparisonWidget extends ChartWidget
                 ],
                 'tooltip' => [
                     'callbacks' => [
-                        'label' => "
+                        'label' => '
                             function(context) {
-                                let label = context.label || '';
+                                let label = context.label || \'\';
                                 if (label) {
-                                    label += ': ';
+                                    label += \': \';
                                 }
-                                label += context.parsed + ' keywords';
+                                label += context.parsed + \' keywords\';
                                 const percentage = ((context.parsed / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
-                                label += ' (' + percentage + '%)';
+                                label += \' (\' + percentage + \'%)\';
                                 return label;
                             }
-                        ",
+                        ',
                     ],
                 ],
             ],

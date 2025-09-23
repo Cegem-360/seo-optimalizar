@@ -50,7 +50,7 @@ class GenerateRefreshToken extends Command
                 '2' => $this->ask('Enter ngrok URL (e.g., https://abc123.ngrok.io/admin/google-ads/oauth/callback)'),
                 '3' => 'http://localhost:8000/admin/google-ads/oauth/callback',
                 '4' => $this->ask('Enter custom redirect URI'),
-                default => 'urn:ietf:wg:oauth:2.0:oob'
+                default => 'urn:ietf:wg:oauth:2.0:oob',
             };
         }
 
@@ -167,7 +167,7 @@ class GenerateRefreshToken extends Command
                     ['Refresh Token', $tokens['refresh_token']],
                     ['Access Token', $tokens['access_token'] ?? 'N/A'],
                     ['Expires In', ($tokens['expires_in'] ?? 0) . ' seconds'],
-                ]
+                ],
             );
 
             $this->newLine();

@@ -125,7 +125,7 @@ class TestCompetitorAnalysis extends Command
             $analysis->page_authority ?? 'N/A',
             $analysis->page_speed_score ?? 'N/A',
             $analysis->has_ssl ? 'Yes' : 'No',
-            $analysis->is_mobile_friendly ? 'Yes' : 'No'
+            $analysis->is_mobile_friendly ? 'Yes' : 'No',
         ));
 
         $this->newLine();

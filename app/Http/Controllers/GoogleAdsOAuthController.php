@@ -78,7 +78,7 @@ class GoogleAdsOAuthController extends Controller
 
         if (! $clientId || ! $clientSecret) {
             return $this->redirector->to('/admin/api-credentials')->with('error',
-                'Google Ads client credentials are required to start OAuth process'
+                'Google Ads client credentials are required to start OAuth process',
             );
         }
 
