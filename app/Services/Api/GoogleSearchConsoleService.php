@@ -402,9 +402,10 @@ class GoogleSearchConsoleService extends BaseApiService
 
         SearchConsoleRanking::query()->create([
             'project_id' => $keyword->project_id,
+            'keyword_id' => $keyword->id,
             'query' => $keyword->keyword,
-            'page' => null, // GSC doesn't provide specific URL in search analytics
-            'position' => $position ? round($position) : null,
+            'page' => 'unknown', // GSC doesn't provide specific URL in search analytics
+            'position' => $position ? round($position, 2) : null,
             'previous_position' => $previousPosition,
             'clicks' => $clicks ?? 0,
             'impressions' => $impressions ?? 0,
