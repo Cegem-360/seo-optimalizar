@@ -12,6 +12,7 @@ use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 
@@ -25,7 +26,7 @@ class CompetitorAnalysisService
     {
         $this->client = new Client();
         try {
-            $apiKey = $repository?->get('services.google.pagespeed_api_key') ?? config('services.google.pagespeed_api_key');
+            $apiKey = Config::get('services.google.pagespeed_api_key') ?? config('services.google.pagespeed_api_key');
         } catch (Exception) {
             $apiKey = '';
         }
@@ -583,7 +584,6 @@ class CompetitorAnalysisService
     {
         try {
             // Itt később menthetjük az insights-okat egy külön táblába ha szükséges
-            Log::info('Market insights discovered', $insights);
         } catch (Exception $exception) {
             Log::error('Failed to save market insights', [
                 'error' => $exception->getMessage(),

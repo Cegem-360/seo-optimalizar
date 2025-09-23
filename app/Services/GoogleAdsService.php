@@ -8,7 +8,6 @@ use App\Models\GoogleAdsReport;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Log;
 
 class GoogleAdsService
 {
@@ -31,13 +30,6 @@ class GoogleAdsService
 
         $keywordCount = count($googleAdsData['keyword_data'] ?? []);
         $successfulFetches = $googleAdsData['statistics']['successful_fetches'] ?? 0;
-
-        Log::info('Google Ads report stored', [
-            'project_id' => $project->id,
-            'report_date' => $reportDate->toDateString(),
-            'keyword_count' => $keywordCount,
-            'successful_fetches' => $successfulFetches,
-        ]);
 
         return $googleAdsReport;
     }

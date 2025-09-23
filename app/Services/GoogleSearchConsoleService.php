@@ -45,7 +45,6 @@ class GoogleSearchConsoleService
                 // If using Google Workspace domain-wide delegation
                 if ($subject = $repository->get('services.google.workspace_subject')) {
                     $this->googleClient->setSubject($subject);
-                    // Log::info('Using Google Workspace delegation for: ' . $subject);
                 }
             } else {
                 Log::warning('Google Service Account credentials file not found: ' . $fullPath);

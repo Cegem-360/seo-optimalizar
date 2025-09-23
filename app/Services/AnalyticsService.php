@@ -8,7 +8,6 @@ use App\Models\AnalyticsReport;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Log;
 
 class AnalyticsService
 {
@@ -39,13 +38,6 @@ class AnalyticsService
             'conversion_data' => $analyticsData['conversion_data'] ?? null,
             'real_time' => $analyticsData['real_time'] ?? null,
             'raw_data' => $analyticsData,
-        ]);
-
-        Log::info('Analytics report stored', [
-            'project_id' => $project->id,
-            'report_date' => $reportDate->toDateString(),
-            'sessions' => $overview['sessions'] ?? 0,
-            'active_users' => $overview['activeUsers'] ?? 0,
         ]);
 
         return $analyticsReport;

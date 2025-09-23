@@ -126,11 +126,6 @@ class EditApiCredential extends EditRecord
 
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
 
-                Log::info('Google Ads refresh token added to credentials', [
-                    'token_length' => strlen((string) $sessionRefreshToken),
-                    'credentials_keys' => array_keys($data['credentials']),
-                ]);
-
                 // Automatically save the refresh token to database
                 $record = $this->getRecord();
                 if ($record instanceof ApiCredential) {
@@ -138,11 +133,6 @@ class EditApiCredential extends EditRecord
                     $currentCredentials['refresh_token'] = $sessionRefreshToken;
 
                     $record->update(['credentials' => $currentCredentials]);
-
-                    Log::info('Google Ads refresh token automatically saved to database', [
-                        'record_id' => $record->id,
-                        'credentials_keys' => array_keys($currentCredentials),
-                    ]);
                 }
 
                 // Clear the session token to prevent reuse
@@ -225,11 +215,6 @@ class EditApiCredential extends EditRecord
             if ($sessionRefreshToken) {
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
                 Session::forget('google_ads_refresh_token');
-
-                Log::info('Google Ads refresh token added during save', [
-                    'token_length' => strlen((string) $sessionRefreshToken),
-                    'credentials_keys' => array_keys($data['credentials']),
-                ]);
             }
         }
 

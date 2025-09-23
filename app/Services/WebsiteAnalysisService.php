@@ -81,23 +81,14 @@ class WebsiteAnalysisService
 
     protected function parseAiResponse(string $response): ?array
     {
-        Log::info('WebsiteAnalysisService - Parsing AI Response', [
-            'response_length' => strlen($response),
-            'response_sample' => substr($response, 0, 200) . '...',
-        ]);
-
         // Próbáljuk JSON-ként értelmezni
         $decoded = json_decode($response, true);
         if (json_last_error() === JSON_ERROR_NONE) {
-            Log::info('WebsiteAnalysisService - JSON decoded successfully', [
-                'decoded_structure' => $this->getStructureInfo($decoded),
-            ]);
-
             // Ha a decoded egy tömb és az első elem tartalmazza az adatokat
             if (is_array($decoded) && count($decoded) === 1 && is_array($decoded[0])) {
-                Log::info('WebsiteAnalysisService - Extracting first array element');
                 return $decoded[0];
             }
+
             return $decoded;
         }
 
@@ -122,17 +113,8 @@ class WebsiteAnalysisService
 
     protected function saveStructuredData(WebsiteAnalysis $websiteAnalysis, array $data): void
     {
-        Log::info('WebsiteAnalysisService - Saving structured data', [
-            'analysis_id' => $websiteAnalysis->id,
-            'data_keys' => array_keys($data),
-            'has_overall_score' => isset($data['overall_score']),
-            'has_sections' => isset($data['sections']),
-            'sections_count' => isset($data['sections']) ? count($data['sections']) : 0,
-        ]);
-
         // Összpontszám mentése
         if (isset($data['overall_score'])) {
-            Log::info('WebsiteAnalysisService - Updating overall score', ['score' => $data['overall_score']]);
             $websiteAnalysis->update(['overall_score' => $data['overall_score']]);
         }
 
@@ -148,40 +130,17 @@ class WebsiteAnalysisService
 
         // Szakaszok mentése
         if (isset($data['sections']) && is_array($data['sections'])) {
-            Log::info('WebsiteAnalysisService - Processing sections', [
-                'sections_count' => count($data['sections']),
-                'sections_structure' => array_map(fn($section) => $this->getStructureInfo($section), $data['sections']),
-            ]);
-
             $priority = 0;
             foreach ($data['sections'] as $index => $section) {
-                Log::info('WebsiteAnalysisService - Processing section', [
-                    'index' => $index,
-                    'section_structure' => $this->getStructureInfo($section),
-                ]);
-
                 // Csak akkor dolgozzuk fel, ha a section tömb
                 if (! is_array($section)) {
-                    Log::warning('WebsiteAnalysisService - Skipping non-array section', ['index' => $index]);
                     continue;
                 }
 
                 // Ha a section egy asszociatív tömb a szekció nevekkel kulcsként
                 if (! isset($section['type']) && ! isset($section['name'])) {
-                    Log::info('WebsiteAnalysisService - Processing section as key-value pairs', [
-                        'section_keys' => array_keys($section),
-                    ]);
-
                     foreach ($section as $sectionKey => $sectionContent) {
                         if (is_array($sectionContent)) {
-                            Log::info('WebsiteAnalysisService - Creating section', [
-                                'type' => $sectionKey,
-                                'name' => $this->getSectionNameFromKey($sectionKey),
-                                'has_score' => isset($sectionContent['score']),
-                                'has_findings' => isset($sectionContent['findings']),
-                                'has_recommendations' => isset($sectionContent['recommendations']),
-                            ]);
-
                             $this->createSection($websiteAnalysis, [
                                 'type' => $sectionKey,
                                 'name' => $this->getSectionNameFromKey($sectionKey),
