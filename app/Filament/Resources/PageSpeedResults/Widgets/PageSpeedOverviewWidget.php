@@ -23,26 +23,31 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
 
         /** @var PageSpeedResult|null $latestResult */
         $latestResult = PageSpeedResult::query()
+            ->select(['id', 'project_id', 'performance_score', 'analyzed_at'])
             ->forProject($project->id)
             ->latest('analyzed_at')
             ->first();
 
         $avgPerformance = PageSpeedResult::query()
+            ->select(['performance_score'])
             ->forProject($project->id)
             ->recent(30)
             ->avg('performance_score');
 
         $avgSeo = PageSpeedResult::query()
+            ->select(['seo_score'])
             ->forProject($project->id)
             ->recent(30)
             ->avg('seo_score');
 
         $avgAccessibility = PageSpeedResult::query()
+            ->select(['accessibility_score'])
             ->forProject($project->id)
             ->recent(30)
             ->avg('accessibility_score');
 
         $totalScans = PageSpeedResult::query()
+            ->select(['id'])
             ->forProject($project->id)
             ->count();
 
