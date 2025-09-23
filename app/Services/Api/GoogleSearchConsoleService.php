@@ -414,29 +414,62 @@ class GoogleSearchConsoleService extends BaseApiService
             $positionChange = (int) round($position - $previousPosition);
         }
 
-        // Use updateOrCreate to avoid duplicates based on date and page URL
-        SearchConsoleRanking::query()->updateOrCreate(
-            [
+        try {
+            // Use updateOrCreate to avoid duplicates based on date and page URL
+            $record = SearchConsoleRanking::query()->updateOrCreate(
+                [
+                    'project_id' => $keyword->project_id,
+                    'keyword_id' => $keyword->id,
+                    'query' => $keyword->keyword,
+                    'page' => $page,
+                    'date_from' => $date,
+                    'date_to' => $date,
+                ],
+                [
+                    'position' => $position ? round($position, 2) : null,
+                    'previous_position' => $previousPosition,
+                    'position_change' => $positionChange,
+                    'clicks' => $clicks ?? 0,
+                    'impressions' => $impressions ?? 0,
+                    'ctr' => $ctr ?? 0,
+                    'days_count' => 1, // Daily data is 1 day
+                    'device' => 'desktop',
+                    'country' => 'hun',
+                    'fetched_at' => now(),
+                ],
+            );
+
+            Log::debug('Google Search Console - Record saved', [
                 'project_id' => $keyword->project_id,
-                'keyword_id' => $keyword->id,
-                'query' => $keyword->keyword,
+                'keyword' => $keyword->keyword,
+                'record_id' => $record->id,
+                'date' => $date,
+                'position' => $position,
+                'clicks' => $clicks,
+                'impressions' => $impressions,
                 'page' => $page,
-                'date_from' => $date,
-                'date_to' => $date,
-            ],
-            [
-                'position' => $position ? round($position, 2) : null,
-                'previous_position' => $previousPosition,
-                'position_change' => $positionChange,
-                'clicks' => $clicks ?? 0,
-                'impressions' => $impressions ?? 0,
-                'ctr' => $ctr ?? 0,
-                'days_count' => 1, // Daily data is 1 day
-                'device' => 'desktop',
-                'country' => 'hun',
-                'fetched_at' => now(),
-            ],
-        );
+            ]);
+        } catch (Exception $e) {
+            Log::error('Google Search Console - Failed to save record', [
+                'project_id' => $keyword->project_id,
+                'keyword' => $keyword->keyword,
+                'date' => $date,
+                'error' => $e->getMessage(),
+                'data' => [
+                    'project_id' => $keyword->project_id,
+                    'keyword_id' => $keyword->id,
+                    'query' => $keyword->keyword,
+                    'page' => $page,
+                    'date_from' => $date,
+                    'date_to' => $date,
+                    'position' => $position,
+                    'clicks' => $clicks,
+                    'impressions' => $impressions,
+                    'ctr' => $ctr,
+                ],
+            ]);
+            throw $e;
+        }
 
         // Send notifications for significant changes
         if ($previousPosition && $position) {
