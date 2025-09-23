@@ -290,6 +290,23 @@ class GoogleSearchConsoleService extends BaseApiService
             return in_array($query, $keywordStrings, true);
         });
 
+        Log::debug('Google Search Console - Keyword data filtering', [
+            'project_id' => $this->project->id,
+            'total_rows' => $allRows->count(),
+            'filtered_rows' => $filteredRows->count(),
+            'our_keywords' => $keywordStrings,
+            'all_found_keywords' => $allRows->map(fn (array $row): string => $row['keys'][1] ?? 'UNKNOWN')->unique()->values()->toArray(),
+            'sample_raw_data' => $allRows->take(5)->toArray(),
+            'sample_filtered_data' => $filteredRows->take(5)->map(fn (array $row): array => [
+                'date' => $row['keys'][0] ?? 'UNKNOWN',
+                'keyword' => $row['keys'][1] ?? 'UNKNOWN',
+                'page' => $row['keys'][2] ?? 'unknown',
+                'clicks' => $row['clicks'] ?? 0,
+                'impressions' => $row['impressions'] ?? 0,
+                'position' => round($row['position'] ?? 0, 2),
+            ])->toArray(),
+        ]);
+
         return $filteredRows;
     }
 
@@ -313,18 +330,43 @@ class GoogleSearchConsoleService extends BaseApiService
 
                 $searchAnalytics = $this->getKeywordData($keywords, $startDate, $endDate);
 
+                Log::info('Google Search Console - Processing keywords individually', [
+                    'project_id' => $this->project->id,
+                    'total_analytics_rows' => $searchAnalytics->count(),
+                    'keywords_to_process' => $keywords->count(),
+                ]);
+
                 // Process each keyword with daily data
                 foreach ($keywords as $keyword) {
                     $keywordAnalytics = $searchAnalytics->filter(function ($row) use ($keyword) {
                         return ($row['keys'][1] ?? '') === $keyword->keyword; // Query is at index 1 now
                     });
 
+                    Log::debug('Google Search Console - Processing keyword', [
+                        'project_id' => $this->project->id,
+                        'keyword' => $keyword->keyword,
+                        'found_rows' => $keywordAnalytics->count(),
+                        'dates_found' => $keywordAnalytics->map(fn ($row) => $row['keys'][0] ?? 'UNKNOWN')->unique()->values()->toArray(),
+                    ]);
+
                     if ($keywordAnalytics->isNotEmpty()) {
                         // Process each day's data for this keyword
                         foreach ($keywordAnalytics as $dailyAnalytics) {
                             $this->createOrUpdateRanking($keyword, $dailyAnalytics);
                             $synced++;
+
+                            Log::debug('Google Search Console - Synced daily record', [
+                                'keyword' => $keyword->keyword,
+                                'date' => $dailyAnalytics['keys'][0] ?? 'UNKNOWN',
+                                'position' => $dailyAnalytics['position'] ?? null,
+                                'total_synced_so_far' => $synced,
+                            ]);
                         }
+                    } else {
+                        Log::warning('Google Search Console - No data found for keyword', [
+                            'project_id' => $this->project->id,
+                            'keyword' => $keyword->keyword,
+                        ]);
                     }
                 }
             } catch (Exception $e) {
@@ -334,6 +376,13 @@ class GoogleSearchConsoleService extends BaseApiService
                 ]);
             }
         }
+
+        Log::info('Google Search Console - Sync completed', [
+            'project_id' => $this->project->id,
+            'total_synced' => $synced,
+            'keywords_processed' => $keywords->count(),
+            'expected_max_records' => $keywords->count() * 7, // 7 days per keyword
+        ]);
 
         return $synced;
     }
