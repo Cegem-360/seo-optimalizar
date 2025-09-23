@@ -16,6 +16,11 @@ class PageSpeedInsightsService extends BaseApiService
 
     private string $baseUrl = 'https://www.googleapis.com/pagespeedonline/v5';
 
+    public function isConfigured(): bool
+    {
+        return ! empty(config('services.google.pagespeed_api_key'));
+    }
+
     protected function configureRequest(PendingRequest $pendingRequest): void
     {
         $apiKey = config('services.google.pagespeed_api_key');
