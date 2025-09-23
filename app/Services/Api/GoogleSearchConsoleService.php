@@ -402,6 +402,14 @@ class GoogleSearchConsoleService extends BaseApiService
         $latestRanking = $keyword->project->searchConsoleRankings()->where('query', $keyword->keyword)->latest('fetched_at')->first();
         $previousPosition = $latestRanking ? (float) $latestRanking->position : null;
 
+        // Calculate position change
+        $positionChange = null;
+        if ($previousPosition !== null && $position !== null) {
+            // Negative means improvement (went from position 10 to 5 = -5 = improved)
+            // Positive means decline (went from position 5 to 10 = +5 = declined)
+            $positionChange = (int) round($position - $previousPosition);
+        }
+
         SearchConsoleRanking::query()->create([
             'project_id' => $keyword->project_id,
             'keyword_id' => $keyword->id,
@@ -409,6 +417,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'page' => $page,
             'position' => $position ? round($position, 2) : null,
             'previous_position' => $previousPosition,
+            'position_change' => $positionChange,
             'clicks' => $clicks ?? 0,
             'impressions' => $impressions ?? 0,
             'ctr' => $ctr ?? 0,
