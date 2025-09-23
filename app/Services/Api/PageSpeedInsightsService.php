@@ -18,10 +18,10 @@ class PageSpeedInsightsService extends BaseApiService
 
     protected function configureRequest(PendingRequest $pendingRequest): void
     {
-        $apiKey = $this->getCredential('api_key');
+        $apiKey = config('services.google.pagespeed_api_key');
 
         if (! $apiKey) {
-            throw new Exception('Missing PageSpeed Insights API key');
+            throw new Exception('Missing PageSpeed Insights API key in config');
         }
 
         $pendingRequest->withHeaders([
@@ -33,7 +33,11 @@ class PageSpeedInsightsService extends BaseApiService
     {
         try {
             // Use direct HTTP call instead of makeRequest to avoid facade issues
-            $apiKey = $this->getCredential('api_key');
+            $apiKey = config('services.google.pagespeed_api_key');
+
+            if (! $apiKey) {
+                return false;
+            }
 
             $client = new Client();
             $response = $client->get($this->baseUrl . '/runPagespeed', [
@@ -55,7 +59,7 @@ class PageSpeedInsightsService extends BaseApiService
     public function analyzeUrl(string $url, string $strategy = 'mobile', array $categories = ['performance', 'accessibility', 'best-practices', 'seo']): array
     {
         $params = [
-            'key' => $this->getCredential('api_key'),
+            'key' => config('services.google.pagespeed_api_key'),
             'url' => $url,
             'strategy' => $strategy, // 'mobile' or 'desktop'
             'category' => $categories,
@@ -70,7 +74,7 @@ class PageSpeedInsightsService extends BaseApiService
     public function analyzeProjectUrl(string $strategy = 'mobile'): array
     {
         // Use direct HTTP call to avoid facade issues
-        $apiKey = $this->getCredential('api_key');
+        $apiKey = config('services.google.pagespeed_api_key');
 
         $client = new Client();
         $response = $client->get($this->baseUrl . '/runPagespeed', [
