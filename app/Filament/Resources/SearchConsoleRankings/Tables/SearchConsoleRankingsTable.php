@@ -51,7 +51,7 @@ class SearchConsoleRankingsTable
                     ->numeric(2)
                     ->badge()
                     ->color(fn ($record) => $record->getPositionBadgeColor())
-                    ->formatStateUsing(fn ($state): string => number_format($state, 1)),
+                    ->formatStateUsing(fn ($state): string => $state !== null ? number_format((float) $state, 1) : '—'),
 
                 TextColumn::make('position_change')
                     ->label('Change')
