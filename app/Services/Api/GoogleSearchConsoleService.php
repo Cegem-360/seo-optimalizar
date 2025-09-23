@@ -281,7 +281,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $payload = [
             'startDate' => $startDate->format('Y-m-d'),
             'endDate' => $endDate->format('Y-m-d'),
-            'dimensions' => ['query'],
+            'dimensions' => ['query', 'page'], // Add page dimension to get URLs
             'rowLimit' => 25000, // Increased limit to get more data
         ];
 
@@ -310,6 +310,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'filtered_rows' => $filteredRows->count(),
             'detailed_results' => $filteredRows->take(10)->map(fn (array $row): array => [
                 'keyword' => $row['keys'][0] ?? 'UNKNOWN',
+                'page' => $row['keys'][1] ?? 'unknown',
                 'clicks' => $row['clicks'] ?? 0,
                 'impressions' => $row['impressions'] ?? 0,
                 'ctr' => $row['ctr'] ?? 0,
@@ -394,6 +395,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $clicks = $analytics['clicks'] ?? 0;
         $impressions = $analytics['impressions'] ?? 0;
         $ctr = $analytics['ctr'] ?? 0;
+        $page = $analytics['keys'][1] ?? 'unknown'; // Get the page URL from keys array
 
         // Get the latest ranking to compare positions
         /** @var SearchConsoleRanking|null $latestRanking */
@@ -404,7 +406,7 @@ class GoogleSearchConsoleService extends BaseApiService
             'project_id' => $keyword->project_id,
             'keyword_id' => $keyword->id,
             'query' => $keyword->keyword,
-            'page' => 'unknown', // GSC doesn't provide specific URL in search analytics
+            'page' => $page,
             'position' => $position ? round($position, 2) : null,
             'previous_position' => $previousPosition,
             'clicks' => $clicks ?? 0,
