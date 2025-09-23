@@ -471,7 +471,7 @@ class GeminiApiService extends BaseApiService
 
             // Egyszerűbb HTTP kérés közvetlenül
             $client = new Client();
-            $response = $client->post($this->baseUrl . '/models/gemini-1.5-flash:generateContent?key=' . $apiKey, [
+            $response = $client->post($this->baseUrl . '/models/gemini-2.5-flash:generateContent?key=' . $apiKey, [
                 'json' => [
                     'contents' => [
                         [
