@@ -426,7 +426,7 @@ class GoogleSearchConsoleService extends BaseApiService
         }
     }
 
-    private function checkForNotifications(int $currentPosition, int $previousPosition): void
+    private function checkForNotifications(float $currentPosition, float $previousPosition): void
     {
         $change = $previousPosition - $currentPosition;
         $changeType = null;
