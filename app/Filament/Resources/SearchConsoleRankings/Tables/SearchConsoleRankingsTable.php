@@ -62,11 +62,11 @@ class SearchConsoleRankingsTable
                             return 'NEW';
                         }
 
-                        if ($state > 0) {
+                        if ($state < 0) {
                             return '↑ ' . abs($state);
                         }
 
-                        if ($state < 0) {
+                        if ($state > 0) {
                             return '↓ ' . abs($state);
                         }
 
@@ -74,8 +74,8 @@ class SearchConsoleRankingsTable
                     })
                     ->color(fn ($state): string => match (true) {
                         $state === null => 'info',
-                        $state > 0 => 'success',
-                        $state < 0 => 'danger',
+                        $state < 0 => 'success',
+                        $state > 0 => 'danger',
                         default => 'gray',
                     }),
 

@@ -317,6 +317,9 @@ class GoogleSearchConsoleService extends BaseApiService
             ->first();
 
         $previousPosition = $latestRanking ? (float) $latestRanking->position : null;
+        $previousClicks = $latestRanking ? (int) $latestRanking->clicks : null;
+        $previousImpressions = $latestRanking ? (int) $latestRanking->impressions : null;
+        $previousCtr = $latestRanking ? (float) $latestRanking->ctr : null;
 
         // Calculate position change
         $positionChange = null;
@@ -324,6 +327,18 @@ class GoogleSearchConsoleService extends BaseApiService
             // Negative means improvement (went from position 10 to 5 = -5 = improved)
             // Positive means decline (went from position 5 to 10 = +5 = declined)
             $positionChange = (int) round($position - $previousPosition);
+        }
+
+        // Calculate clicks change percentage
+        $clicksChangePercent = null;
+        if ($previousClicks !== null && $previousClicks > 0) {
+            $clicksChangePercent = (($clicks - $previousClicks) / $previousClicks) * 100;
+        }
+
+        // Calculate impressions change percentage
+        $impressionsChangePercent = null;
+        if ($previousImpressions !== null && $previousImpressions > 0) {
+            $impressionsChangePercent = (($impressions - $previousImpressions) / $previousImpressions) * 100;
         }
 
         try {
@@ -344,6 +359,11 @@ class GoogleSearchConsoleService extends BaseApiService
                     'clicks' => $clicks ?? 0,
                     'impressions' => $impressions ?? 0,
                     'ctr' => $ctr ?? 0,
+                    'previous_clicks' => $previousClicks,
+                    'previous_impressions' => $previousImpressions,
+                    'previous_ctr' => $previousCtr,
+                    'clicks_change_percent' => $clicksChangePercent ? round($clicksChangePercent, 2) : null,
+                    'impressions_change_percent' => $impressionsChangePercent ? round($impressionsChangePercent, 2) : null,
                     'days_count' => 1, // Daily data is 1 day
                     'device' => 'desktop',
                     'country' => 'hun',
