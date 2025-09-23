@@ -256,12 +256,6 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
 
-        Log::debug('Google Search Console - Search analytics response', [
-            'project_id' => $this->project->id,
-            'total_rows' => count($data['rows'] ?? []),
-            'sample_data' => array_slice($data['rows'] ?? [], 0, 5), // First 5 rows for debugging
-        ]);
-
         return new Collection($data['rows'] ?? []);
     }
 
@@ -285,15 +279,6 @@ class GoogleSearchConsoleService extends BaseApiService
             'rowLimit' => 25000, // Increased limit to get more data
         ];
 
-        Log::info('Google Search Console - Fetching keyword data', [
-            'project_id' => $this->project->id,
-            'property_url' => $propertyUrl,
-            'keyword_count' => count($keywordStrings),
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d'),
-            'sample_keywords' => array_slice($keywordStrings, 0, 5),
-        ]);
-
         $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
 
         $allRows = new Collection($data['rows'] ?? []);
@@ -305,30 +290,11 @@ class GoogleSearchConsoleService extends BaseApiService
             return in_array($query, $keywordStrings, true);
         });
 
-        Log::debug('Google Search Console - Keyword data response', [
-            'project_id' => $this->project->id,
-            'total_rows' => $allRows->count(),
-            'filtered_rows' => $filteredRows->count(),
-            'detailed_results' => $filteredRows->take(10)->map(fn (array $row): array => [
-                'date' => $row['keys'][0] ?? 'UNKNOWN',
-                'keyword' => $row['keys'][1] ?? 'UNKNOWN',
-                'page' => $row['keys'][2] ?? 'unknown',
-                'clicks' => $row['clicks'] ?? 0,
-                'impressions' => $row['impressions'] ?? 0,
-                'ctr' => $row['ctr'] ?? 0,
-                'position' => round($row['position'] ?? 0, 2),
-            ])->toArray(),
-        ]);
-
         return $filteredRows;
     }
 
     public function syncKeywordRankings(): int
     {
-        Log::info('Google Search Console - Starting keyword ranking sync', [
-            'project_id' => $this->project->id,
-        ]);
-
         // Only get high priority keywords, limit to 10
         /** @var \Illuminate\Database\Eloquent\Collection<int, Keyword> $keywords */
         $keywords = $this->project->keywords()
@@ -338,11 +304,6 @@ class GoogleSearchConsoleService extends BaseApiService
 
         $synced = 0;
 
-        Log::info('Google Search Console - Found priority keywords to sync', [
-            'project_id' => $this->project->id,
-            'keyword_count' => $keywords->count(),
-        ]);
-
         // Process all keywords in one batch since we have max 10
         if ($keywords->isNotEmpty()) {
             try {
@@ -351,13 +312,6 @@ class GoogleSearchConsoleService extends BaseApiService
                 $endDate = now()->subDays(1);
 
                 $searchAnalytics = $this->getKeywordData($keywords, $startDate, $endDate);
-
-                Log::info('Google Search Console - Processing search analytics', [
-                    'project_id' => $this->project->id,
-                    'analytics_count' => $searchAnalytics->count(),
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                ]);
 
                 // Process each keyword with daily data
                 foreach ($keywords as $keyword) {
@@ -370,19 +324,7 @@ class GoogleSearchConsoleService extends BaseApiService
                         foreach ($keywordAnalytics as $dailyAnalytics) {
                             $this->createOrUpdateRanking($keyword, $dailyAnalytics);
                             $synced++;
-
-                            Log::debug('Google Search Console - Synced keyword', [
-                                'keyword' => $keyword->keyword,
-                                'date' => $dailyAnalytics['keys'][0] ?? 'unknown',
-                                'position' => $dailyAnalytics['position'] ?? null,
-                                'clicks' => $dailyAnalytics['clicks'] ?? 0,
-                                'impressions' => $dailyAnalytics['impressions'] ?? 0,
-                            ]);
                         }
-                    } else {
-                        Log::info('Google Search Console - No data found for keyword', [
-                            'keyword' => $keyword->keyword,
-                        ]);
                     }
                 }
             } catch (Exception $e) {
@@ -423,24 +365,29 @@ class GoogleSearchConsoleService extends BaseApiService
             $positionChange = (int) round($position - $previousPosition);
         }
 
-        SearchConsoleRanking::query()->create([
-            'project_id' => $keyword->project_id,
-            'keyword_id' => $keyword->id,
-            'query' => $keyword->keyword,
-            'page' => $page,
-            'position' => $position ? round($position, 2) : null,
-            'previous_position' => $previousPosition,
-            'position_change' => $positionChange,
-            'clicks' => $clicks ?? 0,
-            'impressions' => $impressions ?? 0,
-            'ctr' => $ctr ?? 0,
-            'date_from' => $date,
-            'date_to' => $date, // For daily data, from and to are the same
-            'days_count' => 1, // Daily data is 1 day
-            'device' => 'desktop',
-            'country' => 'hun',
-            'fetched_at' => now(),
-        ]);
+        // Use updateOrCreate to avoid duplicates based on date and page URL
+        SearchConsoleRanking::query()->updateOrCreate(
+            [
+                'project_id' => $keyword->project_id,
+                'keyword_id' => $keyword->id,
+                'query' => $keyword->keyword,
+                'page' => $page,
+                'date_from' => $date,
+                'date_to' => $date,
+            ],
+            [
+                'position' => $position ? round($position, 2) : null,
+                'previous_position' => $previousPosition,
+                'position_change' => $positionChange,
+                'clicks' => $clicks ?? 0,
+                'impressions' => $impressions ?? 0,
+                'ctr' => $ctr ?? 0,
+                'days_count' => 1, // Daily data is 1 day
+                'device' => 'desktop',
+                'country' => 'hun',
+                'fetched_at' => now(),
+            ],
+        );
 
         // Send notifications for significant changes
         if ($previousPosition && $position) {
