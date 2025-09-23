@@ -195,7 +195,7 @@ class WebsiteAnalysisService
 
         foreach ($data as $key => $value) {
             if (is_array($value) && ! in_array($key, ['overall_score', 'scores', 'metadata'])) {
-                $sectionName = $knownSections[$key] ?? ucfirst(str_replace('_', ' ', $key));
+                $sectionName = $knownSections[$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
 
                 $this->createSection($websiteAnalysis, [
                     'type' => $key,
