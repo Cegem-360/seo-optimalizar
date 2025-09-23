@@ -117,7 +117,6 @@ class WebsiteAnalysesTable
                         'ux' => 'UX elemzés',
                         'content' => 'Tartalom elemzés',
                         'technical' => 'Technikai elemzés',
-                        'competitor' => 'Versenytárs elemzés',
                     ]),
 
                 SelectFilter::make('status')
@@ -156,7 +155,6 @@ class WebsiteAnalysesTable
                                 'ux' => 'UX elemzés',
                                 'content' => 'Tartalom elemzés',
                                 'technical' => 'Technikai elemzés',
-                                'competitor' => 'Versenytárs elemzés',
                             ])
                             ->required(),
 
