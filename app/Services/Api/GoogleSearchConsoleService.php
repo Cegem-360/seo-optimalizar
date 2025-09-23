@@ -95,7 +95,7 @@ class GoogleSearchConsoleService extends BaseApiService
         }
     }
 
-    public function getSearchAnalytics(array $dimensions = ['query'], ?Carbon $startDate = null, ?Carbon $endDate = null, int $rowLimit = 1000): Collection
+    public function getSearchAnalytics(array $dimensions = ['query'], ?Carbon $startDate = null, ?Carbon $endDate = null, int|float $rowLimit = 1000): Collection
     {
         $startDate ??= now()->subDays(7);
         $endDate ??= now()->subDays(1);
@@ -110,7 +110,7 @@ class GoogleSearchConsoleService extends BaseApiService
             $request->setStartDate($startDate->format('Y-m-d'));
             $request->setEndDate($endDate->format('Y-m-d'));
             $request->setDimensions($dimensions);
-            $request->setRowLimit($rowLimit);
+            $request->setRowLimit((int) $rowLimit);
             $request->setStartRow(0);
 
             Log::info('Google Search Console - Fetching search analytics', [
