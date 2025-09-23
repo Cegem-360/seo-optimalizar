@@ -10,10 +10,14 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\Summarizers\Average;
+use Filament\Tables\Columns\Summarizers\Count;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -35,7 +39,11 @@ class SearchConsoleRankingsTable
                     ->sortable()
                     ->weight('bold')
                     ->limit(40)
-                    ->tooltip(fn ($record) => $record->query),
+                    ->tooltip(fn ($record) => $record->query)
+                    ->summarize([
+                        Count::make()
+                            ->label('Total Entries'),
+                    ]),
 
                 TextColumn::make('page')
                     ->label('URL')
@@ -51,7 +59,12 @@ class SearchConsoleRankingsTable
                     ->numeric(2)
                     ->badge()
                     ->color(fn ($record) => $record->getPositionBadgeColor())
-                    ->formatStateUsing(fn ($state): string => $state !== null ? number_format((float) $state, 1) : '—'),
+                    ->formatStateUsing(fn ($state): string => $state !== null ? number_format((float) $state, 1) : '—')
+                    ->summarize([
+                        Average::make()
+                            ->label('Avg Position')
+                            ->formatStateUsing(fn ($state): string => $state !== null ? number_format($state, 1) : '—'),
+                    ]),
 
                 TextColumn::make('position_change')
                     ->label('Change')
@@ -84,7 +97,15 @@ class SearchConsoleRankingsTable
                     ->sortable()
                     ->numeric()
                     ->badge()
-                    ->color('primary'),
+                    ->color('primary')
+                    ->summarize([
+                        Sum::make()
+                            ->label('Total Clicks')
+                            ->formatStateUsing(fn ($state): string => number_format($state)),
+                        Average::make()
+                            ->label('Avg Clicks')
+                            ->formatStateUsing(fn ($state): string => number_format($state, 1)),
+                    ]),
 
                 TextColumn::make('clicks_change_percent')
                     ->label('Click Δ%')
@@ -108,7 +129,15 @@ class SearchConsoleRankingsTable
                     ->sortable()
                     ->numeric()
                     ->badge()
-                    ->color('warning'),
+                    ->color('warning')
+                    ->summarize([
+                        Sum::make()
+                            ->label('Total Impressions')
+                            ->formatStateUsing(fn ($state): string => number_format($state)),
+                        Average::make()
+                            ->label('Avg Impressions')
+                            ->formatStateUsing(fn ($state): string => number_format($state, 1)),
+                    ]),
 
                 TextColumn::make('ctr')
                     ->label('CTR')
@@ -120,7 +149,12 @@ class SearchConsoleRankingsTable
                         $state >= 0.05 => 'warning',
                         $state >= 0.02 => 'info',
                         default => 'gray',
-                    }),
+                    })
+                    ->summarize([
+                        Average::make()
+                            ->label('Avg CTR')
+                            ->formatStateUsing(fn ($state): string => number_format($state * 100, 2) . '%'),
+                    ]),
 
                 TextColumn::make('device')
                     ->label('Device')
@@ -144,11 +178,27 @@ class SearchConsoleRankingsTable
                     ->description(fn ($record) => $record->fetched_at?->diffForHumans()),
             ])
             ->defaultSort('position', 'asc')
+            ->groups([
+                Group::make('page')
+                    ->label('URL')
+                    ->titlePrefixedWithLabel(false)
+                    ->getTitleFromRecordUsing(fn ($record): string => parse_url((string) $record->page, PHP_URL_PATH) ?? $record->page)
+                    ->collapsible(),
+                Group::make('query')
+                    ->label('Query')
+                    ->collapsible(),
+                Group::make('device')
+                    ->label('Device')
+                    ->collapsible(),
+                Group::make('country')
+                    ->label('Country')
+                    ->collapsible(),
+            ])
             ->filters([
                 // Date Range Filter
                 Filter::make('date_range')
                     ->label('Date Range')
-                    ->form([
+                    ->formSchema([
                         DatePicker::make('date_from')
                             ->label('From')
                             ->default(Carbon::now()->subDays(30)),
