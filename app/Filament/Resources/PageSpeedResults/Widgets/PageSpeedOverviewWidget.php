@@ -57,17 +57,17 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
                 ->color($this->getScoreColor($latestResult?->performance_score))
                 ->icon($this->getScoreIcon($latestResult?->performance_score)),
 
-            Stat::make('Average Performance (30 days)', $avgPerformance ? round($avgPerformance) . '/100' : 'No data')
+            Stat::make('Average Performance (30 days)', $avgPerformance ? round((float) $avgPerformance) . '/100' : 'No data')
                 ->description('Based on ' . PageSpeedResult::query()->forProject($project->id)->recent(30)->count() . ' scans')
                 ->color($this->getScoreColor($avgPerformance))
                 ->chart($this->getPerformanceTrend()),
 
-            Stat::make('SEO Score', $avgSeo ? round($avgSeo) . '/100' : 'No data')
+            Stat::make('SEO Score', $avgSeo ? round((float) $avgSeo) . '/100' : 'No data')
                 ->description('30-day average')
                 ->color($this->getScoreColor($avgSeo))
                 ->icon('heroicon-o-magnifying-glass'),
 
-            Stat::make('Accessibility Score', $avgAccessibility ? round($avgAccessibility) . '/100' : 'No data')
+            Stat::make('Accessibility Score', $avgAccessibility ? round((float) $avgAccessibility) . '/100' : 'No data')
                 ->description('30-day average')
                 ->color($this->getScoreColor($avgAccessibility))
                 ->icon('heroicon-o-eye'),
@@ -84,12 +84,14 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
         ];
     }
 
-    protected function getScoreColor(?float $score): string
+    protected function getScoreColor(mixed $score): string
     {
+        $numericScore = $score !== null ? (float) $score : null;
+
         return match (true) {
-            $score === null => 'gray',
-            $score >= 90 => 'success',
-            $score >= 50 => 'warning',
+            $numericScore === null => 'gray',
+            $numericScore >= 90 => 'success',
+            $numericScore >= 50 => 'warning',
             default => 'danger',
         };
     }
@@ -104,12 +106,14 @@ class PageSpeedOverviewWidget extends StatsOverviewWidget
         };
     }
 
-    protected function getScoreIcon(?float $score): string
+    protected function getScoreIcon(mixed $score): string
     {
+        $numericScore = $score !== null ? (float) $score : null;
+
         return match (true) {
-            $score === null => 'heroicon-o-question-mark-circle',
-            $score >= 90 => 'heroicon-o-check-circle',
-            $score >= 50 => 'heroicon-o-exclamation-triangle',
+            $numericScore === null => 'heroicon-o-question-mark-circle',
+            $numericScore >= 90 => 'heroicon-o-check-circle',
+            $numericScore >= 50 => 'heroicon-o-exclamation-triangle',
             default => 'heroicon-o-x-circle',
         };
     }
