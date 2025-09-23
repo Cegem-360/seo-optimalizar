@@ -400,7 +400,7 @@ class GoogleSearchConsoleService extends BaseApiService
         // Get the latest ranking to compare positions
         /** @var SearchConsoleRanking|null $latestRanking */
         $latestRanking = $keyword->project->searchConsoleRankings()->where('query', $keyword->keyword)->latest('fetched_at')->first();
-        $previousPosition = $latestRanking?->position;
+        $previousPosition = $latestRanking ? (float) $latestRanking->position : null;
 
         SearchConsoleRanking::query()->create([
             'project_id' => $keyword->project_id,
@@ -422,7 +422,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         // Send notifications for significant changes
         if ($previousPosition && $position) {
-            $this->checkForNotifications($position, $previousPosition);
+            $this->checkForNotifications((float) $position, (float) $previousPosition);
         }
     }
 
