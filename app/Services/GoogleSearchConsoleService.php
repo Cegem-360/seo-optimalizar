@@ -14,36 +14,30 @@ use Exception;
 use Google\Client as GoogleClient;
 use Google\Service\SearchConsole;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
-use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSearchConsoleService
 {
-    /**
-     * @var Repository
-     */
-    public $repository;
-
     private readonly GoogleClient $googleClient;
 
     private readonly SearchConsole $searchConsole;
 
-    public function __construct(Repository $repository)
+    public function __construct()
     {
-        $this->repository = $repository;
         $this->googleClient = new GoogleClient();
         $this->googleClient->setApplicationName('SEO Monitor');
         $this->googleClient->setScopes([SearchConsole::WEBMASTERS_READONLY]);
 
         // Try Service Account credentials first
-        if ($credentialsPath = $repository->get('services.google.credentials_path')) {
+        if ($credentialsPath = Config::get('services.google.credentials_path')) {
             $fullPath = base_path($credentialsPath);
             if (file_exists($fullPath)) {
                 $this->googleClient->setAuthConfig($fullPath);
                 $this->googleClient->useApplicationDefaultCredentials();
 
                 // If using Google Workspace domain-wide delegation
-                if ($subject = $repository->get('services.google.workspace_subject')) {
+                if ($subject = Config::get('services.google.workspace_subject')) {
                     $this->googleClient->setSubject($subject);
                 }
             } else {
@@ -51,10 +45,10 @@ class GoogleSearchConsoleService
             }
         }
         // Fall back to OAuth if configured
-        elseif ($clientId = $repository->get('services.google.client_id')) {
+        elseif ($clientId = Config::get('services.google.client_id')) {
             $this->googleClient->setClientId($clientId);
-            $this->googleClient->setClientSecret($repository->get('services.google.client_secret'));
-            $this->googleClient->setRedirectUri($repository->get('services.google.redirect_uri'));
+            $this->googleClient->setClientSecret(Config::get('services.google.client_secret'));
+            $this->googleClient->setRedirectUri(Config::get('services.google.redirect_uri'));
             // Note: OAuth flow needs to be handled separately
         }
 
@@ -202,7 +196,7 @@ class GoogleSearchConsoleService
     public function hasCredentials(): bool
     {
         // Check for Service Account credentials
-        if ($credentialsPath = $this->repository->get('services.google.credentials_path')) {
+        if ($credentialsPath = Config::get('services.google.credentials_path')) {
             $fullPath = base_path($credentialsPath);
             if (file_exists($fullPath)) {
                 return true;
@@ -210,8 +204,8 @@ class GoogleSearchConsoleService
         }
 
         // Check for OAuth credentials
-        return $this->repository->get('services.google.client_id') !== null &&
-               $this->repository->get('services.google.client_secret') !== null;
+        return Config::get('services.google.client_id') !== null &&
+               Config::get('services.google.client_secret') !== null;
     }
 
     /**
@@ -219,7 +213,7 @@ class GoogleSearchConsoleService
      */
     public function isUsingServiceAccount(): bool
     {
-        if ($credentialsPath = $this->repository->get('services.google.credentials_path')) {
+        if ($credentialsPath = Config::get('services.google.credentials_path')) {
             $fullPath = base_path($credentialsPath);
 
             return file_exists($fullPath);
@@ -308,7 +302,7 @@ class GoogleSearchConsoleService
                         $channels[] = 'database';
                     }
 
-                    $notification = new RankingChangeNotification($searchConsoleRanking, $changeType, $this->repository->get('app.url'), $channels);
+                    $notification = new RankingChangeNotification($searchConsoleRanking, $changeType, Config::get('app.url'), $channels);
                     $user->notify($notification);
                 }
             }
