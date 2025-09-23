@@ -328,32 +328,57 @@ class GoogleSearchConsoleService extends BaseApiService
             'project_id' => $this->project->id,
         ]);
 
+        // Only get high priority keywords, limit to 10
         /** @var \Illuminate\Database\Eloquent\Collection<int, Keyword> $keywords */
-        $keywords = $this->project->keywords()->get();
+        $keywords = $this->project->keywords()
+            ->where('priority', 'high')
+            ->limit(10)
+            ->get();
+
         $synced = 0;
 
-        foreach ($keywords->chunk(10) as $chunkIndex => $keywordChunk) {
-            try {
-                $searchAnalytics = $this->getKeywordData($keywordChunk);
+        Log::info('Google Search Console - Found priority keywords to sync', [
+            'project_id' => $this->project->id,
+            'keyword_count' => $keywords->count(),
+        ]);
 
-                foreach ($keywordChunk as $keyword) {
+        // Process all keywords in one batch since we have max 10
+        if ($keywords->isNotEmpty()) {
+            try {
+                // Get data for the last 7 days
+                $startDate = now()->subDays(7);
+                $endDate = now()->subDays(1);
+
+                $searchAnalytics = $this->getKeywordData($keywords, $startDate, $endDate);
+
+                Log::info('Google Search Console - Processing search analytics', [
+                    'project_id' => $this->project->id,
+                    'analytics_count' => $searchAnalytics->count(),
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                ]);
+
+                foreach ($keywords as $keyword) {
                     $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
 
                     if ($analytics) {
                         $this->createOrUpdateRanking($keyword, $analytics);
                         $synced++;
+
+                        Log::debug('Google Search Console - Synced keyword', [
+                            'keyword' => $keyword->keyword,
+                            'position' => $analytics['position'] ?? null,
+                            'clicks' => $analytics['clicks'] ?? 0,
+                            'impressions' => $analytics['impressions'] ?? 0,
+                        ]);
                     }
                 }
             } catch (Exception $e) {
-                Log::error('Google Search Console - Error syncing keyword chunk', [
+                Log::error('Google Search Console - Error syncing keywords', [
                     'project_id' => $this->project->id,
-                    'chunk_index' => $chunkIndex,
                     'error' => $e->getMessage(),
                 ]);
             }
-
-            // Rate limiting - pause between chunks
-            usleep(500000); // 500ms
         }
 
         return $synced;
@@ -391,9 +416,9 @@ class GoogleSearchConsoleService extends BaseApiService
             'clicks' => $clicks ?? 0,
             'impressions' => $impressions ?? 0,
             'ctr' => $ctr ?? 0,
-            'date_from' => now()->format('Y-m-d'),
-            'date_to' => now()->format('Y-m-d'),
-            'days_count' => 1,
+            'date_from' => now()->subDays(7)->format('Y-m-d'),
+            'date_to' => now()->subDays(1)->format('Y-m-d'),
+            'days_count' => 7,
             'device' => 'desktop',
             'country' => 'hun',
             'fetched_at' => now(),
