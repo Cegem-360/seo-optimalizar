@@ -42,15 +42,6 @@ class KeywordForm
                                     ->default('medium')
                                     ->required(),
 
-                                Select::make('intent_type')
-                                    ->options([
-                                        'informational' => 'Informational',
-                                        'navigational' => 'Navigational',
-                                        'commercial' => 'Commercial',
-                                        'transactional' => 'Transactional',
-                                    ])
-                                    ->placeholder('Select intent type'),
-
                                 TextInput::make('geo_target')
                                     ->default('global')
                                     ->placeholder('e.g., US, UK, global'),
@@ -68,10 +59,6 @@ class KeywordForm
                                     ])
                                     ->default('hu')
                                     ->required(),
-
-                                TextInput::make('search_volume')
-                                    ->numeric()
-                                    ->placeholder('Monthly search volume'),
 
                                 TextInput::make('difficulty_score')
                                     ->numeric()

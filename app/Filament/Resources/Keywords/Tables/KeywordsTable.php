@@ -39,21 +39,6 @@ class KeywordsTable
                     })
                     ->sortable(),
 
-                TextColumn::make('intent_type')
-                    ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        'informational' => 'info',
-                        'navigational' => 'warning',
-                        'commercial' => 'success',
-                        'transactional' => 'danger',
-                        default => 'gray',
-                    })
-                    ->sortable(),
-
-                TextColumn::make('search_volume')
-                    ->numeric()
-                    ->sortable(),
-
                 TextColumn::make('geo_target')
                     ->badge()
                     ->color('primary'),
