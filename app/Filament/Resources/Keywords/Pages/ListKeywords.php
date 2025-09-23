@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Keywords\Pages;
 
 use App\Filament\Resources\Keywords\KeywordResource;
+use App\Services\Api\ApiServiceManager;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -21,14 +22,54 @@ class ListKeywords extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('sync_keywords')
-                ->label('Kulcsszavak frissítése')
+            Action::make('import_keywords')
+                ->label('Kulcsszavak importálása')
+                ->icon(Heroicon::CloudArrowDown)
+                ->color('success')
+                ->modalHeading('Kulcsszavak importálása')
+                ->modalDescription('Importálja az új kulcsszavakat a Google Search Console-ból az elmúlt 30 napból.')
+                ->modalSubmitActionLabel('Importálás')
+                ->action(function (): void {
+                    try {
+                        $project = Filament::getTenant();
+
+                        if (! $project) {
+                            throw new Exception('Projekt nem található');
+                        }
+
+                        $apiManager = new ApiServiceManager($project);
+
+                        if (! $apiManager->hasService('google_search_console')) {
+                            throw new Exception('Google Search Console nincs konfigurálva ehhez a projekthez');
+                        }
+
+                        $gscService = $apiManager->getGoogleSearchConsole();
+                        $importedCount = $gscService->importKeywords();
+
+                        Notification::make()
+                            ->title('Importálás sikeres')
+                            ->body("Sikeresen importáltunk {$importedCount} kulcsszót.")
+                            ->success()
+                            ->send();
+
+                        $this->refreshTable();
+                    } catch (Exception $e) {
+                        Notification::make()
+                            ->title('Importálási hiba')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
+                }),
+
+            Action::make('update_keywords')
+                ->label('Metrikák frissítése')
                 ->icon(Heroicon::ArrowPath)
-                ->color('primary')
-                ->modalHeading('Kulcsszavak frissítése')
-                ->modalDescription('Frissíti a kulcsszavak listáját a projekt alapján.')
+                ->color('warning')
+                ->modalHeading('Kulcsszavak metrikáinak frissítése')
+                ->modalDescription('Frissíti a meglévő kulcsszavak metrikáit (search volume, difficulty) a Google Ads API-ból.')
                 ->modalSubmitActionLabel('Frissítés')
-                ->action(function () {
+                ->action(function (): void {
                     try {
                         $project = Filament::getTenant();
 

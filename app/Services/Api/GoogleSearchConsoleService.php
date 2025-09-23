@@ -284,7 +284,7 @@ class GoogleSearchConsoleService extends BaseApiService
         $allRows = new Collection($data['rows'] ?? []);
 
         // Filter the results to only include our keywords
-        $filteredRows = $allRows->filter(function ($row) use ($keywordStrings) {
+        $filteredRows = $allRows->filter(function (array $row) use ($keywordStrings): bool {
             $query = $row['keys'][1] ?? ''; // Query is now at index 1 because date is at index 0
 
             return in_array($query, $keywordStrings, true);
@@ -338,7 +338,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
                 // Process each keyword with daily data
                 foreach ($keywords as $keyword) {
-                    $keywordAnalytics = $searchAnalytics->filter(function ($row) use ($keyword) {
+                    $keywordAnalytics = $searchAnalytics->filter(function (array $row) use ($keyword): bool {
                         return ($row['keys'][1] ?? '') === $keyword->keyword; // Query is at index 1 now
                     });
 
@@ -346,7 +346,7 @@ class GoogleSearchConsoleService extends BaseApiService
                         'project_id' => $this->project->id,
                         'keyword' => $keyword->keyword,
                         'found_rows' => $keywordAnalytics->count(),
-                        'dates_found' => $keywordAnalytics->map(fn ($row) => $row['keys'][0] ?? 'UNKNOWN')->unique()->values()->toArray(),
+                        'dates_found' => $keywordAnalytics->map(fn ($row): mixed => $row['keys'][0] ?? 'UNKNOWN')->unique()->values()->toArray(),
                     ]);
 
                     if ($keywordAnalytics->isNotEmpty()) {
@@ -473,7 +473,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         // Send notifications for significant changes
         if ($previousPosition && $position) {
-            $this->checkForNotifications((float) $position, (float) $previousPosition);
+            $this->checkForNotifications((float) $position, $previousPosition);
         }
     }
 
@@ -495,5 +495,71 @@ class GoogleSearchConsoleService extends BaseApiService
 
         // Here you would dispatch a notification job
         // We'll implement this in the notification system later
+    }
+
+    public function importKeywords(?Carbon $startDate = null, ?Carbon $endDate = null): int
+    {
+        Log::info('Google Search Console - Starting keyword import', [
+            'project_id' => $this->project->id,
+        ]);
+
+        $startDate ??= now()->subDays(30);
+        $endDate ??= now()->subDays(1);
+
+        try {
+            // Get search analytics data with query dimension
+            $searchAnalytics = $this->getSearchAnalytics(['query'], $startDate, $endDate, 1000);
+
+            $importedCount = 0;
+
+            foreach ($searchAnalytics as $row) {
+                $query = $row['keys'][0] ?? null;
+
+                if (! $query || strlen((string) $query) < 2) {
+                    continue; // Skip empty or too short queries
+                }
+
+                // Import/update keyword using updateOrCreate
+                $keyword = Keyword::query()->updateOrCreate(
+                    [
+                        'project_id' => $this->project->id,
+                        'keyword' => $query,
+                    ],
+                    [
+                        'category' => 'imported',
+                        'priority' => 'low',
+                        'geo_target' => 'hun',
+                        'intent_type' => 'informational',
+                        'search_volume' => $row['impressions'] ?? 0,
+                        'difficulty' => null,
+                        'last_updated' => now(),
+                    ],
+                );
+
+                $importedCount++;
+
+                Log::debug('Google Search Console - Imported keyword', [
+                    'keyword' => $query,
+                    'impressions' => $row['impressions'] ?? 0,
+                    'clicks' => $row['clicks'] ?? 0,
+                    'position' => $row['position'] ?? null,
+                ]);
+            }
+
+            Log::info('Google Search Console - Keyword import completed', [
+                'project_id' => $this->project->id,
+                'imported_count' => $importedCount,
+                'date_range' => "{$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}",
+            ]);
+
+            return $importedCount;
+        } catch (Exception $e) {
+            Log::error('Google Search Console - Error importing keywords', [
+                'project_id' => $this->project->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
 }

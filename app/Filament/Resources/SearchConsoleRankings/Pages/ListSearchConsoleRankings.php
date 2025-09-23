@@ -28,7 +28,7 @@ class ListSearchConsoleRankings extends ListRecords
                 ->modalHeading('Search Console adatok szinkronizálása')
                 ->modalDescription('Frissíti a keresési pozíciókat és teljesítményadatokat a Google Search Console-ból.')
                 ->modalSubmitActionLabel('Szinkronizálás')
-                ->action(function () {
+                ->action(function (): void {
                     try {
                         $project = Filament::getTenant();
 
