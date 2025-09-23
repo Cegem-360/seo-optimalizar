@@ -301,6 +301,7 @@ class GoogleSearchConsoleService extends BaseApiService
         // Filter the results to only include our keywords
         $filteredRows = $allRows->filter(function ($row) use ($keywordStrings) {
             $query = $row['keys'][0] ?? '';
+
             return in_array($query, $keywordStrings, true);
         });
 
@@ -331,26 +332,9 @@ class GoogleSearchConsoleService extends BaseApiService
         $keywords = $this->project->keywords()->get();
         $synced = 0;
 
-        Log::info('Google Search Console - Found keywords to sync', [
-            'project_id' => $this->project->id,
-            'keyword_count' => $keywords->count(),
-        ]);
-
         foreach ($keywords->chunk(10) as $chunkIndex => $keywordChunk) {
-            Log::debug('Google Search Console - Processing keyword chunk', [
-                'project_id' => $this->project->id,
-                'chunk' => $chunkIndex + 1,
-                'chunk_size' => $keywordChunk->count(),
-            ]);
-
             try {
                 $searchAnalytics = $this->getKeywordData($keywordChunk);
-
-                Log::debug('Google Search Console - Retrieved analytics data', [
-                    'project_id' => $this->project->id,
-                    'chunk' => $chunkIndex + 1,
-                    'analytics_count' => $searchAnalytics->count(),
-                ]);
 
                 foreach ($keywordChunk as $keyword) {
                     $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
@@ -358,20 +342,12 @@ class GoogleSearchConsoleService extends BaseApiService
                     if ($analytics) {
                         $this->createOrUpdateRanking($keyword, $analytics);
                         $synced++;
-
-                        Log::debug('Google Search Console - Updated keyword ranking', [
-                            'project_id' => $this->project->id,
-                            'keyword' => $keyword->keyword,
-                            'position' => $analytics['position'] ?? null,
-                            'clicks' => $analytics['clicks'] ?? 0,
-                            'impressions' => $analytics['impressions'] ?? 0,
-                        ]);
                     }
                 }
             } catch (Exception $e) {
-                Log::error('Google Search Console - Error processing keyword chunk', [
+                Log::error('Google Search Console - Error syncing keyword chunk', [
                     'project_id' => $this->project->id,
-                    'chunk' => $chunkIndex + 1,
+                    'chunk_index' => $chunkIndex,
                     'error' => $e->getMessage(),
                 ]);
             }
@@ -379,12 +355,6 @@ class GoogleSearchConsoleService extends BaseApiService
             // Rate limiting - pause between chunks
             usleep(500000); // 500ms
         }
-
-        Log::info('Google Search Console - Keyword ranking sync completed', [
-            'project_id' => $this->project->id,
-            'synced_count' => $synced,
-            'total_keywords' => $keywords->count(),
-        ]);
 
         return $synced;
     }
