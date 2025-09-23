@@ -198,7 +198,7 @@ class SearchConsoleRankingsTable
                 // Date Range Filter
                 Filter::make('date_range')
                     ->label('Date Range')
-                    ->formSchema([
+                    ->schema([
                         DatePicker::make('date_from')
                             ->label('From')
                             ->default(Carbon::now()->subDays(30)),
