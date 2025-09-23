@@ -18,7 +18,7 @@ class WebsiteAnalysisService
 {
     public function createAnalysis(array $data): WebsiteAnalysis
     {
-        return DB::transaction(fn () => WebsiteAnalysis::query()->create([
+        return WebsiteAnalysis::query()->create([
             'project_id' => $data['project_id'],
             'url' => $data['url'],
             'analysis_type' => $data['analysis_type'],
@@ -26,7 +26,7 @@ class WebsiteAnalysisService
             'ai_model' => $data['ai_model'] ?? null,
             'request_params' => $data['request_params'] ?? null,
             'status' => 'pending',
-        ]));
+        ]);
     }
 
     public function processAiResponse(WebsiteAnalysis $websiteAnalysis, string $aiResponse): WebsiteAnalysis

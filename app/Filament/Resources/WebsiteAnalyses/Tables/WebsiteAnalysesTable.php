@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\WebsiteAnalyses\Tables;
 
 use App\Models\Project;
+use App\Models\WebsiteAnalysis;
 use App\Services\WebsiteAnalysisService;
 use Exception;
 use Filament\Actions\Action;
@@ -19,7 +20,6 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Foundation\Application;
 
 class WebsiteAnalysesTable
 {
@@ -136,70 +136,6 @@ class WebsiteAnalysesTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
-                Action::make('analyze')
-                    ->label('Új elemzés')
-                    ->icon('heroicon-o-magnifying-glass')
-                    ->color('success')
-                    ->visible(fn ($record): bool => $record->status !== 'processing')
-                    ->schema([
-                        Select::make('analysis_type')
-                            ->label('Elemzés típusa')
-                            ->options([
-                                'seo' => 'SEO elemzés',
-                                'ux' => 'UX elemzés',
-                                'content' => 'Tartalom elemzés',
-                                'technical' => 'Technikai elemzés',
-                                'competitor' => 'Versenytárs elemzés',
-                            ])
-                            ->required(),
-
-                        TextInput::make('url')
-                            ->label('Weboldal URL')
-                            ->url()
-                            ->required()
-                            ->placeholder('https://example.com'),
-
-                        Select::make('ai_provider')
-                            ->label('AI szolgáltató')
-                            ->options(fn (): array => WebsiteAnalysisService::getAvailableAiProviders())
-                            ->required(),
-                    ])
-                    ->action(function (array $data, $record): void {
-                        $websiteAnalysisService = (new Application())->make(WebsiteAnalysisService::class);
-
-                        try {
-                            $project = Filament::getTenant();
-
-                            if (! $project instanceof Project) {
-                                return;
-                            }
-
-                            $analysis = $websiteAnalysisService->createAnalysis([
-                                'project_id' => $project->id,
-                                'url' => $data['url'],
-                                'analysis_type' => $data['analysis_type'],
-                                'ai_provider' => $data['ai_provider'],
-                                'ai_model' => WebsiteAnalysisService::getModelForProvider($data['ai_provider']),
-                            ]);
-
-                            // Meghívjuk a valós AI szolgáltatást
-                            if ($data['ai_provider']) {
-                                $websiteAnalysisService->runAiAnalysis($analysis);
-                            }
-
-                            Notification::make()
-                                ->title('Elemzés elindítva')
-                                ->body('A weboldal elemzés sikeresen elindult.')
-                                ->success()
-                                ->send();
-                        } catch (Exception $exception) {
-                            Notification::make()
-                                ->title('Hiba')
-                                ->body('Az elemzés indítása sikertelen: ' . $exception->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
             ])
             ->headerActions([
                 Action::make('new_analysis')
@@ -238,7 +174,7 @@ class WebsiteAnalysesTable
                             if (! $project instanceof Project) {
                                 return;
                             }
-
+                            /** @var WebsiteAnalysis $analysis */
                             $analysis = $websiteAnalysisService->createAnalysis([
                                 'project_id' => $project->id,
                                 'url' => $data['url'],
