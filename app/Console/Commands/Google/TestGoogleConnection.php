@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Google;
 
-use App\Services\GoogleSearchConsoleService;
+use App\Models\Project;
+use App\Services\Api\ApiServiceManager;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository;
 
 class TestGoogleConnection extends Command
 {
-    protected $signature = 'google:test-connection';
+    protected $signature = 'google:test-connection {--project= : Test for specific project ID}';
 
-    protected $description = 'Test Google Search Console API connection';
+    protected $description = 'Test Google Search Console API connection for projects';
 
     /**
      * Create a new console command instance.
@@ -23,62 +24,59 @@ class TestGoogleConnection extends Command
         parent::__construct();
     }
 
-    public function handle(GoogleSearchConsoleService $googleSearchConsoleService): int
+    public function handle(): int
     {
         $this->info('Testing Google Search Console API connection...');
         $this->newLine();
 
-        // Check if credentials are configured
-        if (! $googleSearchConsoleService->hasCredentials()) {
-            $this->error('No credentials configured!');
-            $this->info('Run: php artisan google:setup-service-account');
+        // Get projects to test
+        $projects = $this->option('project')
+            ? Project::query()->where('id', $this->option('project'))->get()
+            : Project::all();
+
+        if ($projects->isEmpty()) {
+            $this->error('No projects found to test.');
 
             return self::FAILURE;
         }
 
-        // Check authentication type
-        if ($googleSearchConsoleService->isUsingServiceAccount()) {
-            $this->info('✓ Using Service Account authentication');
-        } else {
-            $this->info('✓ Using OAuth authentication');
-        }
+        $successCount = 0;
+        $totalCount = $projects->count();
 
-        // Try to list sites
-        try {
-            $this->info('Fetching available sites...');
-            $sites = $googleSearchConsoleService->getSites();
+        foreach ($projects as $project) {
+            $this->info("Testing project: {$project->name}");
 
-            if ($sites === []) {
-                $this->warn('No sites found. Make sure the service account has access to at least one Search Console property.');
-                $this->info('Add the service account email to your Search Console property:');
-                $this->info('1. Go to https://search.google.com/search-console');
-                $this->info('2. Select your property');
-                $this->info('3. Go to Settings > Users and permissions');
-                $this->info('4. Add the service account email as a user');
-            } else {
-                $this->info('✓ Connection successful!');
-                $this->newLine();
-                $this->info('Available sites:');
-                foreach ($sites as $site) {
-                    $this->line(' - ' . $site->getSiteUrl());
+            try {
+                $apiManager = new ApiServiceManager($project);
+
+                if (! $apiManager->hasService('google_search_console')) {
+                    $this->warn("✗ Google Search Console not configured for project: {$project->name}");
+
+                    continue;
                 }
+
+                $gscService = $apiManager->getGoogleSearchConsole();
+                $isConnected = $gscService->testConnection();
+
+                if ($isConnected) {
+                    $this->info("✓ Connection successful for project: {$project->name}");
+                    $successCount++;
+
+                    // Try to get sites
+                    $sites = $gscService->getSites();
+                    $this->info("  Available sites: {$sites->count()}");
+                } else {
+                    $this->error("✗ Connection failed for project: {$project->name}");
+                }
+            } catch (Exception $exception) {
+                $this->error("✗ Error testing project {$project->name}: {$exception->getMessage()}");
             }
 
-            return self::SUCCESS;
-        } catch (Exception $exception) {
-            $this->error('Connection failed: ' . $exception->getMessage());
             $this->newLine();
-
-            if (str_contains($exception->getMessage(), 'Could not load the default credentials')) {
-                $this->info('Service Account file might be missing or invalid.');
-                $this->info('Check that the file exists at: ' . base_path($this->repository->get('services.google.credentials_path')));
-            } elseif (str_contains($exception->getMessage(), '403')) {
-                $this->info('Access denied. Make sure:');
-                $this->info('1. Search Console API is enabled in Google Cloud Console');
-                $this->info('2. Service account has access to your Search Console property');
-            }
-
-            return self::FAILURE;
         }
+
+        $this->info("Test completed: {$successCount}/{$totalCount} projects connected successfully");
+
+        return $successCount > 0 ? self::SUCCESS : self::FAILURE;
     }
 }

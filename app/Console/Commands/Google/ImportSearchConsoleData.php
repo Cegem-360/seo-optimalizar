@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands\Google;
 
 use App\Models\Project;
-use App\Services\GoogleSearchConsoleService;
+use App\Services\Api\ApiServiceManager;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -29,16 +29,9 @@ class ImportSearchConsoleData extends Command
     /**
      * Execute the console command.
      */
-    public function handle(GoogleSearchConsoleService $googleSearchConsoleService): int
+    public function handle(): int
     {
         $this->info('Starting Google Search Console data import...');
-
-        if (! $googleSearchConsoleService->hasCredentials()) {
-            $this->error('Google Search Console credentials not configured!');
-            $this->info('Please set GOOGLE_APPLICATION_CREDENTIALS in your .env file.');
-
-            return self::FAILURE;
-        }
 
         // Get projects to import for
         $projects = $this->option('project')
@@ -57,17 +50,26 @@ class ImportSearchConsoleData extends Command
             $this->info('Importing data for project: ' . $project->name);
 
             try {
-                $importedCount = $googleSearchConsoleService->importAndUpdateRankings($project);
+                $apiManager = new ApiServiceManager($project);
+
+                if (! $apiManager->hasService('google_search_console')) {
+                    $this->warn("Google Search Console not configured for project: {$project->name}");
+
+                    continue;
+                }
+
+                $gscService = $apiManager->getGoogleSearchConsole();
+                $importedCount = $gscService->importKeywords();
                 $totalImported += $importedCount;
 
-                $this->info(sprintf('✓ Imported %d ranking records for %s', $importedCount, $project->name));
+                $this->info(sprintf('✓ Imported %d keywords for %s', $importedCount, $project->name));
             } catch (Exception $e) {
                 $this->error(sprintf('✗ Error importing data for %s: ', $project->name) . $e->getMessage());
                 Log::error(sprintf('Search Console import error for project %s: ', $project->id) . $e->getMessage());
             }
         }
 
-        $this->info('Import completed! Total records imported: ' . $totalImported);
+        $this->info('Import completed! Total keywords imported: ' . $totalImported);
 
         return self::SUCCESS;
     }

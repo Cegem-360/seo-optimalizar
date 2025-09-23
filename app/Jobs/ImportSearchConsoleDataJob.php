@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Project;
-use App\Services\GoogleSearchConsoleService;
+use App\Services\Api\ApiServiceManager;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -19,16 +19,21 @@ class ImportSearchConsoleDataJob implements ShouldQueue
         public Project $project,
     ) {}
 
-    public function handle(GoogleSearchConsoleService $googleSearchConsoleService): void
+    public function handle(): void
     {
         try {
-            if (! $googleSearchConsoleService->hasCredentials()) {
-                Log::error('Google Search Console credentials not configured');
+            $apiManager = new ApiServiceManager($this->project);
+
+            if (! $apiManager->hasService('google_search_console')) {
+                Log::warning("Google Search Console not configured for project: {$this->project->name}");
 
                 return;
             }
 
-            $importedCount = $googleSearchConsoleService->importAndUpdateRankings($this->project);
+            $gscService = $apiManager->getGoogleSearchConsole();
+            $importedCount = $gscService->importKeywords();
+
+            Log::info("Search Console import completed for project {$this->project->name}: {$importedCount} keywords imported");
         } catch (Exception $exception) {
             Log::error(sprintf('Search Console import failed for project %s: ', $this->project->id) . $exception->getMessage());
             throw $exception;

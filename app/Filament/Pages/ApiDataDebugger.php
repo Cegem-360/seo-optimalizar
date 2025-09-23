@@ -10,7 +10,6 @@ use App\Services\Api\ApiServiceManager;
 use App\Services\Api\GoogleAdsApiService;
 use App\Services\Api\GoogleAnalyticsService;
 use App\Services\GoogleAdsService;
-use App\Services\GoogleSearchConsoleService;
 use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
@@ -21,9 +20,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Google\ApiCore\ApiException;
-use Google\Client as GoogleClient;
-use Google\Service\SearchConsole;
-use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use UnitEnum;
@@ -187,40 +183,21 @@ class ApiDataDebugger extends Page
                 throw new Exception('No project selected');
             }
 
-            $searchConsoleService = app(GoogleSearchConsoleService::class);
+            $apiManager = new ApiServiceManager($project);
 
-            if (! $searchConsoleService->hasCredentials()) {
-                throw new Exception('Google Search Console credentials not configured');
+            if (! $apiManager->hasService('google_search_console')) {
+                throw new Exception('Google Search Console not configured for this project');
             }
 
-            // Direct API call to get raw data
-            $googleClient = new GoogleClient();
-            $googleClient->setApplicationName('SEO Monitor Debug');
-            $googleClient->setScopes([SearchConsole::WEBMASTERS_READONLY]);
+            $gscService = $apiManager->getGoogleSearchConsole();
 
-            $credentialsPath = config('services.google.credentials_path');
-            if ($credentialsPath) {
-                $fullPath = base_path($credentialsPath);
-                if (file_exists($fullPath)) {
-                    $googleClient->setAuthConfig($fullPath);
-                    $googleClient->useApplicationDefaultCredentials();
-
-                    if ($subject = config('services.google.workspace_subject')) {
-                        $googleClient->setSubject($subject);
-                    }
-                }
-            }
-
-            $searchConsole = new SearchConsole($googleClient);
-
-            $searchAnalyticsQueryRequest = new SearchAnalyticsQueryRequest();
-            $searchAnalyticsQueryRequest->setStartDate(Carbon::parse($data['startDate'])->format('Y-m-d'));
-            $searchAnalyticsQueryRequest->setEndDate(Carbon::parse($data['endDate'])->format('Y-m-d'));
-            $searchAnalyticsQueryRequest->setDimensions(['query', 'page', 'country', 'device']);
-            $searchAnalyticsQueryRequest->setRowLimit($data['limit'] ?? 50);
-            $searchAnalyticsQueryRequest->setDataState('all'); // Include fresh data
-
-            $response = $searchConsole->searchanalytics->query($project->url, $searchAnalyticsQueryRequest);
+            // Use the Api service to get search analytics data
+            $searchAnalytics = $gscService->getSearchAnalytics(
+                ['query', 'page', 'country', 'device'],
+                Carbon::parse($data['startDate']),
+                Carbon::parse($data['endDate']),
+                $data['limit'] ?? 50,
+            );
 
             $this->searchConsoleData = [
                 'metadata' => [
@@ -228,7 +205,7 @@ class ApiDataDebugger extends Page
                     'start_date' => $data['startDate'],
                     'end_date' => $data['endDate'],
                     'row_limit' => $data['limit'],
-                    'total_rows' => count($response->getRows() ?? []),
+                    'total_rows' => $searchAnalytics->count(),
                 ],
                 'aggregated_metrics' => [
                     'total_clicks' => 0,
@@ -239,32 +216,32 @@ class ApiDataDebugger extends Page
                 'rows' => [],
             ];
 
-            if ($response->getRows()) {
+            if ($searchAnalytics->isNotEmpty()) {
                 $totalClicks = 0;
                 $totalImpressions = 0;
                 $totalCtr = 0;
                 $totalPosition = 0;
                 $rowCount = 0;
 
-                foreach ($response->getRows() as $row) {
-                    $keys = $row->getKeys();
+                foreach ($searchAnalytics as $row) {
+                    $keys = $row['keys'] ?? [];
                     $rowData = [
                         'query' => $keys[0] ?? 'N/A',
                         'page' => $keys[1] ?? 'N/A',
                         'country' => $keys[2] ?? 'N/A',
                         'device' => $keys[3] ?? 'N/A',
-                        'clicks' => $row->getClicks() ?? 0,
-                        'impressions' => $row->getImpressions() ?? 0,
-                        'ctr' => round(($row->getCtr() ?? 0) * 100, 2) . '%',
-                        'position' => round($row->getPosition() ?? 0, 1),
+                        'clicks' => $row['clicks'] ?? 0,
+                        'impressions' => $row['impressions'] ?? 0,
+                        'ctr' => round(($row['ctr'] ?? 0) * 100, 2) . '%',
+                        'position' => round($row['position'] ?? 0, 1),
                     ];
 
                     $this->searchConsoleData['rows'][] = $rowData;
 
-                    $totalClicks += $row->getClicks() ?? 0;
-                    $totalImpressions += $row->getImpressions() ?? 0;
-                    $totalCtr += $row->getCtr() ?? 0;
-                    $totalPosition += $row->getPosition() ?? 0;
+                    $totalClicks += $row['clicks'] ?? 0;
+                    $totalImpressions += $row['impressions'] ?? 0;
+                    $totalCtr += $row['ctr'] ?? 0;
+                    $totalPosition += $row['position'] ?? 0;
                     $rowCount++;
                 }
 

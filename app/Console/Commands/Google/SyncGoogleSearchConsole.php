@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands\Google;
 
 use App\Models\Project;
-use App\Services\GoogleSearchConsoleService;
+use App\Services\Api\ApiServiceManager;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -18,21 +18,8 @@ class SyncGoogleSearchConsole extends Command
 
     protected $description = 'Sync Google Search Console data for projects';
 
-    public function __construct(
-        private readonly GoogleSearchConsoleService $googleSearchConsoleService,
-    ) {
-        parent::__construct();
-    }
-
     public function handle(): int
     {
-        if (! $this->googleSearchConsoleService->hasCredentials()) {
-            $this->error('Google Search Console credentials are not configured.');
-            $this->warn('Please set up your Google Cloud credentials in the config/services.php file.');
-
-            return Command::FAILURE;
-        }
-
         if ($projectId = $this->option('project')) {
             $projects = Project::query()->where('id', $projectId)->get();
             if ($projects->isEmpty()) {
@@ -59,9 +46,18 @@ class SyncGoogleSearchConsole extends Command
             try {
                 $this->line(' Syncing project: ' . $project->name);
 
-                $importedCount = $this->googleSearchConsoleService->importAndUpdateRankings($project);
+                $apiManager = new ApiServiceManager($project);
 
-                $this->line(sprintf(' ✓ Imported %s ranking entries for %s', $importedCount, $project->name));
+                if (! $apiManager->hasService('google_search_console')) {
+                    $this->warn("Google Search Console not configured for project: {$project->name}");
+
+                    return;
+                }
+
+                $gscService = $apiManager->getGoogleSearchConsole();
+                $syncedCount = $gscService->syncKeywordRankings();
+
+                $this->line(sprintf(' ✓ Synced %s ranking entries for %s', $syncedCount, $project->name));
             } catch (Exception $exception) {
                 $this->error(sprintf(' ✗ Failed to sync %s: %s', $project->name, $exception->getMessage()));
 

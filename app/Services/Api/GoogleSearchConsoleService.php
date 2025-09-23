@@ -8,6 +8,9 @@ use App\Models\Keyword;
 use App\Models\SearchConsoleRanking;
 use Carbon\Carbon;
 use Exception;
+use Google\Client;
+use Google\Service\SearchConsole;
+use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -16,204 +19,56 @@ class GoogleSearchConsoleService extends BaseApiService
 {
     protected string $serviceName = 'google_search_console';
 
-    private string $baseUrl = 'https://www.googleapis.com/webmasters/v3';
+    private ?Client $client = null;
 
-    private ?string $accessToken = null;
+    private ?SearchConsole $service = null;
 
     protected function configureRequest(PendingRequest $pendingRequest): void
     {
-        // This method is overridden - we use direct cURL calls instead
+        // This method is overridden - we use Google API client instead
     }
 
-    private function makeApiRequest(string $method, string $url, array $data = []): array
+    private function getGoogleClient(): Client
     {
-        if ($this->accessToken === null || $this->accessToken === '' || $this->accessToken === '0') {
-            $this->refreshAccessToken();
+        if ($this->client !== null) {
+            return $this->client;
         }
-
-        $curl = curl_init();
-
-        $headers = [
-            'Authorization: Bearer ' . $this->accessToken,
-            'Accept: application/json',
-            'Content-Type: application/json',
-        ];
-
-        $curlOptions = [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CONNECTTIMEOUT => 10,
-        ];
-
-        if ($method === 'POST') {
-            $curlOptions[CURLOPT_POST] = true;
-            if ($data !== []) {
-                $curlOptions[CURLOPT_POSTFIELDS] = json_encode($data);
-            }
-        }
-
-        curl_setopt_array($curl, $curlOptions);
-
-        $response_body = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $error = curl_error($curl);
-        curl_close($curl);
-
-        if ($error !== '' && $error !== '0') {
-            throw new Exception('cURL error: ' . $error);
-        }
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            Log::error('Google Search Console - API request failed', [
-                'project_id' => $this->project->id,
-                'method' => $method,
-                'url' => $url,
-                'status' => $httpCode,
-                'body' => $response_body,
-            ]);
-            throw new Exception('API request failed. HTTP ' . $httpCode . ': ' . $response_body);
-        }
-
-        $data = json_decode($response_body, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception('Invalid JSON response: ' . json_last_error_msg());
-        }
-
-        return $data;
-    }
-
-    private function refreshAccessToken(): void
-    {
-        Log::info('Google Search Console - Getting service account access token', [
-            'project_id' => $this->project->id,
-            'service' => $this->serviceName,
-        ]);
 
         $serviceAccountJson = $this->getCredential('service_account_json');
-
-        Log::debug('Google Search Console - Service account check', [
-            'project_id' => $this->project->id,
-            'has_service_account' => ! empty($serviceAccountJson),
-            'service_account_email' => isset($serviceAccountJson['client_email']) ? substr((string) $serviceAccountJson['client_email'], 0, 20) . '...' : 'MISSING',
-        ]);
 
         if (! $serviceAccountJson || empty($serviceAccountJson['private_key']) || empty($serviceAccountJson['client_email'])) {
             throw new Exception('Missing Google Search Console service account credentials');
         }
 
-        // Create JWT token for Service Account authentication
-        $now = time();
-        $expiry = $now + 3600; // 1 hour
+        $this->client = new Client();
+        $this->client->setAuthConfig($serviceAccountJson);
+        $this->client->addScope(SearchConsole::WEBMASTERS_READONLY);
+        $this->client->useApplicationDefaultCredentials();
 
-        $header = rtrim(strtr(base64_encode(json_encode([
-            'alg' => 'RS256',
-            'typ' => 'JWT',
-        ])), '+/', '-_'), '=');
+        return $this->client;
+    }
 
-        $payload = rtrim(strtr(base64_encode(json_encode([
-            'iss' => $serviceAccountJson['client_email'],
-            'scope' => 'https://www.googleapis.com/auth/webmasters.readonly',
-            'aud' => 'https://oauth2.googleapis.com/token',
-            'exp' => $expiry,
-            'iat' => $now,
-        ])), '+/', '-_'), '=');
-
-        $signature_input = $header . '.' . $payload;
-
-        // Sign with private key
-        $private_key = $serviceAccountJson['private_key'];
-        openssl_sign($signature_input, $signature, $private_key, OPENSSL_ALGO_SHA256);
-        $signature = rtrim(strtr(base64_encode((string) $signature), '+/', '-_'), '=');
-
-        $jwt = $signature_input . '.' . $signature;
-
-        // Exchange JWT for access token
-        $postData = http_build_query([
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $jwt,
-        ]);
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://oauth2.googleapis.com/token',
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $postData,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/x-www-form-urlencoded',
-                'Content-Length: ' . strlen($postData),
-            ],
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CONNECTTIMEOUT => 10,
-        ]);
-
-        $response_body = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $error = curl_error($curl);
-        curl_close($curl);
-
-        if ($error !== '' && $error !== '0') {
-            Log::error('Google Search Console - cURL error during token refresh', [
-                'project_id' => $this->project->id,
-                'error' => $error,
-            ]);
-            throw new Exception('cURL error: ' . $error);
+    private function getSearchConsoleService(): SearchConsole
+    {
+        if ($this->service !== null) {
+            return $this->service;
         }
 
-        Log::debug('Google Search Console - Token refresh response', [
-            'project_id' => $this->project->id,
-            'status' => $httpCode,
-            'successful' => $httpCode === 200,
-        ]);
+        $client = $this->getGoogleClient();
+        $this->service = new SearchConsole($client);
 
-        if ($httpCode !== 200) {
-            Log::error('Google Search Console - Failed to refresh access token', [
-                'project_id' => $this->project->id,
-                'status' => $httpCode,
-                'body' => $response_body,
-            ]);
-            throw new Exception('Failed to refresh Google Search Console access token. HTTP ' . $httpCode . ': ' . $response_body);
-        }
-
-        $data = json_decode($response_body, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            Log::error('Google Search Console - Invalid JSON response', [
-                'project_id' => $this->project->id,
-                'json_error' => json_last_error_msg(),
-                'response_body' => $response_body,
-            ]);
-            throw new Exception('Invalid JSON response: ' . json_last_error_msg());
-        }
-
-        $this->accessToken = $data['access_token'];
-
-        Log::info('Google Search Console - Service account access token obtained successfully', [
-            'project_id' => $this->project->id,
-            'token_length' => strlen((string) $this->accessToken),
-        ]);
+        return $this->service;
     }
 
     public function testConnection(): bool
     {
-        Log::info('Google Search Console - Testing connection', [
-            'project_id' => $this->project->id,
-            'service' => $this->serviceName,
-        ]);
-
         try {
-            $data = $this->makeApiRequest('GET', $this->baseUrl . '/sites');
-
-            Log::info('Google Search Console - Connection test successful', [
-                'project_id' => $this->project->id,
-                'sites_count' => count($data['siteEntry'] ?? []),
-            ]);
+            $service = $this->getSearchConsoleService();
+            $service->sites->listSites();
 
             return true;
         } catch (Exception $exception) {
-            Log::error('Google Search Console - Connection test error', [
+            Log::error('Google Search Console - Connection test failed', [
                 'project_id' => $this->project->id,
                 'error' => $exception->getMessage(),
             ]);
@@ -224,9 +79,20 @@ class GoogleSearchConsoleService extends BaseApiService
 
     public function getSites(): Collection
     {
-        $data = $this->makeApiRequest('GET', $this->baseUrl . '/sites');
+        try {
+            $service = $this->getSearchConsoleService();
+            $sitesListResponse = $service->sites->listSites();
+            $sites = $sitesListResponse->getSiteEntry() ?? [];
 
-        return new Collection($data['siteEntry'] ?? []);
+            return new Collection($sites);
+        } catch (Exception $exception) {
+            Log::error('Google Search Console - Failed to get sites', [
+                'project_id' => $this->project->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function getSearchAnalytics(array $dimensions = ['query'], ?Carbon $startDate = null, ?Carbon $endDate = null, int $rowLimit = 1000): Collection
@@ -237,26 +103,49 @@ class GoogleSearchConsoleService extends BaseApiService
         $siteUrl = $this->project->url;
         $propertyUrl = $this->getCredential('property_url') ?? $siteUrl;
 
-        $payload = [
-            'startDate' => $startDate->format('Y-m-d'),
-            'endDate' => $endDate->format('Y-m-d'),
-            'dimensions' => $dimensions,
-            'rowLimit' => $rowLimit,
-            'startRow' => 0,
-        ];
+        try {
+            $service = $this->getSearchConsoleService();
 
-        Log::info('Google Search Console - Fetching search analytics', [
-            'project_id' => $this->project->id,
-            'site_url' => $propertyUrl,
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d'),
-            'dimensions' => $dimensions,
-            'row_limit' => $rowLimit,
-        ]);
+            $request = new SearchAnalyticsQueryRequest();
+            $request->setStartDate($startDate->format('Y-m-d'));
+            $request->setEndDate($endDate->format('Y-m-d'));
+            $request->setDimensions($dimensions);
+            $request->setRowLimit($rowLimit);
+            $request->setStartRow(0);
 
-        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
+            Log::info('Google Search Console - Fetching search analytics', [
+                'project_id' => $this->project->id,
+                'site_url' => $propertyUrl,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'dimensions' => $dimensions,
+                'row_limit' => $rowLimit,
+            ]);
 
-        return new Collection($data['rows'] ?? []);
+            $response = $service->searchanalytics->query($propertyUrl, $request);
+            $rows = $response->getRows() ?? [];
+
+            // Convert Google objects to arrays for consistency
+            $data = [];
+            foreach ($rows as $row) {
+                $data[] = [
+                    'keys' => $row->getKeys(),
+                    'clicks' => $row->getClicks(),
+                    'impressions' => $row->getImpressions(),
+                    'ctr' => $row->getCtr(),
+                    'position' => $row->getPosition(),
+                ];
+            }
+
+            return new Collection($data);
+        } catch (Exception $exception) {
+            Log::error('Google Search Console - Failed to get search analytics', [
+                'project_id' => $this->project->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function getKeywordData(Collection $keywords, ?Carbon $startDate = null, ?Carbon $endDate = null): Collection
@@ -271,43 +160,66 @@ class GoogleSearchConsoleService extends BaseApiService
         $endDate ??= now()->subDays(1);
         $propertyUrl = $this->getCredential('property_url') ?? $this->project->url;
 
-        // Get daily data with date dimension
-        $payload = [
-            'startDate' => $startDate->format('Y-m-d'),
-            'endDate' => $endDate->format('Y-m-d'),
-            'dimensions' => ['date', 'query', 'page'], // Add date dimension for daily data
-            'rowLimit' => 25000, // Increased limit to get more data
-        ];
+        try {
+            $service = $this->getSearchConsoleService();
 
-        $data = $this->makeApiRequest('POST', $this->baseUrl . '/sites/' . urlencode($propertyUrl) . '/searchAnalytics/query', $payload);
+            $request = new SearchAnalyticsQueryRequest();
+            $request->setStartDate($startDate->format('Y-m-d'));
+            $request->setEndDate($endDate->format('Y-m-d'));
+            $request->setDimensions(['date', 'query', 'page']); // Add date dimension for daily data
+            $request->setRowLimit(25000); // Increased limit to get more data
+            $request->setStartRow(0);
 
-        $allRows = new Collection($data['rows'] ?? []);
+            $response = $service->searchanalytics->query($propertyUrl, $request);
+            $rows = $response->getRows() ?? [];
 
-        // Filter the results to only include our keywords
-        $filteredRows = $allRows->filter(function (array $row) use ($keywordStrings): bool {
-            $query = $row['keys'][1] ?? ''; // Query is now at index 1 because date is at index 0
+            // Convert Google objects to arrays
+            $allRows = [];
+            foreach ($rows as $row) {
+                $allRows[] = [
+                    'keys' => $row->getKeys(),
+                    'clicks' => $row->getClicks(),
+                    'impressions' => $row->getImpressions(),
+                    'ctr' => $row->getCtr(),
+                    'position' => $row->getPosition(),
+                ];
+            }
 
-            return in_array($query, $keywordStrings, true);
-        });
+            $allRows = new Collection($allRows);
 
-        Log::debug('Google Search Console - Keyword data filtering', [
-            'project_id' => $this->project->id,
-            'total_rows' => $allRows->count(),
-            'filtered_rows' => $filteredRows->count(),
-            'our_keywords' => $keywordStrings,
-            'all_found_keywords' => $allRows->map(fn (array $row): string => $row['keys'][1] ?? 'UNKNOWN')->unique()->values()->toArray(),
-            'sample_raw_data' => $allRows->take(5)->toArray(),
-            'sample_filtered_data' => $filteredRows->take(5)->map(fn (array $row): array => [
-                'date' => $row['keys'][0] ?? 'UNKNOWN',
-                'keyword' => $row['keys'][1] ?? 'UNKNOWN',
-                'page' => $row['keys'][2] ?? 'unknown',
-                'clicks' => $row['clicks'] ?? 0,
-                'impressions' => $row['impressions'] ?? 0,
-                'position' => round($row['position'] ?? 0, 2),
-            ])->toArray(),
-        ]);
+            // Filter the results to only include our keywords
+            $filteredRows = $allRows->filter(function (array $row) use ($keywordStrings): bool {
+                $query = $row['keys'][1] ?? ''; // Query is now at index 1 because date is at index 0
 
-        return $filteredRows;
+                return in_array($query, $keywordStrings, true);
+            });
+
+            Log::debug('Google Search Console - Keyword data filtering', [
+                'project_id' => $this->project->id,
+                'total_rows' => $allRows->count(),
+                'filtered_rows' => $filteredRows->count(),
+                'our_keywords' => $keywordStrings,
+                'all_found_keywords' => $allRows->map(fn (array $row): string => $row['keys'][1] ?? 'UNKNOWN')->unique()->values()->toArray(),
+                'sample_raw_data' => $allRows->take(5)->toArray(),
+                'sample_filtered_data' => $filteredRows->take(5)->map(fn (array $row): array => [
+                    'date' => $row['keys'][0] ?? 'UNKNOWN',
+                    'keyword' => $row['keys'][1] ?? 'UNKNOWN',
+                    'page' => $row['keys'][2] ?? 'unknown',
+                    'clicks' => $row['clicks'] ?? 0,
+                    'impressions' => $row['impressions'] ?? 0,
+                    'position' => round($row['position'] ?? 0, 2),
+                ])->toArray(),
+            ]);
+
+            return $filteredRows;
+        } catch (Exception $exception) {
+            Log::error('Google Search Console - Failed to get keyword data', [
+                'project_id' => $this->project->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function syncKeywordRankings(): int
@@ -519,6 +431,20 @@ class GoogleSearchConsoleService extends BaseApiService
                     continue; // Skip empty or too short queries
                 }
 
+                // Determine priority based on performance data
+                $clicks = $row['clicks'] ?? 0;
+                $impressions = $row['impressions'] ?? 0;
+                $position = $row['position'] ?? 100;
+
+                $priority = 'low'; // default
+                if ($clicks > 0 && $position <= 20) {
+                    $priority = 'high'; // Has clicks and good position
+                } elseif ($impressions >= 100 && $position <= 30) {
+                    $priority = 'medium'; // Good impressions and decent position
+                } elseif ($clicks > 0 || ($impressions >= 50 && $position <= 50)) {
+                    $priority = 'medium'; // Some engagement or potential
+                }
+
                 // Import/update keyword using updateOrCreate
                 $keyword = Keyword::query()->updateOrCreate(
                     [
@@ -527,10 +453,10 @@ class GoogleSearchConsoleService extends BaseApiService
                     ],
                     [
                         'category' => 'imported',
-                        'priority' => 'low',
+                        'priority' => $priority,
                         'geo_target' => 'hun',
                         'intent_type' => 'informational',
-                        'search_volume' => $row['impressions'] ?? 0,
+                        'search_volume' => $impressions,
                         'difficulty' => null,
                         'last_updated' => now(),
                     ],
@@ -540,9 +466,10 @@ class GoogleSearchConsoleService extends BaseApiService
 
                 Log::debug('Google Search Console - Imported keyword', [
                     'keyword' => $query,
-                    'impressions' => $row['impressions'] ?? 0,
-                    'clicks' => $row['clicks'] ?? 0,
-                    'position' => $row['position'] ?? null,
+                    'priority' => $priority,
+                    'impressions' => $impressions,
+                    'clicks' => $clicks,
+                    'position' => $position,
                 ]);
             }
 
