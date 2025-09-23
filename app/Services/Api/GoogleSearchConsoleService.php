@@ -277,13 +277,12 @@ class GoogleSearchConsoleService extends BaseApiService
         $endDate ??= now()->subDays(1);
         $propertyUrl = $this->getCredential('property_url') ?? $this->project->url;
 
-        // Get aggregated data without date dimension for the period
+        // Get daily data with date dimension
         $payload = [
             'startDate' => $startDate->format('Y-m-d'),
             'endDate' => $endDate->format('Y-m-d'),
-            'dimensions' => ['query', 'page'], // Add page dimension to get URLs
+            'dimensions' => ['date', 'query', 'page'], // Add date dimension for daily data
             'rowLimit' => 25000, // Increased limit to get more data
-            'aggregationType' => 'byPage', // Aggregate by page
         ];
 
         Log::info('Google Search Console - Fetching keyword data', [
@@ -301,7 +300,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
         // Filter the results to only include our keywords
         $filteredRows = $allRows->filter(function ($row) use ($keywordStrings) {
-            $query = $row['keys'][0] ?? '';
+            $query = $row['keys'][1] ?? ''; // Query is now at index 1 because date is at index 0
 
             return in_array($query, $keywordStrings, true);
         });
@@ -311,8 +310,9 @@ class GoogleSearchConsoleService extends BaseApiService
             'total_rows' => $allRows->count(),
             'filtered_rows' => $filteredRows->count(),
             'detailed_results' => $filteredRows->take(10)->map(fn (array $row): array => [
-                'keyword' => $row['keys'][0] ?? 'UNKNOWN',
-                'page' => $row['keys'][1] ?? 'unknown',
+                'date' => $row['keys'][0] ?? 'UNKNOWN',
+                'keyword' => $row['keys'][1] ?? 'UNKNOWN',
+                'page' => $row['keys'][2] ?? 'unknown',
                 'clicks' => $row['clicks'] ?? 0,
                 'impressions' => $row['impressions'] ?? 0,
                 'ctr' => $row['ctr'] ?? 0,
@@ -359,18 +359,29 @@ class GoogleSearchConsoleService extends BaseApiService
                     'end_date' => $endDate->format('Y-m-d'),
                 ]);
 
+                // Process each keyword with daily data
                 foreach ($keywords as $keyword) {
-                    $analytics = $searchAnalytics->firstWhere('keys.0', $keyword->keyword);
+                    $keywordAnalytics = $searchAnalytics->filter(function ($row) use ($keyword) {
+                        return ($row['keys'][1] ?? '') === $keyword->keyword; // Query is at index 1 now
+                    });
 
-                    if ($analytics) {
-                        $this->createOrUpdateRanking($keyword, $analytics);
-                        $synced++;
+                    if ($keywordAnalytics->isNotEmpty()) {
+                        // Process each day's data for this keyword
+                        foreach ($keywordAnalytics as $dailyAnalytics) {
+                            $this->createOrUpdateRanking($keyword, $dailyAnalytics);
+                            $synced++;
 
-                        Log::debug('Google Search Console - Synced keyword', [
+                            Log::debug('Google Search Console - Synced keyword', [
+                                'keyword' => $keyword->keyword,
+                                'date' => $dailyAnalytics['keys'][0] ?? 'unknown',
+                                'position' => $dailyAnalytics['position'] ?? null,
+                                'clicks' => $dailyAnalytics['clicks'] ?? 0,
+                                'impressions' => $dailyAnalytics['impressions'] ?? 0,
+                            ]);
+                        }
+                    } else {
+                        Log::info('Google Search Console - No data found for keyword', [
                             'keyword' => $keyword->keyword,
-                            'position' => $analytics['position'] ?? null,
-                            'clicks' => $analytics['clicks'] ?? 0,
-                            'impressions' => $analytics['impressions'] ?? 0,
                         ]);
                     }
                 }
@@ -387,15 +398,21 @@ class GoogleSearchConsoleService extends BaseApiService
 
     private function createOrUpdateRanking(Keyword $keyword, array $analytics): void
     {
+        $date = $analytics['keys'][0] ?? now()->format('Y-m-d'); // Date is at index 0
         $position = $analytics['position'] ?? null;
         $clicks = $analytics['clicks'] ?? 0;
         $impressions = $analytics['impressions'] ?? 0;
         $ctr = $analytics['ctr'] ?? 0;
-        $page = $analytics['keys'][1] ?? 'unknown'; // Get the page URL from keys array
+        $page = $analytics['keys'][2] ?? 'unknown'; // Page URL is now at index 2
 
-        // Get the latest ranking to compare positions
+        // Get the latest ranking for this keyword to compare positions
         /** @var SearchConsoleRanking|null $latestRanking */
-        $latestRanking = $keyword->project->searchConsoleRankings()->where('query', $keyword->keyword)->latest('fetched_at')->first();
+        $latestRanking = $keyword->project->searchConsoleRankings()
+            ->where('query', $keyword->keyword)
+            ->where('date_from', '<', $date)
+            ->latest('date_from')
+            ->first();
+
         $previousPosition = $latestRanking ? (float) $latestRanking->position : null;
 
         // Calculate position change
@@ -417,9 +434,9 @@ class GoogleSearchConsoleService extends BaseApiService
             'clicks' => $clicks ?? 0,
             'impressions' => $impressions ?? 0,
             'ctr' => $ctr ?? 0,
-            'date_from' => now()->subDays(7)->format('Y-m-d'),
-            'date_to' => now()->subDays(1)->format('Y-m-d'),
-            'days_count' => 7,
+            'date_from' => $date,
+            'date_to' => $date, // For daily data, from and to are the same
+            'days_count' => 1, // Daily data is 1 day
             'device' => 'desktop',
             'country' => 'hun',
             'fetched_at' => now(),
