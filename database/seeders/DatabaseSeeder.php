@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // Create admin user
         $user = User::query()->create([
             'name' => 'Admin User',
-            'email' => 'admin@admin.com',
+            'email' => 'info@cegem360.hu',
             'password' => $this->hasher->make('password'),
             'email_verified_at' => now(),
         ]);
