@@ -9,6 +9,7 @@ use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Sleep;
 
 class PageSpeedInsightsService extends BaseApiService
 {
@@ -168,7 +169,7 @@ class PageSpeedInsightsService extends BaseApiService
 
     public function analyzeBothStrategies(?string $url = null): array
     {
-        $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
+        $url = ! in_array($url, [null, '', '0'], true) ? $url : $this->project->url;
 
         $results = [
             'mobile' => $this->analyzeUrl($url, 'mobile'),
@@ -176,14 +177,14 @@ class PageSpeedInsightsService extends BaseApiService
         ];
 
         // Add a small delay between requests to respect rate limits
-        sleep(1);
+        Sleep::sleep(1);
 
         return $results;
     }
 
     public function getCoreWebVitals(?string $url = null, string $strategy = 'mobile'): array
     {
-        $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
+        $url = ! in_array($url, [null, '', '0'], true) ? $url : $this->project->url;
         $analysis = $this->analyzeUrl($url, $strategy);
 
         $coreWebVitals = [];
@@ -251,7 +252,7 @@ class PageSpeedInsightsService extends BaseApiService
 
     public function getOptimizationSuggestions(?string $url = null, string $strategy = 'mobile'): Collection
     {
-        $url = $url !== null && $url !== '' && $url !== '0' ? $url : $this->project->url;
+        $url = ! in_array($url, [null, '', '0'], true) ? $url : $this->project->url;
         $analysis = $this->analyzeUrl($url, $strategy);
 
         $suggestions = new Collection();

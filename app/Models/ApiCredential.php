@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\File;
 
 /**
  * @property-read Project|null $project
@@ -111,7 +112,7 @@ class ApiCredential extends Model
         if ($this->service_account_file) {
             $path = storage_path('app/service-accounts/' . $this->service_account_file);
             if (file_exists($path)) {
-                unlink($path);
+                File::delete($path);
             }
         }
     }

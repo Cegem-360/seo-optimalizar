@@ -20,7 +20,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Google\ApiCore\ApiException;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use UnitEnum;
 
@@ -54,8 +54,8 @@ class ApiDataDebugger extends Page
 
     public function mount(): void
     {
-        $this->dateFrom = Carbon::now()->subDays(7)->format('Y-m-d');
-        $this->dateTo = Carbon::now()->format('Y-m-d');
+        $this->dateFrom = Date::now()->subDays(7)->format('Y-m-d');
+        $this->dateTo = Date::now()->format('Y-m-d');
     }
 
     protected function getHeaderActions(): array
@@ -66,8 +66,8 @@ class ApiDataDebugger extends Page
                 ->icon('heroicon-o-magnifying-glass')
                 ->color('primary')
                 ->fillForm([
-                    'startDate' => Carbon::now()->subDays(7),
-                    'endDate' => Carbon::now(),
+                    'startDate' => Date::now()->subDays(7),
+                    'endDate' => Date::now(),
                     'limit' => 50,
                 ])
                 ->schema([
@@ -91,8 +91,8 @@ class ApiDataDebugger extends Page
                 ->icon('heroicon-o-chart-bar')
                 ->color('success')
                 ->fillForm([
-                    'startDate' => Carbon::now()->subDays(7),
-                    'endDate' => Carbon::now(),
+                    'startDate' => Date::now()->subDays(7),
+                    'endDate' => Date::now(),
                 ])
                 ->schema([
                     DatePicker::make('startDate')
@@ -111,8 +111,8 @@ class ApiDataDebugger extends Page
                 ->icon('heroicon-o-currency-dollar')
                 ->color('warning')
                 ->fillForm([
-                    'startDate' => Carbon::now()->subDays(7),
-                    'endDate' => Carbon::now(),
+                    'startDate' => Date::now()->subDays(7),
+                    'endDate' => Date::now(),
                     'limit' => 10,
                     'use_project_keywords' => true,
                     'save_to_database' => false,
@@ -194,8 +194,8 @@ class ApiDataDebugger extends Page
             // Use the Api service to get search analytics data
             $searchAnalytics = $gscService->getSearchAnalytics(
                 ['query', 'page', 'country', 'device'],
-                Carbon::parse($data['startDate']),
-                Carbon::parse($data['endDate']),
+                Date::parse($data['startDate']),
+                Date::parse($data['endDate']),
                 $data['limit'] ?? 50,
             );
 
@@ -290,8 +290,8 @@ class ApiDataDebugger extends Page
             }
 
             // Use the comprehensive data fetching method
-            $startDate = Carbon::parse($data['startDate']);
-            $endDate = Carbon::parse($data['endDate']);
+            $startDate = Date::parse($data['startDate']);
+            $endDate = Date::parse($data['endDate']);
 
             $this->analyticsData = $analytics->getAllGA4Data($startDate, $endDate);
             $this->selectedService = 'analytics';
@@ -489,8 +489,8 @@ class ApiDataDebugger extends Page
             // Save to database if requested
             if ($data['save_to_database'] ?? false) {
                 try {
-                    $googleAdsService = app(GoogleAdsService::class);
-                    $reportDate = Carbon::today();
+                    $googleAdsService = resolve(GoogleAdsService::class);
+                    $reportDate = Date::today();
 
                     $report = $googleAdsService->storeGoogleAdsReport($project, $debugData, $reportDate);
 
@@ -563,7 +563,7 @@ class ApiDataDebugger extends Page
 
         // Use custom keywords from text input
         if (! empty($data['custom_keywords'])) {
-            $keywords = array_map('trim', explode(',', (string) $data['custom_keywords']));
+            $keywords = array_map(trim(...), explode(',', (string) $data['custom_keywords']));
 
             return array_slice(array_filter($keywords), 0, $limit);
         }

@@ -6,9 +6,9 @@ namespace App\Filament\Widgets;
 
 use App\Models\Project;
 use App\Models\SearchConsoleRanking;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Date;
 
 class RankingTrendsChart extends ChartWidget
 {
@@ -29,7 +29,7 @@ class RankingTrendsChart extends ChartWidget
         $labels = [];
 
         for ($i = 29; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
+            $date = Date::now()->subDays($i);
             $labels[] = $date->format('M j');
 
             $avgPosition = SearchConsoleRanking::query()

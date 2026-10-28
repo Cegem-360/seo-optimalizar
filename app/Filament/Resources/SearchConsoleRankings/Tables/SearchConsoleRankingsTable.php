@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\SearchConsoleRankings\Tables;
 
-use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -20,6 +19,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Date;
 
 class SearchConsoleRankingsTable
 {
@@ -171,7 +171,7 @@ class SearchConsoleRankingsTable
                 TextColumn::make('country')
                     ->label('Country')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => strtoupper((string) $state)),
+                    ->formatStateUsing(fn ($state): string => strtoupper((string) $state)),
 
                 TextColumn::make('fetched_at')
                     ->label('Fetched')
@@ -204,10 +204,10 @@ class SearchConsoleRankingsTable
                     ->schema([
                         DatePicker::make('date_from')
                             ->label('From')
-                            ->default(Carbon::now()->subDays(30)),
+                            ->default(Date::now()->subDays(30)),
                         DatePicker::make('date_to')
                             ->label('To')
-                            ->default(Carbon::now()),
+                            ->default(Date::now()),
                     ])
                     ->query(fn (Builder $builder, array $data): Builder => $builder
                         ->when(
@@ -222,12 +222,12 @@ class SearchConsoleRankingsTable
                         $indicators = [];
 
                         if ($data['date_from'] ?? null) {
-                            $indicators[] = Indicator::make('From: ' . Carbon::parse($data['date_from'])->format('M d, Y'))
+                            $indicators[] = Indicator::make('From: ' . Date::parse($data['date_from'])->format('M d, Y'))
                                 ->removeField('date_from');
                         }
 
                         if ($data['date_to'] ?? null) {
-                            $indicators[] = Indicator::make('To: ' . Carbon::parse($data['date_to'])->format('M d, Y'))
+                            $indicators[] = Indicator::make('To: ' . Date::parse($data['date_to'])->format('M d, Y'))
                                 ->removeField('date_to');
                         }
 
@@ -298,7 +298,7 @@ class SearchConsoleRankingsTable
                 // Recent Filter
                 Filter::make('recent')
                     ->label('Recent (Last 7 days)')
-                    ->query(fn (Builder $builder): Builder => $builder->where('fetched_at', '>=', Carbon::now()->subDays(7))),
+                    ->query(fn (Builder $builder): Builder => $builder->where('fetched_at', '>=', Date::now()->subDays(7))),
             ])
             ->recordActions([
                 ViewAction::make(),

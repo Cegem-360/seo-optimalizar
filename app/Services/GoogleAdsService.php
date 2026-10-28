@@ -8,12 +8,13 @@ use App\Models\GoogleAdsReport;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Date;
 
 class GoogleAdsService
 {
     public function storeGoogleAdsReport(Project $project, array $googleAdsData, ?Carbon $reportDate = null): GoogleAdsReport
     {
-        $reportDate ??= Carbon::today();
+        $reportDate ??= Date::today();
 
         // Create or update the Google Ads report
         $googleAdsReport = GoogleAdsReport::query()->updateOrCreate([
@@ -34,7 +35,7 @@ class GoogleAdsService
     public function getLatestReport(Project $project): ?GoogleAdsReport
     {
         return GoogleAdsReport::query()->where('project_id', $project->id)
-            ->orderByDesc('report_date')
+            ->latest('report_date')
             ->first();
     }
 
@@ -42,14 +43,14 @@ class GoogleAdsService
     {
         return GoogleAdsReport::query()->where('project_id', $project->id)
             ->whereBetween('report_date', [$startDate->toDateString(), $endDate->toDateString()])
-            ->orderBy('report_date')
+            ->oldest('report_date')
             ->get();
     }
 
     public function getKeywordPerformanceAnalysis(Project $project, int $days = 30): array
     {
-        $startDate = Carbon::now()->subDays($days);
-        $reports = $this->getReportsForDateRange($project, $startDate, Carbon::now());
+        $startDate = Date::now()->subDays($days);
+        $reports = $this->getReportsForDateRange($project, $startDate, Date::now());
 
         $keywordAnalysis = [];
 
@@ -57,17 +58,15 @@ class GoogleAdsService
             if (! empty($report->keyword_data)) {
                 foreach ($report->keyword_data as $keyword) {
                     $keywordText = $keyword['keyword'] ?? '';
-                    if (! isset($keywordAnalysis[$keywordText])) {
-                        $keywordAnalysis[$keywordText] = [
-                            'keyword' => $keywordText,
-                            'avg_search_volume' => 0,
-                            'avg_difficulty' => 0,
-                            'avg_competition' => 0,
-                            'min_cpc' => null,
-                            'max_cpc' => null,
-                            'reports_count' => 0,
-                        ];
-                    }
+                    $keywordAnalysis[$keywordText] ??= [
+                        'keyword' => $keywordText,
+                        'avg_search_volume' => 0,
+                        'avg_difficulty' => 0,
+                        'avg_competition' => 0,
+                        'min_cpc' => null,
+                        'max_cpc' => null,
+                        'reports_count' => 0,
+                    ];
 
                     $analysis = &$keywordAnalysis[$keywordText];
                     $analysis['avg_search_volume'] += $keyword['search_volume'] ?? 0;

@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Sleep;
 
 class PageSpeedMonitor extends Command
 {
@@ -119,7 +120,7 @@ class PageSpeedMonitor extends Command
 
                 // Small delay between requests to respect rate limits
                 if (count($strategies) > 1) {
-                    sleep(2);
+                    Sleep::sleep(2);
                 }
             }
 

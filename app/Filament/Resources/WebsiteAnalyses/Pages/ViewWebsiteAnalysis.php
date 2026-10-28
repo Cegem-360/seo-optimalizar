@@ -164,7 +164,7 @@ class ViewWebsiteAnalysis extends ViewRecord
     private function runReanalysis(): void
     {
         try {
-            $service = app(WebsiteAnalysisService::class);
+            $service = resolve(WebsiteAnalysisService::class);
 
             /** @var WebsiteAnalysis $record */
             $record = $this->record;

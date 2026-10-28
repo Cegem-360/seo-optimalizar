@@ -44,7 +44,7 @@ Route::get('/auth/google', function () {
 })->name('auth.google');
 
 Route::get('/auth/google/callback', function (Request $request) {
-    $code = $request->get('code');
+    $code = $request->input('code');
 
     if (! $code) {
         return redirect('/admin')->with('error', 'Authorization failed');

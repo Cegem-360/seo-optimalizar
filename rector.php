@@ -14,7 +14,6 @@ use Rector\Php70\Rector\Ternary\TernaryToSpaceshipRector;
 use Rector\Php70\Rector\Variable\WrapVariableVariableNameInCurlyBracesRector;
 use Rector\Php74\Rector\Assign\NullCoalescingOperatorRector;
 use Rector\Strict\Rector\Empty_\DisallowedEmptyRuleFixerRector;
-use Rector\Strict\Rector\Ternary\BooleanInTernaryOperatorRuleFixerRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 use RectorLaravel\Rector\MethodCall\AvoidNegatedCollectionFilterOrRejectRector;
 use RectorLaravel\Set\LaravelLevelSetList;
@@ -71,7 +70,6 @@ return RectorConfig::configure()
         TernaryToSpaceshipRector::class,
         WrapVariableVariableNameInCurlyBracesRector::class,
         NullCoalescingOperatorRector::class,
-        BooleanInTernaryOperatorRuleFixerRector::class,
     ])
     ->withSets([
         LaravelLevelSetList::UP_TO_LARAVEL_120,
@@ -91,7 +89,4 @@ return RectorConfig::configure()
         typeDeclarations: true,
         privatization: true,
         naming: false,
-        instanceOf: true,
-        earlyReturn: true,
-        strictBooleans: true,
     );

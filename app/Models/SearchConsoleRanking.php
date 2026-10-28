@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Database\Factories\SearchConsoleRankingFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Date;
 
 class SearchConsoleRanking extends Model
 {
@@ -123,8 +123,8 @@ class SearchConsoleRanking extends Model
     {
         return Attribute::make(
             get: function (): string {
-                $from = Carbon::parse($this->date_from)->format('M d, Y');
-                $to = Carbon::parse($this->date_to)->format('M d, Y');
+                $from = Date::parse($this->date_from)->format('M d, Y');
+                $to = Date::parse($this->date_to)->format('M d, Y');
 
                 if ($from === $to) {
                     return $from;
@@ -145,7 +145,7 @@ class SearchConsoleRanking extends Model
     #[Scope]
     protected function currentPeriod(Builder $builder): Builder
     {
-        return $builder->whereDate('date_to', '>=', Carbon::now()->subDays(30));
+        return $builder->whereDate('date_to', '>=', Date::now()->subDays(30));
     }
 
     #[Scope]

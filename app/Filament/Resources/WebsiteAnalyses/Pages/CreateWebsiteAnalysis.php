@@ -70,7 +70,7 @@ class CreateWebsiteAnalysis extends CreateRecord
     private function runAnalysis(WebsiteAnalysis $websiteAnalysis): void
     {
         try {
-            $service = app(WebsiteAnalysisService::class);
+            $service = resolve(WebsiteAnalysisService::class);
             $service->runAiAnalysis($websiteAnalysis);
 
             Notification::make()

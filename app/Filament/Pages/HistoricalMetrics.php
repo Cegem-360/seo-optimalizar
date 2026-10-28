@@ -11,7 +11,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use UnitEnum;
 
 class HistoricalMetrics extends Page
@@ -49,8 +49,8 @@ class HistoricalMetrics extends Page
             })
             ->toArray();
 
-        $this->dateFrom = Carbon::now()->subMonths(12)->format('Y-m-d');
-        $this->dateTo = Carbon::now()->format('Y-m-d');
+        $this->dateFrom = Date::now()->subMonths(12)->format('Y-m-d');
+        $this->dateTo = Date::now()->format('Y-m-d');
     }
 
     protected function getHeaderActions(): array
@@ -126,8 +126,8 @@ class HistoricalMetrics extends Page
 
         // Szűrés dátum alapján ha szükséges
         $filteredData = [];
-        $fromDate = Carbon::parse($this->dateFrom);
-        $toDate = Carbon::parse($this->dateTo);
+        $fromDate = Date::parse($this->dateFrom);
+        $toDate = Date::parse($this->dateTo);
 
         foreach ($monthlyData as $entry) {
             if (! is_array($entry)) {
@@ -146,7 +146,7 @@ class HistoricalMetrics extends Page
                 continue;
             }
 
-            $entryDate = Carbon::createFromDate($entry['year'], $entry['month'], 1);
+            $entryDate = Date::createFromDate($entry['year'], $entry['month'], 1);
 
             if ($entryDate->between($fromDate, $toDate)) {
                 $filteredData[] = [

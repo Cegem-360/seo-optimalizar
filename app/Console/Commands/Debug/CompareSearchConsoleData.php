@@ -7,9 +7,9 @@ namespace App\Console\Commands\Debug;
 use App\Models\ApiCredential;
 use App\Models\Project;
 use App\Services\Api\GoogleSearchConsoleService;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class CompareSearchConsoleData extends Command
@@ -67,12 +67,12 @@ class CompareSearchConsoleData extends Command
 
         // Date range
         $startDate = $this->option('start-date')
-            ? Carbon::parse($this->option('start-date'))
-            : Carbon::now()->subDays(7);
+            ? Date::parse($this->option('start-date'))
+            : Date::now()->subDays(7);
 
         $endDate = $this->option('end-date')
-            ? Carbon::parse($this->option('end-date'))
-            : Carbon::now()->subDays(1);
+            ? Date::parse($this->option('end-date'))
+            : Date::now()->subDays(1);
 
         $this->info(sprintf('Date range: %s to %s', $startDate->format('Y-m-d'), $endDate->format('Y-m-d')));
         $this->newLine();

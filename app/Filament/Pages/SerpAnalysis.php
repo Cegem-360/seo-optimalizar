@@ -18,6 +18,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Sleep;
 use UnitEnum;
 
 /**
@@ -189,7 +190,7 @@ class SerpAnalysis extends Page implements HasSchemas
 
                 // Kis szünet API rate limiting miatt
                 if (count($keywords) > 1) {
-                    sleep(1);
+                    Sleep::sleep(1);
                 }
             }
 

@@ -8,12 +8,13 @@ use App\Models\AnalyticsReport;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Date;
 
 class AnalyticsService
 {
     public function storeAnalyticsReport(Project $project, array $analyticsData, ?Carbon $reportDate = null): AnalyticsReport
     {
-        $reportDate ??= Carbon::yesterday();
+        $reportDate ??= Date::yesterday();
 
         // Extract overview data
         $overview = $analyticsData['overview'] ?? [];
@@ -46,7 +47,7 @@ class AnalyticsService
     public function getLatestReport(Project $project): ?AnalyticsReport
     {
         return AnalyticsReport::query()->where('project_id', $project->id)
-            ->orderByDesc('report_date')
+            ->latest('report_date')
             ->first();
     }
 
@@ -54,13 +55,13 @@ class AnalyticsService
     {
         return AnalyticsReport::query()->where('project_id', $project->id)
             ->whereBetween('report_date', [$startDate->toDateString(), $endDate->toDateString()])
-            ->orderBy('report_date')
+            ->oldest('report_date')
             ->get();
     }
 
     public function getMonthlyTrends(Project $project, int $months = 3): array
     {
-        $endDate = Carbon::now();
+        $endDate = Date::now();
         $startDate = $endDate->copy()->subMonths($months);
 
         $reports = $this->getReportsForDateRange($project, $startDate, $endDate);
@@ -99,8 +100,8 @@ class AnalyticsService
 
     public function getTopPerformingPages(Project $project, int $days = 30): array
     {
-        $startDate = Carbon::now()->subDays($days);
-        $reports = $this->getReportsForDateRange($project, $startDate, Carbon::now());
+        $startDate = Date::now()->subDays($days);
+        $reports = $this->getReportsForDateRange($project, $startDate, Date::now());
 
         $allPages = [];
 
@@ -108,17 +109,15 @@ class AnalyticsService
             if (! empty($report->top_pages)) {
                 foreach ($report->top_pages as $page) {
                     $path = $page['pagePath'] ?? '';
-                    if (! isset($allPages[$path])) {
-                        $allPages[$path] = [
-                            'pagePath' => $path,
-                            'pageTitle' => $page['pageTitle'] ?? '',
-                            'total_page_views' => 0,
-                            'total_sessions' => 0,
-                            'avg_bounce_rate' => 0,
-                            'avg_session_duration' => 0,
-                            'days_count' => 0,
-                        ];
-                    }
+                    $allPages[$path] ??= [
+                        'pagePath' => $path,
+                        'pageTitle' => $page['pageTitle'] ?? '',
+                        'total_page_views' => 0,
+                        'total_sessions' => 0,
+                        'avg_bounce_rate' => 0,
+                        'avg_session_duration' => 0,
+                        'days_count' => 0,
+                    ];
 
                     $allPages[$path]['total_page_views'] += $page['screenPageViews'] ?? 0;
                     $allPages[$path]['total_sessions'] += $page['sessions'] ?? 0;
@@ -146,8 +145,8 @@ class AnalyticsService
 
     public function getTrafficSourceAnalysis(Project $project, int $days = 30): array
     {
-        $startDate = Carbon::now()->subDays($days);
-        $reports = $this->getReportsForDateRange($project, $startDate, Carbon::now());
+        $startDate = Date::now()->subDays($days);
+        $reports = $this->getReportsForDateRange($project, $startDate, Date::now());
 
         $sources = [];
         $totalSessions = 0;
@@ -156,16 +155,14 @@ class AnalyticsService
             if (! empty($report->traffic_sources)) {
                 foreach ($report->traffic_sources as $source) {
                     $channel = $source['sessionDefaultChannelGroup'] ?? 'Unknown';
-                    if (! isset($sources[$channel])) {
-                        $sources[$channel] = [
-                            'channel' => $channel,
-                            'total_sessions' => 0,
-                            'total_users' => 0,
-                            'avg_bounce_rate' => 0,
-                            'total_conversions' => 0,
-                            'days_count' => 0,
-                        ];
-                    }
+                    $sources[$channel] ??= [
+                        'channel' => $channel,
+                        'total_sessions' => 0,
+                        'total_users' => 0,
+                        'avg_bounce_rate' => 0,
+                        'total_conversions' => 0,
+                        'days_count' => 0,
+                    ];
 
                     $sessions = $source['sessions'] ?? 0;
                     $sources[$channel]['total_sessions'] += $sessions;

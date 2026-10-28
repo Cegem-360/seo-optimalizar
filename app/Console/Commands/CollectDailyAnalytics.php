@@ -10,6 +10,7 @@ use App\Services\Api\GoogleAnalyticsService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class CollectDailyAnalytics extends Command
@@ -34,8 +35,8 @@ class CollectDailyAnalytics extends Command
     public function handle(AnalyticsService $analyticsService): int
     {
         $date = $this->option('date')
-            ? Carbon::createFromFormat('Y-m-d', $this->option('date'))
-            : Carbon::yesterday();
+            ? Date::createFromFormat('Y-m-d', $this->option('date'))
+            : Date::yesterday();
 
         $projectId = $this->option('project');
 
@@ -278,7 +279,7 @@ class CollectDailyAnalytics extends Command
      */
     public function storeManualData(Project $project, array $analyticsData, ?Carbon $date = null): void
     {
-        $analyticsService = app(AnalyticsService::class);
+        $analyticsService = resolve(AnalyticsService::class);
         $analyticsService->storeAnalyticsReport($project, $analyticsData, $date);
         $this->info('Manual analytics data stored for project ' . $project->name);
     }

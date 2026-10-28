@@ -15,6 +15,7 @@ use Google\Client as GoogleClient;
 use Google\Service\SearchConsole;
 use Google\Service\SearchConsole\SearchAnalyticsQueryRequest;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class GoogleSearchConsoleService
@@ -61,8 +62,8 @@ class GoogleSearchConsoleService
     public function getPerformanceData(Project $project, array $keywords = [], ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         try {
-            $startDate ??= Carbon::now()->subDays(30);
-            $endDate ??= Carbon::now()->subDay();
+            $startDate ??= Date::now()->subDays(30);
+            $endDate ??= Date::now()->subDay();
 
             $searchAnalyticsQueryRequest = new SearchAnalyticsQueryRequest();
             $searchAnalyticsQueryRequest->setStartDate($startDate->format('Y-m-d'));

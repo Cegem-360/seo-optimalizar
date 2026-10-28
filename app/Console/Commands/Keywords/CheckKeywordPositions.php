@@ -36,7 +36,7 @@ class CheckKeywordPositions extends Command
             $this->info('Dispatching position check job for project: ' . $project->name);
 
             try {
-                ImportSearchConsoleDataJob::dispatch($project);
+                dispatch(new ImportSearchConsoleDataJob($project));
                 $totalDispatched++;
 
                 $this->info('✓ Job dispatched for ' . $project->name);

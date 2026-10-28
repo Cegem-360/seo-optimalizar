@@ -73,8 +73,8 @@ class GoogleAdsOAuthController extends Controller
     public function start(Request $request, GoogleAdsOAuthService $googleAdsOAuthService)
     {
         // Get client credentials from request or session
-        $clientId = $request->get('client_id') ?? $request->session()->get('google_ads_oauth_client_id');
-        $clientSecret = $request->get('client_secret') ?? $request->session()->get('google_ads_oauth_client_secret');
+        $clientId = $request->input('client_id') ?? $request->session()->get('google_ads_oauth_client_id');
+        $clientSecret = $request->input('client_secret') ?? $request->session()->get('google_ads_oauth_client_secret');
 
         if (! $clientId || ! $clientSecret) {
             return $this->redirector->to('/admin/api-credentials')->with('error',
@@ -117,12 +117,12 @@ class GoogleAdsOAuthController extends Controller
             if ($request->has('error')) {
                 return $this->renderOAuthResult([
                     'success' => false,
-                    'error' => $request->get('error_description', 'OAuth authorization was denied'),
+                    'error' => $request->input('error_description', 'OAuth authorization was denied'),
                 ]);
             }
 
             // Validate state
-            $receivedState = $request->get('state');
+            $receivedState = $request->input('state');
             $savedState = $request->session()->get('google_ads_oauth_state');
 
             if (! $request->has('state') || ! $googleAdsOAuthService->validateState($receivedState, $request)) {
@@ -133,7 +133,7 @@ class GoogleAdsOAuthController extends Controller
             }
 
             // Get the authorization code
-            $code = $request->get('code');
+            $code = $request->input('code');
             if (! $code) {
                 return $this->renderOAuthResult([
                     'success' => false,

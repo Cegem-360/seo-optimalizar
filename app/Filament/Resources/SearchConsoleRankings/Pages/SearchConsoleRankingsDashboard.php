@@ -9,7 +9,6 @@ use App\Filament\Resources\SearchConsoleRankings\Widgets\ClicksPerformanceWidget
 use App\Filament\Resources\SearchConsoleRankings\Widgets\PositionDistributionWidget;
 use App\Filament\Resources\SearchConsoleRankings\Widgets\SearchConsoleOverviewWidget;
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
@@ -17,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Date;
 
 class SearchConsoleRankingsDashboard extends Page
 {
@@ -39,8 +39,8 @@ class SearchConsoleRankingsDashboard extends Page
     public function mount(): void
     {
         $this->filters = [
-            'date_from' => Carbon::now()->subDays(30)->format('Y-m-d'),
-            'date_to' => Carbon::now()->format('Y-m-d'),
+            'date_from' => Date::now()->subDays(30)->format('Y-m-d'),
+            'date_to' => Date::now()->format('Y-m-d'),
             'device' => 'all',
             'country' => 'all',
             'position_range' => 'all',
@@ -62,10 +62,10 @@ class SearchConsoleRankingsDashboard extends Page
                 ->schema([
                     DatePicker::make('date_from')
                         ->label('From Date')
-                        ->default(Carbon::now()->subDays(30)),
+                        ->default(Date::now()->subDays(30)),
                     DatePicker::make('date_to')
                         ->label('To Date')
-                        ->default(Carbon::now()),
+                        ->default(Date::now()),
                     Select::make('device')
                         ->label('Device')
                         ->options([

@@ -516,7 +516,7 @@ class GeminiApiService extends BaseApiService
             /** @var Collection<int, SearchConsoleRanking> $rankings */
             $rankings = $this->project->searchConsoleRankings()
                 ->where('query', $keyword->keyword)
-                ->orderBy('fetched_at', 'desc')
+                ->latest('fetched_at')
                 ->limit(10)
                 ->get();
 

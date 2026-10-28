@@ -6,10 +6,10 @@ namespace App\Filament\Resources\PageSpeedResults\Widgets;
 
 use App\Models\PageSpeedResult;
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Date;
 
 class PageSpeedTrendChart extends ChartWidget
 {
@@ -66,7 +66,7 @@ class PageSpeedTrendChart extends ChartWidget
                     'tension' => 0.3,
                 ],
             ],
-            'labels' => $results->map(fn (PageSpeedResult $pageSpeedResult): string => $pageSpeedResult->analyzed_at ? Carbon::parse($pageSpeedResult->analyzed_at)->format('M d, H:i') : '')->toArray(),
+            'labels' => $results->map(fn (PageSpeedResult $pageSpeedResult): string => $pageSpeedResult->analyzed_at ? Date::parse($pageSpeedResult->analyzed_at)->format('M d, H:i') : '')->toArray(),
         ];
     }
 

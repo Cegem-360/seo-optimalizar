@@ -48,7 +48,7 @@ class EditWebsiteAnalysis extends EditRecord
     private function runReanalysis(): void
     {
         try {
-            $service = app(WebsiteAnalysisService::class);
+            $service = resolve(WebsiteAnalysisService::class);
 
             /** @var WebsiteAnalysis $record */
             $record = $this->record;
@@ -96,7 +96,7 @@ class EditWebsiteAnalysis extends EditRecord
     private function runAiAnalysis(): void
     {
         try {
-            $service = app(WebsiteAnalysisService::class);
+            $service = resolve(WebsiteAnalysisService::class);
 
             /** @var WebsiteAnalysis $record */
             $record = $this->record;

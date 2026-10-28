@@ -8,7 +8,6 @@ use App\Models\Project;
 use App\Services\Api\GoogleAdsApiService;
 use App\Services\GoogleAdsService;
 use BackedEnum;
-use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -17,6 +16,8 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Sleep;
 
 class ManualSync extends Page
 {
@@ -424,7 +425,7 @@ class ManualSync extends Page
 
             // Collect data for the specified number of days
             for ($i = $days - 1; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i)->format('Y-m-d');
+                $date = Date::now()->subDays($i)->format('Y-m-d');
 
                 try {
                     $exitCode = Artisan::call('analytics:collect-daily', [
@@ -463,7 +464,7 @@ class ManualSync extends Page
                 }
 
                 // Add a small delay to avoid rate limiting (reduced from 1 second)
-                usleep(200000); // 0.2 seconds
+                Sleep::usleep(200000); // 0.2 seconds
             }
 
             $this->syncResults[] = [
@@ -532,7 +533,7 @@ class ManualSync extends Page
 
             // Initialize Google Ads service
             $googleAdsApiService = new GoogleAdsApiService($tenant);
-            $googleAdsReportService = app(GoogleAdsService::class);
+            $googleAdsReportService = resolve(GoogleAdsService::class);
 
             // Test connection
             $connectionStatus = $googleAdsApiService->testConnection();
@@ -652,7 +653,7 @@ class ManualSync extends Page
             ];
 
             // Save to database
-            $report = $googleAdsReportService->storeGoogleAdsReport($tenant, $debugData, Carbon::today());
+            $report = $googleAdsReportService->storeGoogleAdsReport($tenant, $debugData, Date::today());
 
             $this->syncResults[] = [
                 'operation' => 'Google Ads Data Sync',

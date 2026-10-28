@@ -6,10 +6,10 @@ namespace App\Filament\Widgets;
 
 use App\Models\PageSpeedResult;
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Date;
 
 class PageSpeedOverview extends StatsOverviewWidget
 {
@@ -43,13 +43,13 @@ class PageSpeedOverview extends StatsOverviewWidget
 
         return [
             Stat::make('Latest Mobile Performance', $latestMobile?->performance_score ? $latestMobile->performance_score . '/100' : 'No data')
-                ->description($latestMobile?->analyzed_at ? 'Analyzed ' . Carbon::parse($latestMobile->analyzed_at)->diffForHumans() : '')
+                ->description($latestMobile?->analyzed_at ? 'Analyzed ' . Date::parse($latestMobile->analyzed_at)->diffForHumans() : '')
                 ->descriptionIcon('heroicon-m-device-phone-mobile')
                 ->color($this->getScoreColor($latestMobile?->performance_score))
                 ->chart($this->getPerformanceTrend('mobile')),
 
             Stat::make('Latest Desktop Performance', $latestDesktop?->performance_score ? $latestDesktop->performance_score . '/100' : 'No data')
-                ->description($latestDesktop?->analyzed_at ? 'Analyzed ' . Carbon::parse($latestDesktop->analyzed_at)->diffForHumans() : '')
+                ->description($latestDesktop?->analyzed_at ? 'Analyzed ' . Date::parse($latestDesktop->analyzed_at)->diffForHumans() : '')
                 ->descriptionIcon('heroicon-m-computer-desktop')
                 ->color($this->getScoreColor($latestDesktop?->performance_score))
                 ->chart($this->getPerformanceTrend('desktop')),
@@ -90,7 +90,7 @@ class PageSpeedOverview extends StatsOverviewWidget
         return PageSpeedResult::query()->where('project_id', $tenant->id)
             ->where('strategy', $strategy)
             ->where('analyzed_at', '>=', now()->subDays(7))
-            ->orderBy('analyzed_at')
+            ->oldest('analyzed_at')
             ->pluck('performance_score')
             ->toArray();
     }

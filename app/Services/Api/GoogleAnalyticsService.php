@@ -22,6 +22,7 @@ use Google\Analytics\Data\V1beta\RunReportResponse;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class GoogleAnalyticsService extends BaseApiService
@@ -384,8 +385,8 @@ class GoogleAnalyticsService extends BaseApiService
                 throw new Exception('GA4 client or property ID not configured');
             }
 
-            $startDate ??= Carbon::now()->subDays(30);
-            $endDate ??= Carbon::now();
+            $startDate ??= Date::now()->subDays(30);
+            $endDate ??= Date::now();
 
             return [
                 'overview' => $this->getOverviewData($client, $propertyId, $startDate, $endDate),

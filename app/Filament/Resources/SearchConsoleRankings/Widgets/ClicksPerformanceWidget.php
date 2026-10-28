@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Resources\SearchConsoleRankings\Widgets;
 
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Date;
 
 class ClicksPerformanceWidget extends ChartWidget
 {
@@ -34,7 +34,7 @@ class ClicksPerformanceWidget extends ChartWidget
         $impressionsData = [];
 
         for ($i = 29; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
+            $date = Date::now()->subDays($i);
             $dateString = $date->format('Y-m-d');
             $labels[] = $date->format('M j');
 

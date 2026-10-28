@@ -8,7 +8,7 @@ use App\Models\Project;
 use App\Models\SearchConsoleRanking;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 
 class TrafficOverviewWidget extends ChartWidget
 {
@@ -46,8 +46,8 @@ class TrafficOverviewWidget extends ChartWidget
             ];
         }
 
-        $endDate = Carbon::now();
-        $startDate = Carbon::now()->subDays($days);
+        $endDate = Date::now();
+        $startDate = Date::now()->subDays($days);
 
         // Get rankings data grouped by date
         $rankings = SearchConsoleRanking::query()
@@ -70,7 +70,7 @@ class TrafficOverviewWidget extends ChartWidget
         $impressionsData = [];
 
         foreach ($rankings as $ranking) {
-            $labels[] = Carbon::parse($ranking->date)->format('M d');
+            $labels[] = Date::parse($ranking->date)->format('M d');
             $avgPositions[] = round($ranking->avg_position, 1);
             $top10Counts[] = $ranking->top10_count;
             $clicksData[] = $ranking->total_clicks ?? 0;

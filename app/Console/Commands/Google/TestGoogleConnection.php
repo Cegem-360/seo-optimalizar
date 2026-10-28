@@ -8,7 +8,6 @@ use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Config\Repository;
 
 class TestGoogleConnection extends Command
 {
@@ -19,7 +18,7 @@ class TestGoogleConnection extends Command
     /**
      * Create a new console command instance.
      */
-    public function __construct(private readonly Repository $repository)
+    public function __construct()
     {
         parent::__construct();
     }

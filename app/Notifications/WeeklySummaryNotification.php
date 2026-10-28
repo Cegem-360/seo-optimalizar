@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Project;
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Date;
 
 class WeeklySummaryNotification extends Notification implements ShouldQueue
 {
@@ -29,8 +29,8 @@ class WeeklySummaryNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $weekStart = Carbon::now()->startOfWeek()->format('M j');
-        $weekEnd = Carbon::now()->endOfWeek()->format('M j, Y');
+        $weekStart = Date::now()->startOfWeek()->format('M j');
+        $weekEnd = Date::now()->endOfWeek()->format('M j, Y');
 
         $mailMessage = (new MailMessage())
             ->subject(sprintf('📊 Weekly SEO Summary: %s (%s - %s)', $this->project->name, $weekStart, $weekEnd))
@@ -107,8 +107,8 @@ class WeeklySummaryNotification extends Notification implements ShouldQueue
             'project_id' => $this->project->id,
             'project_name' => $this->project->name,
             'summary_data' => $this->summaryData,
-            'week_start' => Carbon::now()->startOfWeek()->format('Y-m-d'),
-            'week_end' => Carbon::now()->endOfWeek()->format('Y-m-d'),
+            'week_start' => Date::now()->startOfWeek()->format('Y-m-d'),
+            'week_end' => Date::now()->endOfWeek()->format('Y-m-d'),
         ];
     }
 }

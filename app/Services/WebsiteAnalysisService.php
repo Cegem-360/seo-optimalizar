@@ -286,7 +286,7 @@ class WebsiteAnalysisService
                     $prompt,
                 );
 
-                if ($response !== null && $response !== '' && $response !== '0') {
+                if (! in_array($response, [null, '', '0'], true)) {
                     // Process the AI response
                     $this->processAiResponse($websiteAnalysis, $response);
                 } else {

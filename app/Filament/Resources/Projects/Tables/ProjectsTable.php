@@ -60,7 +60,7 @@ class ProjectsTable
                     ->label('Import from Search Console')
                     ->action(function ($record): void {
                         if ($record instanceof Project) {
-                            ImportSearchConsoleDataJob::dispatch($record);
+                            dispatch(new ImportSearchConsoleDataJob($record));
                         }
                     })
                     ->requiresConfirmation()
@@ -78,7 +78,7 @@ class ProjectsTable
                         ->action(function (Collection $records): void {
                             foreach ($records as $record) {
                                 if ($record instanceof Project) {
-                                    ImportSearchConsoleDataJob::dispatch($record);
+                                    dispatch(new ImportSearchConsoleDataJob($record));
                                 }
                             }
                         })

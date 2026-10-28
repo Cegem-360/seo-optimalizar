@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Project;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Date;
 use InvalidArgumentException;
 
 class GoogleAnalyticsImporter
@@ -19,7 +20,7 @@ class GoogleAnalyticsImporter
      */
     public function importAnalyticsData(Project $project, array $analyticsData, ?Carbon $date = null): void
     {
-        $date ??= Carbon::yesterday();
+        $date ??= Date::yesterday();
 
         // Validate the data structure
         $this->validateAnalyticsData($analyticsData);

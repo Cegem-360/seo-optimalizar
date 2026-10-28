@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Filament\Resources\SearchConsoleRankings\Widgets;
 
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Date;
 
 class SearchConsoleOverviewWidget extends StatsOverviewWidget
 {
@@ -22,7 +22,7 @@ class SearchConsoleOverviewWidget extends StatsOverviewWidget
 
         // Base query for current project
         $builder = $project->searchConsoleRankings()
-            ->where('date_to', '>=', Carbon::now()->subDays(30));
+            ->where('date_to', '>=', Date::now()->subDays(30));
 
         // Get statistics
         $totalQueries = (clone $builder)->distinct('query')->count('query');
@@ -46,8 +46,8 @@ class SearchConsoleOverviewWidget extends StatsOverviewWidget
         $dateRange = 'Last 30 days';
 
         if ($earliestDate && $latestDate) {
-            $start = Carbon::parse($earliestDate)->format('M d');
-            $end = Carbon::parse($latestDate)->format('M d, Y');
+            $start = Date::parse($earliestDate)->format('M d');
+            $end = Date::parse($latestDate)->format('M d, Y');
             $dateRange = sprintf('%s - %s', $start, $end);
         }
 
@@ -127,7 +127,7 @@ class SearchConsoleOverviewWidget extends StatsOverviewWidget
         // Get last 7 days of clicks data
         $clicks = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
+            $date = Date::now()->subDays($i)->format('Y-m-d');
             $count = $project->searchConsoleRankings()
                 ->whereDate('date_from', '<=', $date)
                 ->whereDate('date_to', '>=', $date)

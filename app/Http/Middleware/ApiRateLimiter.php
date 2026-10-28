@@ -33,7 +33,7 @@ class ApiRateLimiter
      */
     public function handle(Request $request, Closure $next, ?string $service = null): Response
     {
-        if ($service === null || $service === '' || $service === '0' || ! isset($this->serviceLimits[$service])) {
+        if (in_array($service, [null, '', '0'], true) || ! isset($this->serviceLimits[$service])) {
             return $next($request);
         }
 

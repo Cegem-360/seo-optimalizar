@@ -30,7 +30,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
     private function getGoogleClient(): Client
     {
-        if ($this->client !== null) {
+        if ($this->client instanceof Client) {
             return $this->client;
         }
 
@@ -50,7 +50,7 @@ class GoogleSearchConsoleService extends BaseApiService
 
     private function getSearchConsoleService(): SearchConsole
     {
-        if ($this->service !== null) {
+        if ($this->service instanceof SearchConsole) {
             return $this->service;
         }
 

@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class SendWeeklySummary extends Command
@@ -41,8 +42,8 @@ class SendWeeklySummary extends Command
         }
 
         $totalSent = 0;
-        $weekStart = Carbon::now()->startOfWeek();
-        $weekEnd = Carbon::now()->endOfWeek();
+        $weekStart = Date::now()->startOfWeek();
+        $weekEnd = Date::now()->endOfWeek();
 
         foreach ($projects as $project) {
             $this->info('Generating summary for project: ' . $project->name);

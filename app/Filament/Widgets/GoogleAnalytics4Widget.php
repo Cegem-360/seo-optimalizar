@@ -9,7 +9,7 @@ use App\Services\Api\ApiServiceManager;
 use Exception;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class GoogleAnalytics4Widget extends ChartWidget
@@ -56,8 +56,8 @@ class GoogleAnalytics4Widget extends ChartWidget
             }
 
             $ga4Service = $apiManager->getGoogleAnalytics4();
-            $endDate = Carbon::now()->subDays(1); // GA4 has 1-day delay
-            $startDate = Carbon::now()->subDays($days + 1);
+            $endDate = Date::now()->subDays(1); // GA4 has 1-day delay
+            $startDate = Date::now()->subDays($days + 1);
 
             $data = $ga4Service->getOrganicTrafficData($startDate, $endDate);
 
@@ -72,7 +72,7 @@ class GoogleAnalytics4Widget extends ChartWidget
             $bounceRates = [];
 
             foreach ($data as $row) {
-                $labels[] = Carbon::parse($row['date'])->format('M d');
+                $labels[] = Date::parse($row['date'])->format('M d');
                 $sessions[] = $row['sessions'] ?? 0;
                 $users[] = $row['activeUsers'] ?? 0;
                 $pageViews[] = $row['screenPageViews'] ?? 0;

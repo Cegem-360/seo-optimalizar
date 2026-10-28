@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Services\Api\ApiServiceManager;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Sleep;
 
 class AnalyzeSerpWithGemini extends Command
 {
@@ -88,7 +89,7 @@ class AnalyzeSerpWithGemini extends Command
                             $totalAnalyzed++;
 
                             // Rate limiting
-                            sleep(2);
+                            Sleep::sleep(2);
                         } else {
                             $this->warn('Could not analyze keyword: ' . $keyword->keyword);
                         }

@@ -16,6 +16,7 @@ use Google\Ads\GoogleAds\V21\Services\KeywordSeed;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Sleep;
 
 class GoogleAdsApiService extends BaseApiService
 {
@@ -153,7 +154,7 @@ class GoogleAdsApiService extends BaseApiService
             }
 
             // Rate limiting - be respectful to the API
-            usleep(100000); // 0.1 seconds
+            Sleep::usleep(100000); // 0.1 seconds
         }
 
         return $results;
@@ -194,7 +195,7 @@ class GoogleAdsApiService extends BaseApiService
                 }
 
                 // Rate limiting
-                usleep(200000); // 0.2 seconds
+                Sleep::usleep(200000); // 0.2 seconds
             } catch (Exception $e) {
                 Log::warning('Failed to update keyword metrics', [
                     'keyword_id' => $keyword->id,
@@ -373,7 +374,7 @@ class GoogleAdsApiService extends BaseApiService
                 }
 
                 // Rate limiting - be more conservative with historical metrics
-                usleep(500000); // 0.5 seconds
+                Sleep::usleep(500000); // 0.5 seconds
             } catch (Exception $e) {
                 Log::warning('Failed to update keyword historical metrics', [
                     'keyword_id' => $keyword->id,

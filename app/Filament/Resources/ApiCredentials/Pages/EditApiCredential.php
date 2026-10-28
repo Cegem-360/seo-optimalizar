@@ -120,9 +120,7 @@ class EditApiCredential extends EditRecord
 
             if ($sessionRefreshToken) {
                 // Update credentials with the new refresh token
-                if (! isset($data['credentials'])) {
-                    $data['credentials'] = [];
-                }
+                $data['credentials'] ??= [];
 
                 $data['credentials']['refresh_token'] = $sessionRefreshToken;
 

@@ -22,7 +22,7 @@ class AnalyticsOverviewWidget extends BaseWidget
 
         // Get latest analytics report for the project
         $latestReport = AnalyticsReport::query()->where('project_id', $tenant->id)
-            ->orderByDesc('report_date')
+            ->latest('report_date')
             ->first();
 
         if (! $latestReport) {
@@ -36,7 +36,7 @@ class AnalyticsOverviewWidget extends BaseWidget
         // Get previous report for comparison
         $previousReport = AnalyticsReport::query()->where('project_id', $tenant->id)
             ->where('report_date', '<', $latestReport->report_date)
-            ->orderByDesc('report_date')
+            ->latest('report_date')
             ->first();
 
         return [
@@ -124,7 +124,7 @@ class AnalyticsOverviewWidget extends BaseWidget
     private function getChartData(Project $project, string $metric): array
     {
         $reports = AnalyticsReport::query()->where('project_id', $project->id)
-            ->orderBy('report_date')
+            ->oldest('report_date')
             ->limit(7)
             ->get();
 

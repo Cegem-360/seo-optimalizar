@@ -10,7 +10,7 @@ use Exception;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseStatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class GoogleAnalytics4StatsWidget extends BaseStatsOverviewWidget
@@ -40,10 +40,10 @@ class GoogleAnalytics4StatsWidget extends BaseStatsOverviewWidget
             $ga4Service = $apiManager->getGoogleAnalytics4();
 
             // Get data for the last 30 days vs previous 30 days
-            $currentPeriodEnd = Carbon::now()->subDays(1);
-            $currentPeriodStart = Carbon::now()->subDays(30);
-            $previousPeriodEnd = Carbon::now()->subDays(31);
-            $previousPeriodStart = Carbon::now()->subDays(60);
+            $currentPeriodEnd = Date::now()->subDays(1);
+            $currentPeriodStart = Date::now()->subDays(30);
+            $previousPeriodEnd = Date::now()->subDays(31);
+            $previousPeriodStart = Date::now()->subDays(60);
 
             $currentData = $ga4Service->getAudienceOverview($currentPeriodStart, $currentPeriodEnd);
             $previousData = $ga4Service->getAudienceOverview($previousPeriodStart, $previousPeriodEnd);

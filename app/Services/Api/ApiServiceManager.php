@@ -17,9 +17,7 @@ class ApiServiceManager
 
     public function getService(string $serviceName): BaseApiService
     {
-        if (! isset($this->services[$serviceName])) {
-            $this->services[$serviceName] = $this->createService($serviceName);
-        }
+        $this->services[$serviceName] ??= $this->createService($serviceName);
 
         return $this->services[$serviceName];
     }

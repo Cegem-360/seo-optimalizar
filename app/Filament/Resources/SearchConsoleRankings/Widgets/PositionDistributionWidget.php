@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Resources\SearchConsoleRankings\Widgets;
 
 use App\Models\Project;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Date;
 
 class PositionDistributionWidget extends ChartWidget
 {
@@ -30,7 +30,7 @@ class PositionDistributionWidget extends ChartWidget
         }
 
         $builder = $project->searchConsoleRankings()
-            ->where('date_to', '>=', Carbon::now()->subDays(30));
+            ->where('date_to', '>=', Date::now()->subDays(30));
 
         $positionRanges = [
             '1-3' => (clone $builder)->whereBetween('position', [1, 3])->count(),
